@@ -6,10 +6,27 @@ param (
 
 # region Function pool
 function Invoke-GithubRequest {
-	param([Object] $Body, [String] $query)
-	# TODO:
-	return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $Body -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
+    param([String[]] $Body, [String] $query, [Microsoft.PowerShell.Commands.WebRequestMethod] $Method)
+    $Body = @{
+        'body' = $Body -join "`r`n"
+    }
+	# TODO: handle without body, ...
+	return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $Body -Compress) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/5/comments"
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 function Add-Comment {
 	<#
@@ -93,6 +110,8 @@ $HEADER = @{
 	'Authorization' = "token $env:GITHUB_TOKEN"
 }
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+# user/repo
+$global:REPOSITORY = $env:GITHUB_REPOSITORY
 
 Write-Host -f Yellow $EVENT.action
 
