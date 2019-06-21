@@ -25,11 +25,20 @@ $HEADER = @{
 }
 
 if ($Type -eq 'Issue') {
+	$envs = [Environment]::GetEnvironmentVariables()
+	$table = @()
+	$table += '| Name | Value |'
+	$table += '| :--- | :--- |'
+	$envs | ForEach-Object {
+		$table += "| $_ | $([Environment]::GetEnvironmentVariable($_))|"
+	}
+
+	$table = $table -join "`r`n"
 	$BODY = @{
-		'body' = [Web.HttpUtility]::UrlEncode((@"
+		'body' = ([System.Web.HttpUtility]::UrlEncode((@"
 Hello from github actions
-$([Environment]::GetEnvironmentVariables())
-"@))
+$table
+"@)))
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
 }
