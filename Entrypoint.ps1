@@ -16,6 +16,11 @@ function Add-Comment {
 	param([Int] $ID, [String] $Message)
 }
 
+function Write-Log {
+	param ([String[]] $Message)
+	Write-Output "LOG: $($Message -join "`r`n    ")"
+}
+
 $URI='https://api.github.com'
 $API_VERSION='v3'
 $API_HEADER="Accept: application/vnd.github.$API_VERSION+json; application/vnd.github.antiope-preview+json"
@@ -24,7 +29,13 @@ $HEADER = @{
 	'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
+$EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+
 if ($Type -eq 'Issue') {
+	if ($EVENT.action -ne 'opened') {
+		Write-Log 'Every issues action except ''opened'' is ignored.'
+		exit 0
+	}
 	$envs = [Environment]::GetEnvironmentVariables().Keys
 	$table = @()
 	$table += '| Name | Value |'
