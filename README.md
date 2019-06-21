@@ -1,3 +1,5 @@
+❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗ DO NOT USE YET. Wait for 1.0 tag releae ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
+
 # Github actions for scoop buckets
 
 ## How to debug locally
