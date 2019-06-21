@@ -16,7 +16,7 @@
                     1. If there is problem
                         1. Add label package-fix-needed and verified
                     1. If no, comment on issue and close it
-        1. $env:GITHUB_EVENT_PATH
+        1. $env:GITHUB_EVENT_PATH, <https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables>
 
 ## Pull requests
 
