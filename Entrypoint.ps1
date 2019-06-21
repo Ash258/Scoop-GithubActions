@@ -34,6 +34,7 @@ if ($Type -eq 'Issue') {
 	}
 
 	$table = $table -join "`r`n"
+	Write-Output $table
 	$BODY = @{
 		'body' = ([System.Web.HttpUtility]::UrlEncode(("Hello from github actions")))
 	}
