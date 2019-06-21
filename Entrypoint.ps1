@@ -35,11 +35,17 @@ if ($Type -eq 'Issue') {
 
 	$table = $table -join "`r`n"
 	Write-Output $table
+
+	$fileCont = Get-Content $env:GITHUB_EVENT_PATH -Raw
 	$BODY = @{
 		'body' = (@"
 Hello from github actions now should be with correct encoding
 
 $table
+
+COntent:
+
+$fileCont
 "@)
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
