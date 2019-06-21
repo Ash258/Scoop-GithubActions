@@ -25,7 +25,7 @@ $HEADER = @{
 }
 
 if ($Type -eq 'Issue') {
-	$envs = [Environment]::GetEnvironmentVariables()
+	$envs = [Environment]::GetEnvironmentVariables().Keys
 	$table = @()
 	$table += '| Name | Value |'
 	$table += '| :--- | :--- |'
