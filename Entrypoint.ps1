@@ -26,10 +26,10 @@ $HEADER = @{
 
 if ($Type -eq 'Issue') {
 	$BODY = @{
-		'body' = @"
+		'body' = [Web.HttpUtility]::UrlEncode((@"
 Hello from github actions
 $([Environment]::GetEnvironmentVariables())
-"@
+"@))
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
 }
