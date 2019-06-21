@@ -6,8 +6,10 @@ LABEL org.label-schema.maintainer="Jakub <Ash258> Čábera <cabera.jakub@gmail.c
       org.label-schema.vcs-url="https://github.com/Ash258/Scoop-GithubActions" \
       org.label-schema.schema-version="1.0.0"
 
-# TODO: Install some git, hub, ...
-# TODO" Clone scoop
+RUN apk add --no-cache --virtual .scoop-deps git \
+    && apk add hub --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
+    && git clone 'https://github.com/lukesampson/scoop.git' '/SCOOP'
+
 COPY Entrypoint.ps1 /Entrypoint.ps1
 
 ENTRYPOINT [ "pwsh", "/Entrypoint.ps1" ]
