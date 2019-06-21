@@ -1,5 +1,15 @@
 # Github actions for scoop buckets
 
+## How to debug locally
+
+```powershell
+$env:GITHUB_TOKEN = '<yourtoken>'
+$env:GITHUB_EVENT_PATH = "<repo_root>\cosi.json"
+.\Entrypoint.ps1 <Type>
+# Try to avoid all real requests into repository
+#    but GithubActionsBucketForTesting so feel free to do whatever you want with this repo
+```
+
 ## Issues
 
 1. On issues.created
