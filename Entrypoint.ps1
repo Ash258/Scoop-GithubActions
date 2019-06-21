@@ -38,8 +38,9 @@ if ($Type -eq 'Issue') {
 	$BODY = @{
 		'body' = (@"
 Hello from github actions now should be with correct encoding
+
 $table
 "@)
 	}
-	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
+	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
 }
