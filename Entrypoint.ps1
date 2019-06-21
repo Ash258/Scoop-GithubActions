@@ -21,7 +21,7 @@ $API_VERSION='v3'
 $API_HEADER="Accept: application/vnd.github.$API_VERSION+json; application/vnd.github.antiope-preview+json"
 
 $HEADER = @{
-	'Authorization' = "token $evn:GITHUB_TOKEN"
+	'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
 if ($Type -eq 'Issue') {
@@ -36,7 +36,10 @@ if ($Type -eq 'Issue') {
 	$table = $table -join "`r`n"
 	Write-Output $table
 	$BODY = @{
-		'body' = ([System.Web.HttpUtility]::UrlEncode(("Hello from github actions")))
+		'body' = ([System.Web.HttpUtility]::UrlEncode((@"
+Hello from github actions
+$table
+"@)))
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
 }
