@@ -29,3 +29,18 @@ When any of action failed comment and add label
 1. Install??
 1. Format
     1. This is covered by Appveyor
+
+## Excavator
+
+Should work:
+
+```HCL
+workflow "Excavator" {
+    on = "schedule(@every 1h)"
+    resolves = "Excavate"
+}
+
+action "Excavate" {
+    "use" = "ScoopInstaller/Excavator@master" # Create custom excavator
+}
+```
