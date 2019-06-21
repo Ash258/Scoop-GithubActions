@@ -35,10 +35,7 @@ if ($Type -eq 'Issue') {
 
 	$table = $table -join "`r`n"
 	$BODY = @{
-		'body' = ([System.Web.HttpUtility]::UrlEncode((@"
-Hello from github actions
-$table
-"@)))
+		'body' = ([System.Web.HttpUtility]::UrlEncode(("Hello from github actions")))
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
 }
