@@ -67,7 +67,8 @@ function Write-Log {
 
 # TODO: Rename?
 function Initialize-Issue {
-	Write-Log 'Issue initialized'
+    Write-Log 'Issue initialized'
+    # TODO: Test listing of /github/workspace ...
 
 	# Only continue if new issue is created
 	if ($EVENT.action -ne 'opened') {
