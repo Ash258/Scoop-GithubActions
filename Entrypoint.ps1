@@ -36,10 +36,10 @@ if ($Type -eq 'Issue') {
 	$table = $table -join "`r`n"
 	Write-Output $table
 	$BODY = @{
-		'body' = ([System.Web.HttpUtility]::UrlEncode((@"
-Hello from github actions
+		'body' = (@"
+Hello from github actions now should be with correct encoding
 $table
-"@)))
+"@)
 	}
 	Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$URI/repos/Ash258/GithubActionsBucketForTesting/issues/1/comments"
 }
