@@ -1,7 +1,7 @@
 param (
-	[Parameter(Mandatory)]
-	[ValidateSet('Issue', 'PR', 'Push', '__TESTS__')]
-	[String] $Type
+    [Parameter(Mandatory)]
+    [ValidateSet('Issue', 'PR', 'Push', '__TESTS__')]
+    [String] $Type
 )
 
 #region Function pool
@@ -34,35 +34,39 @@ function Resolve-IssueTitle {
 
 
 function Invoke-GithubRequest {
-	param([String[]] $Body, [String] $query, [Microsoft.PowerShell.Commands.WebRequestMethod] $Method)
-	$Body = @{
-		'body' = $Body -join "`r`n"
-	}
-	# TODO: handle without body, ...
-	return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $Body -Compress) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/5/comments"
+    param(
+        [String[]] $Body,
+        [String] $query,
+        [Microsoft.PowerShell.Commands.WebRequestMethod] $Method
+    )
+    $Body = @{
+        'body' = $Body -join "`r`n"
+    }
+    # TODO: handle without body, ...
+    return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $Body -Compress) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/5/comments"
 }
 
 function Add-Comment {
-	<#
+    <#
     .SYNOPSIS
         Add comment into specific issue / PR
     #>
-	param([Int] $ID, [String[]] $Message)
-	# TODO:
+    param([Int] $ID, [String[]] $Message)
+    # TODO:
 }
 
 function Add-Label {
-	param([Ing] $ID, [String[]] $Labels)
+    param([Ing] $ID, [String[]] $Labels)
 
-	foreach ($label in $Labels) {
-		Write-Log $label
-	}
+    foreach ($label in $Labels) {
+        Write-Log $label
+    }
 }
 
 function Write-Log {
-	[Parameter(Mandatory, ValueFromRemainingArguments)]
-	param ([String[]] $Message)
-	Write-Output "`r`nLOG: $($Message -join "`r`n    ")"
+    [Parameter(Mandatory, ValueFromRemainingArguments)]
+    param ([String[]] $Message)
+    Write-Output "`r`nLOG: $($Message -join "`r`n    ")"
 }
 
 # TODO: Rename?
@@ -70,25 +74,25 @@ function Initialize-Issue {
     Write-Log 'Issue initialized'
     # TODO: Test listing of /github/workspace ...
 
-	# Only continue if new issue is created
-	if ($EVENT.action -ne 'opened') {
-		Write-Log 'Every issues action except ''opened'' are ignored.'
-		exit 0
-	}
-	$envs = [Environment]::GetEnvironmentVariables().Keys
-	$table = @()
-	$table += '| Name | Value |'
-	$table += '| :--- | :--- |'
-	$envs | ForEach-Object {
-		$table += "| $_ | $([Environment]::GetEnvironmentVariable($_))|"
-	}
+    # Only continue if new issue is created
+    if ($EVENT.action -ne 'opened') {
+        Write-Log 'Every issues action except ''opened'' are ignored.'
+        exit 0
+    }
+    $envs = [Environment]::GetEnvironmentVariables().Keys
+    $table = @()
+    $table += '| Name | Value |'
+    $table += '| :--- | :--- |'
+    $envs | ForEach-Object {
+        $table += "| $_ | $([Environment]::GetEnvironmentVariable($_))|"
+    }
 
-	$table = $table -join "`r`n"
-	Write-Output $table
+    $table = $table -join "`r`n"
+    Write-Output $table
 
-	$fileCont = Get-Content $env:GITHUB_EVENT_PATH -Raw
-	$BODY = @{
-		'body' = (@"
+    $fileCont = Get-Content $env:GITHUB_EVENT_PATH -Raw
+    $BODY = @{
+        'body' = (@"
 Hello from github actions now should be with correct encoding
 
 $table
@@ -97,17 +101,17 @@ COntent:
 
 $fileCont
 "@)
-	}
-	# Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
+    }
+    # Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
 
 }
 
 function Initialize-PR {
-	Write-Log 'PR initialized'
+    Write-Log 'PR initialized'
 }
 
 function Initialize-Push {
-	Write-Log 'Push initialized'
+    Write-Log 'Push initialized'
 }
 # endregion Function pool
 
@@ -118,7 +122,7 @@ $API_BASE_URl = 'https://api.github.com'
 $API_VERSION = 'v3'
 $API_HEADER = "Accept: application/vnd.github.$API_VERSION+json; application/vnd.github.antiope-preview+json"
 $HEADER = @{
-	'Authorization' = "token $env:GITHUB_TOKEN"
+    'Authorization' = "token $env:GITHUB_TOKEN"
 }
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
@@ -127,7 +131,7 @@ $global:REPOSITORY = $env:GITHUB_REPOSITORY
 Write-Host -f Yellow $EVENT.action
 
 switch ($Type) {
-	'Issue' { Initialize-Issue }
-	'PR' { Initialize-PR }
-	'Push' { Initialize-Push }
+    'Issue' { Initialize-Issue }
+    'PR' { Initialize-PR }
+    'Push' { Initialize-Push }
 }
