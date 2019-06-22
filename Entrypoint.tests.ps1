@@ -31,4 +31,11 @@ describe 'Helper functoins test' {
 
         $falses | ForEach-Object { New-CheckListItem $_[0] | Should -Be "- [ ] $($_[0])" }
     }
+
+    # it 'Changed files in PR' {
+    #     $files = Get-AllChangedFilesInPR 9
+
+    #     $files.filename | Should -Be @('README.template.md', 'bucket/Added.json', 'bucket/FRD.json', 'bucket/PotPlayer.json')
+    #     $files.status | Should -Be @('removed', 'added', 'removed', 'modified')
+    # }
 }

@@ -2,6 +2,43 @@
 
 # Github actions for scoop buckets
 
+Example workflow for everything.
+
+```hcl
+workflow "Issues" {
+    on = "issues"
+    resolves = [ "IssueHandler" ]
+}
+
+action "IssueHandler" {
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Issue"
+    secrets = [ "GITHUB_TOKEN" ]
+}
+
+workflow "Pull requests" {
+    on = "pull_requests"
+    resolves = [ "PullRequestHandler" ]
+}
+
+action "PullRequestHandler" {
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "PR"
+    secrets = [ "GITHUB_TOKEN" ]
+}
+
+workflow "Excavator" {
+    on = "schedule(0 * * * *)"
+    resolves = [ "Excavate" ]
+}
+
+action "Excavate" {
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Scheduled"
+    secrets = [ "GITHUB_TOKEN" ]
+}
+```
+
 ## How to debug locally
 
 ```powershell
@@ -32,30 +69,56 @@ $env:GITHUB_EVENT_PATH = "<repo_root>\cosi.json"
 
 ## Pull requests
 
-When pull request is created there are few actions needed
+Will be executed when pull_request is (opened, reopened)
 
-When any of action failed comment and add label
+Github action will check if these requirements are met
 
+1. Properties
+    1. Description
+    1. License
 1. Checkver
 1. Checkhashes
-1. Install??
-1. Format
+1. Install❓❓
+1. Format❓❓
     1. This is covered by Appveyor
 
 ## Excavator
 
-This is not real replacement of excavator. (Until i resolve how to store logs somehow)
+This is not real replacement of excavator. (Until i resolve how to store/expose logs somehow)
 Should work:
 
 ```HCL
-workflow "Excavator" {
-    on = "schedule(0 * * * *)"
-    resolves = "Excavate"
+workflow "Issues" {
+    on = "issues"
+    resolves = [ "IssueHandler" ]
 }
 
+action "IssueHandler" {
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Issue"
+    secrets = [ "GITHUB_TOKEN" ]
+}
+
+workflow "Pull requests" {
+    on = "pull_requests"
+    resolves = [ "PullRequestHandler" ]
+}
+
+action "PullRequestHandler" {
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "PR"
+    secrets = [ "GITHUB_TOKEN" ]
+}
+
+workflow "Excavator" {
+    on = "schedule(0 * * * *)"
+    resolves = [ "Excavate" ]
+}
+
+# Post comment to specific issue each 5 minutes
 action "Excavate" {
-    use = "Ash258/Scoop-GithubActions@master"
-    args = [ "Schedule" ]
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Scheduled"
     secrets = [ "GITHUB_TOKEN" ]
 }
 ```

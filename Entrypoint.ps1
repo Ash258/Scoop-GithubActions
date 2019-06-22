@@ -50,6 +50,14 @@ function Write-Log {
 }
 
 function New-CheckListItem {
+    <#
+    .SYNOPSIS
+        Helper functino for creating markdown check lists.
+    .PARAMETER Check
+        Name of check.
+    .PARAMETER OK
+        Check was met.
+    #>
     param ([String] $Check, [Switch] $OK)
 
     if ($OK) {
@@ -173,34 +181,40 @@ function Initialize-Issue {
 }
 
 function Initialize-PR {
-    Write-Log 'PR initialized'
+    <#
+    .SYNOPSIS
+        Handle pull requests actions.
+    #>
+	Write-Log 'PR initialized'
 
-    # TODO: Get all changed files in PR
-    # Since binaries do not return any data on success flow needs to be this:
-    # Run check with force param
-    # if error, then just
-    # git status, if changed
-    # run checkver
-    # run checkhashes
-    # run formatjson?
+	# TODO: Get all changed files in PR
+	# Since binaries do not return any data on success flow needs to be this:
+	# Run check with force param
+	# if error, then just
+	# git status, if changed
+	# run checkver
+	# run checkhashes
+	# run formatjson?
 
-    # TODO: Bucket
-    # & "$env:SCOOP_HOME\bin\check<>.ps1" "-App $name -Dir $BUCKET_ROOT -Force"
-    $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
+    $EVENT | Format-Table | Out-String
+    # $checksStatus = @()
 
-    $body = @{
-        'body' = (@(
-                "- Properties",
-                "    - [$status] Description",
-                "    - [$status] License",
-                "- [$status] Checkver functional",
-                "- [$status] Autoupdate working",
-                "- [$status] Hashes are correct",
-                "- [$status] Manifest is formatted"
-            ) -join "`r`n")
-    }
+    # & "$env:SCOOP_HOME\bin\checkver.ps1"
+	# $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
 
-    Write-Log $body.body
+	# $body = @{
+	# 	'body' = (@(
+	# 			"- Properties",
+	# 			"    - [$status] Description",
+	# 			"    - [$status] License",
+	# 			"- [$status] Checkver functional",
+	# 			"- [$status] Autoupdate working",
+	# 			"- [$status] Hashes are correct",
+	# 			"- [$status] Manifest is formatted"
+	# 		) -join "`r`n")
+	# }
+
+	# Write-Log $body.body
 }
 
 function Initialize-Push {
