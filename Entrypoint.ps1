@@ -1,6 +1,6 @@
 param (
     [Parameter(Mandatory)]
-    [ValidateSet('Issue', 'PR', 'Push', '__TESTS__')]
+    [ValidateSet('Issue', 'PR', 'Push', '__TESTS__', 'Scheduled')]
     [String] $Type
 )
 
@@ -111,7 +111,13 @@ function Initialize-PR {
 }
 
 function Initialize-Push {
-    Write-Log 'Push initialized'
+	Write-Log 'Push initialized'
+}
+
+function Initialize-Scheduled {
+    Write-Log 'Scheduled initialized'
+
+    Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json @{ 'body' = "Scheduled comment each 5 minute - $(Get-Date)" }) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/7/comments"
 }
 # endregion Function pool
 
@@ -122,16 +128,16 @@ $API_BASE_URl = 'https://api.github.com'
 $API_VERSION = 'v3'
 $API_HEADER = "Accept: application/vnd.github.$API_VERSION+json; application/vnd.github.antiope-preview+json"
 $HEADER = @{
-    'Authorization' = "token $env:GITHUB_TOKEN"
+	'Authorization' = "token $env:GITHUB_TOKEN"
 }
+
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
-
-Write-Host -f Yellow $EVENT.action
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
     'PR' { Initialize-PR }
     'Push' { Initialize-Push }
+    'Scheduled' { Initialize-Scheduled }
 }
