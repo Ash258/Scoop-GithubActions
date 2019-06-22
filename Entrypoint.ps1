@@ -44,6 +44,40 @@ function New-CheckListItem {
     }
 }
 
+function Invoke-GithubRequest {
+    <#
+    .SYNOPSIS
+        Invoke authenticated github API request.
+    .PARAMETER Query
+        Query to be executed
+    .PARAMETER Method
+        Method to be used with request
+    .PARAMETER Body
+        Additional body to be send.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [String] $Query,
+        [Microsoft.PowerShell.Commands.WebRequestMethod] $Method = 'Get',
+        [Hashtable] $Body
+    )
+
+    $api_base_url = 'https://api.github.com'
+    $headers = @{
+        # Authorization token is neeeded for posting comments and to increase limit of requests
+        'Authorization' = "token $env:GITHUB_TOKEN"
+    }
+
+    $parameters = @{
+        'Headers' = $headers
+        'Method'  = $Method
+        'Uri'     = "$api_base_url/$Query"
+    }
+    if ($Body) { $parameters.Add('Body', (ConvertTo-Json $Body -Depth 8 -Compress)) }
+
+    return Invoke-WebRequest @parameters
+}
+
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -53,26 +87,14 @@ function New-CheckListItem {
 
 
 
-function Invoke-GithubRequest {
-    param(
-        [String[]] $Body,
-        [String] $query,
-        [Microsoft.PowerShell.Commands.WebRequestMethod] $Method
-    )
-    $Body = @{
-        'body' = $Body -join "`r`n"
-    }
-    # TODO: handle without body, ...
-    return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $Body -Compress) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/5/comments"
-}
-
 function Add-Comment {
     <#
     .SYNOPSIS
         Add comment into specific issue / PR
     #>
     param([Int] $ID, [String[]] $Message)
-    # TODO:
+
+    return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
 }
 
 function Add-Label {
@@ -111,7 +133,7 @@ function Initialize-PR {
     # TODO: Get all changed files in PR
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
-        # if error, then just
+    # if error, then just
     # git status, if changed
     # run checkver
     # run checkhashes
@@ -123,14 +145,14 @@ function Initialize-PR {
 
     $body = @{
         'body' = (@(
-            "- Properties",
-            "    - [$status] Description",
-            "    - [$status] License",
-            "- [$status] Checkver functional",
-            "- [$status] Autoupdate working",
-            "- [$status] Hashes are correct",
-            "- [$status] Manifest is formatted"
-        ) -join "`r`n")
+                "- Properties",
+                "    - [$status] Description",
+                "    - [$status] License",
+                "- [$status] Checkver functional",
+                "- [$status] Autoupdate working",
+                "- [$status] Hashes are correct",
+                "- [$status] Manifest is formatted"
+            ) -join "`r`n")
     }
 
     Write-Log $body.body
@@ -154,11 +176,6 @@ function Initialize-Scheduled {
 #region Main
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
-
-$API_BASE_URl = 'https://api.github.com'
-$HEADER = @{
-    'Authorization' = "token $env:GITHUB_TOKEN"
-}
 
 # Convert actual API response to object
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
