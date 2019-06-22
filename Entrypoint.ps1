@@ -102,7 +102,11 @@ function Add-Comment {
     .PARAMETER Message
         String or array of string to be send as comment.
     #>
-    param([Int] $ID, [String[]] $Message)
+    param(
+        [Int] $ID,
+        [Alias('Comment')]
+        [String[]] $Message
+    )
 
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/comments" -Method Post -Body @{ 'body' = ($Message -join "`r`n") }
 }
