@@ -160,18 +160,16 @@ function Get-EnvironmentVariables {
 
 
 
-# TODO: Rename?
+
+
+
 function Initialize-Issue {
     Write-Log 'Issue initialized'
-    # TODO: Test listing of /github/workspace ...
 
-    # Only continue if new issue is created
-    # if ($EVENT.action -ne 'opened') {
-    #     Write-Log 'Only ''opened'' action is supported.'
-    #     exit 0
-    # }
+    $title = $EVENT.issue.title
+    $id = $EVENT.issue.number
 
-    # Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
+    Write-Host $title $id
 }
 
 function Initialize-PR {
