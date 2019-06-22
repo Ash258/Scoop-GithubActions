@@ -5,6 +5,21 @@ param (
     [String] $Type
 )
 
+#region Variables pool
+# Convert actual API response to object
+$EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+# Event type for automatic handler detection
+$EVENT_TYPE = $env:GITHUB_EVENT_NAME
+# user/repo format
+$REPOSITORY = $env:GITHUB_REPOSITORY
+# Location of bucket
+$BUCKET_ROOT = $env:GITHUB_WORKSPACE
+
+# Backward compatability for manifests inside root of repository
+$nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
+$MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+#endregion Variables pool
+
 #region Function pool
 function Resolve-IssueTitle {
     <#
@@ -49,7 +64,7 @@ function Invoke-GithubRequest {
     .SYNOPSIS
         Invoke authenticated github API request.
     .PARAMETER Query
-        Query to be executed
+        Query to be executed.
     .PARAMETER Method
         Method to be used with request
     .PARAMETER Body
@@ -78,6 +93,23 @@ function Invoke-GithubRequest {
     return Invoke-WebRequest @parameters
 }
 
+function Add-Comment {
+    <#
+    .SYNOPSIS
+        Add comment into specific issue / PR.
+    .PARAMETER ID
+        ID of issue / PR.
+    .PARAMETER Message
+        String or array of string to be send as comment.
+    #>
+    param([Int] $ID, [String[]] $Message)
+
+    Write-Host $REPOSITORY
+    Write-Host $EVENT
+
+    return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/comments" -Method Post -Body @{ 'body' = ($Message -join "`r`n") }
+}
+
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -87,15 +119,6 @@ function Invoke-GithubRequest {
 
 
 
-function Add-Comment {
-    <#
-    .SYNOPSIS
-        Add comment into specific issue / PR
-    #>
-    param([Int] $ID, [String[]] $Message)
-
-    return Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
-}
 
 function Add-Label {
     param([Ing] $ID, [String[]] $Labels)
@@ -176,19 +199,6 @@ function Initialize-Scheduled {
 #region Main
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
-
-# Convert actual API response to object
-$global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
-# Event type for automatic handler detection
-$global:EVENT_TYPE = $env:GITHUB_EVENT_NAME
-# user/repo format
-$global:REPOSITORY = $env:GITHUB_REPOSITORY
-# Location of bucket
-$global:BUCKET_ROOT = $env:GITHUB_WORKSPACE
-
-# Backward compatability for manifests inside root of repository
-$nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
-$global:MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
 
 Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
 Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
