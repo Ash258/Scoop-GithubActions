@@ -21,6 +21,7 @@ $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUC
 #endregion Variables pool
 
 #region Function pool
+#region ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 function Resolve-IssueTitle {
     <#
     .SYNOPSIS
@@ -165,7 +166,7 @@ function Close-Issue {
 }
 
 function Remove-Label {
-    <#
+	<#
     .SYNOPSIS
         Remove label from issue / PR.
     .PARAMETER ID
@@ -173,33 +174,26 @@ function Remove-Label {
     .PARAMETER Label
         Array of labels to be removed.
     #>
-    param([Int] $ID, [String[]] $Label)
+	param([Int] $ID, [String[]] $Label)
 
-    $responses = @()
-    foreach ($lab in $Label) {
-        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
-    }
+	$responses = @()
+	foreach ($lab in $Label) {
+		$responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
+	}
 
-    return $responses
+	return $responses
 }
-# ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
+#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
-
-
-
-
-
-
-
-function Test-HashCheckFlow {
+function Test-Hash {
     param (
         [Parameter(Mandatory = $true)]
         [String] $Manifest,
         [Int] $IssueID
     )
 
-    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION
+    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
 
     $status = git status --porcelain -uno
     Write-Log "Status: $status"
@@ -211,7 +205,7 @@ function Test-HashCheckFlow {
 
         # TODO: Push if possible
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
-        Add-Comment -ID $IssueID -Message 'You are right'
+        Add-Comment -ID $IssueID -Message 'You are right.'
     } else {
         Write-Log 'Cannot reproduce'
 
@@ -220,6 +214,14 @@ function Test-HashCheckFlow {
         Close-Issue -ID $IssueID
     }
 }
+
+
+
+
+
+
+
+
 
 
 
@@ -255,10 +257,10 @@ function Initialize-Issue {
     switch -Wildcard ($problem) {
         '*hash check*' {
             Write-Log 'Hash check failed'
-            Test-HashCheckFlow $problematicName $id
+            Test-Hash $problematicName $id
         }
         '*extact_dir*' { }
-        '*download*failed*' { } # TODO:
+        '*download*failed*' { }
     }
     Write-Host $title $id $problematicName $problematicVersion $problem
 }
