@@ -188,12 +188,11 @@ function Test-HashCheckFlow {
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION
 
     $status = git status --porcelain -uno
-    Write-Log $status
+    Write-Log "Status: $status"
 
     Write-Log @('', (Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw))
 
-    exit 0
-    if ($status.Count -eq 1) {
+    if ($status -and $status.Count -eq 1) {
         Write-Log 'Verified'
 
         # TODO: Push if possible
