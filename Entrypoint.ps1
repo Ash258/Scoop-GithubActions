@@ -185,7 +185,7 @@ function Test-HashCheckFlow {
         [Int] $IssueID
     )
 
-    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
+    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION
 
     $status = git status --porcelain -uno
     Write-Log $status
