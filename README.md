@@ -4,6 +4,8 @@
 
 Example workflow for everything.
 
+Email is needed for pushing
+
 ```hcl
 workflow "Issues" {
   on = "issues"
@@ -23,18 +25,27 @@ workflow "Excavator" {
 action "IssueHandler" {
   uses = "Ash258/Scoop-GithubActions@master"
   args = "Issue"
+  env = {
+      "GITH_EMAIL" = "youremail@email.com"
+  }
   secrets = ["GITHUB_TOKEN"]
 }
 
 action "PullRequestHandler" {
   uses = "Ash258/Scoop-GithubActions@master"
   args = "PR"
+  env = {
+      "GITH_EMAIL" = "youremail@email.com"
+  }
   secrets = ["GITHUB_TOKEN"]
 }
 
 action "Excavate" {
   uses = "Ash258/Scoop-GithubActions@master"
   args = "Scheduled"
+  env = {
+      "GITH_EMAIL" = "youremail@email.com"
+  }
   secrets = ["GITHUB_TOKEN"]
 }
 
