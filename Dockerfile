@@ -6,6 +6,8 @@ LABEL org.label-schema.maintainer="Jakub <Ash258> Čábera <cabera.jakub@gmail.c
       org.label-schema.vcs-url="https://github.com/Ash258/Scoop-GithubActions" \
       org.label-schema.schema-version="1.0.0"
 
+ENV SCOOP_HOME /SCOOP
+
 RUN apk add --no-cache --virtual .scoop-deps git \
     && apk add hub --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     && git clone 'https://github.com/lukesampson/scoop.git' '/SCOOP'

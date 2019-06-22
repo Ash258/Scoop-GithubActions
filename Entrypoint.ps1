@@ -117,6 +117,8 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
+    Push-Location $BUCKET_ROOT
+
 $bodyS = @{
 		'body' = @"
 Scheduled comment each hour - $(Get-Date)
@@ -146,7 +148,7 @@ $HEADER = @{
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
-$global:BUCKET_FOLDER = $env:GITHUB_WORKSPACE
+$global:BUCKET_ROOT = $env:GITHUB_WORKSPACE
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
