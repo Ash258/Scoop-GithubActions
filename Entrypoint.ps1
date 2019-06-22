@@ -157,12 +157,18 @@ function Get-EnvironmentVariables {
 function Test-HashCheckFlow {
     param (
         [Parameter(Mandatory = $true)]
-        [String] $Manifest
+        [String] $Manifest,
+        [Int] $IssueID
     )
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
-    hub status
-    git status --porcelain
+    $status = git status --porcelain -uno
+    if ($status.Count -eq 1) {
+        Write-Log 'Verified'
+        # TODO: Push if possible
+        Add-Label -ID $IssueID -Label 'verified'
+        Add-Comment -ID $IssueID -Message 'You are right'
+    }
 }
 
 
@@ -199,7 +205,7 @@ function Initialize-Issue {
     switch -Wildcard ($problem) {
         '*hash check*' {
             Write-Log 'Hash check failed'
-            Test-HashCheckFlow $problematicName
+            Test-HashCheckFlow $problematicName $id
         }
         '*extact_dir*' { }
         '*download*failed*' { } # TODO:
