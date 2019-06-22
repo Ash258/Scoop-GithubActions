@@ -169,7 +169,15 @@ function Initialize-Issue {
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
 
-    Write-Host $title $id
+    $problematicName, $problematicVersion, $problem = Resolve-IssueTitle $title
+    if (($null -eq $problematicName) -or
+        ($null -eq $problematicVersion) -or
+        ($null -eq $problem)
+    ) {
+        Write-Log 'Not compatible issue title'
+    }
+
+    Write-Host $title $id $problematicName $problematicVersion $problem
 }
 
 function Initialize-PR {
