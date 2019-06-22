@@ -90,20 +90,7 @@ function Initialize-Issue {
     $table = $table -join "`r`n"
     Write-Output $table
 
-    $fileCont = Get-Content $env:GITHUB_EVENT_PATH -Raw
-    $BODY = @{
-        'body' = (@"
-Hello from github actions now should be with correct encoding
-
-$table
-
-COntent:
-
-$fileCont
-"@)
-    }
     # Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
-
 }
 
 function Initialize-PR {
@@ -111,29 +98,19 @@ function Initialize-PR {
 }
 
 function Initialize-Push {
-	Write-Log 'Push initialized'
+    Write-Log 'Push initialized'
 }
 
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    Push-Location $BUCKET_ROOT
-
-$bodyS = @{
-		'body' = @"
-Scheduled comment each hour - $(Get-Date)
-
-WORKSPACE
-$(Get-ChildItem $env:GITHUB_WORKSPACE)
-
-HOME
-$(Get-ChildItem $env:HOME)
-"@
+    $bodyS = @{
+        'body' = (@("Scheduled comment each hour - $(Get-Date)", 'WORKSPACE', "$(Get-ChildItem $env:GITHUB_WORKSPACE)") -join "`r`n")
     }
 
     Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $bodyS) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/7/comments"
 }
-# endregion Function pool
+#endregion Function pool
 
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
@@ -141,7 +118,7 @@ if ($Type -eq '__TESTS__') { return }
 $API_BASE_URl = 'https://api.github.com'
 $API_VERSION = 'v3'
 $HEADER = @{
-	'Authorization' = "token $env:GITHUB_TOKEN"
+    'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
 # Convert actual API request response to object
@@ -149,6 +126,10 @@ $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
 $global:BUCKET_ROOT = $env:GITHUB_WORKSPACE
+$global:EVENT_TYPE = $env:GITHUB_EVENT_NAME
+
+Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
+Write-Host $EVENT_TYPE -ForegroundColor DarkBlue
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
