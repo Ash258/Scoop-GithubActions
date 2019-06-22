@@ -117,7 +117,7 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    @{
+$bodyS = @{
 		'body' = @"
 Scheduled comment each 5 minute - $(Get-Date)
 
@@ -128,7 +128,8 @@ HOME
 $(Get-ChildItem $env:HOME)
 "@
     }
-    Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json @{ 'body' = "Scheduled comment each 5 minute - $(Get-Date)" }) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/7/comments"
+
+    Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $bodyS) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/7/comments"
 }
 # endregion Function pool
 
