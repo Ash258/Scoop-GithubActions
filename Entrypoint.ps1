@@ -12,7 +12,8 @@ function Resolve-IssueTitle {
         Parse issue title and return manifest name, version and problem.
     .PARAMETER Title
         Title to be parsed.
-    .EXAMPLE Resolve-IssueTitle 'recuva@2.4: hash check failed'
+    .EXAMPLE
+        Resolve-IssueTitle 'recuva@2.4: hash check failed'
     #>
     param([String] $Title)
 
@@ -22,6 +23,24 @@ function Resolve-IssueTitle {
         return $Matches.name, $Matches.version, $Matches.problem
     } else {
         return $null, $null, $null
+    }
+}
+
+function Write-Log {
+    [Parameter(Mandatory, ValueFromRemainingArguments)]
+    param ([String[]] $Message)
+
+    Write-Output ''
+    $Message | ForEach-Object { Write-Output "LOG: $_" }
+}
+
+function New-CheckListItem {
+    param ([String] $Check, [Switch] $OK)
+
+    if ($OK) {
+        return "- [x] $Check"
+    } else {
+        return "- [ ] $Check"
     }
 }
 
@@ -59,15 +78,7 @@ function Add-Comment {
 function Add-Label {
     param([Ing] $ID, [String[]] $Labels)
 
-    foreach ($label in $Labels) {
-        Write-Log $label
-    }
-}
-
-function Write-Log {
-    [Parameter(Mandatory, ValueFromRemainingArguments)]
-    param ([String[]] $Message)
-    Write-Output "`r`nLOG: $($Message -join "`r`n    ")"
+    foreach ($label in $Labels) { Write-Log $label }
 }
 
 # TODO: Rename?
@@ -96,6 +107,30 @@ function Initialize-Issue {
 
 function Initialize-PR {
     Write-Log 'PR initialized'
+
+    # TODO: Get all changed files in PR
+    # Since binaries do not return any data on success flow needs to be this:
+    # Run check with force param
+        # if error, then just
+    # git status, if changed
+    # run checkver
+    # run checkhashes
+    # run formatjson?
+
+    # TODO: Bucket
+    # & "$env:SCOOP_HOME\bin\check<>.ps1" "-App $name -Dir $BUCKET_ROOT -Force"
+    $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
+
+    $body = @{
+        'body' = (@(
+            "- [$status] Checkver functional",
+            "- [$status] Autoupdate working",
+            "- [$status] Hashes are correct",
+            "- [$status] Manifest is formatted"
+        ) -join "`r`n")
+    }
+
+    Write-Log $body.body
 }
 
 function Initialize-Push {
