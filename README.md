@@ -23,7 +23,7 @@
             1. Remove label `hash-fix-needed`
             1. Close issue
 
-Example workflow for everything you will ever need as bucket maintainer [^1].
+Example workflow for everything you will ever need as bucket maintainer.
 
 ```hcl
 workflow "Issues" {
@@ -45,7 +45,7 @@ action "IssueHandler" {
   uses = "Ash258/Scoop-GithubActions@master"
   args = "Issue"
   env = {
-      "GITH_EMAIL" = "youremail@email.com"
+      "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
   }
   secrets = ["GITHUB_TOKEN"]
 }
@@ -153,5 +153,3 @@ action "Excavate" {
     secrets = [ "GITHUB_TOKEN" ]
 }
 ```
-
-[^1]: Email is needed for pushing
