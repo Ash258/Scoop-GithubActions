@@ -1,3 +1,4 @@
+# TODO: Remove and make it automatically
 param (
     [Parameter(Mandatory)]
     [ValidateSet('Issue', 'PR', 'Push', '__TESTS__', 'Scheduled')]
@@ -15,7 +16,7 @@ function Resolve-IssueTitle {
     #>
     param([String] $Title)
 
-    $result = $Title -match "(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$"
+    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
 
     if ($result) {
         return $Matches.name, $Matches.version, $Matches.problem
@@ -121,7 +122,7 @@ $HEADER = @{
     'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
-# Convert actual API request response to object
+# Convert actual API response to object
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
@@ -133,10 +134,10 @@ Write-Host $EVENT_TYPE -ForegroundColor DarkBlue
 Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
 
 switch ($Type) {
-	'Issue' { Initialize-Issue }
-	'PR' { Initialize-PR }
-	'Push' { Initialize-Push }
-	'Scheduled' { Initialize-Scheduled }
+    'Issue' { Initialize-Issue }
+    'PR' { Initialize-PR }
+    'Push' { Initialize-Push }
+    'Scheduled' { Initialize-Scheduled }
 }
 
 # switch ($EVENT_TYPE) {
