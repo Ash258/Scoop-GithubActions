@@ -196,10 +196,14 @@ function Test-Hash {
     $status = hub status --porcelain -uno
     Write-Log "Status: $status"
 
-    if ((hub diff --name-only).Count -eq 1) {
+    $changes = hub diff --name-only
+    if (($changes).Count -eq 1) {
         Write-Log 'Verified'
 
-        # TODO: Push if possible
+        hub add "$changes"
+        hub commit -m "$Manifest`: hash check failed`r`n- Closes #$IssueID"
+        hub push origin master
+
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         Add-Comment -ID $IssueID -Message 'You are right.'
     } else {
