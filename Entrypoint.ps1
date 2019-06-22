@@ -161,14 +161,13 @@ function Get-EnvironmentVariables {
 
 
 
-function Test-ManifestHash {
-    param([String] $Manifest)
+function Test-HashCheckFlow {
+    param (
+        [Parameter(Mandatory = $true)]
+        [String] $Manifest
+    )
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
-}
-
-function Test-HashCheckFlow {
-
 }
 
 function Initialize-Issue {
@@ -195,9 +194,10 @@ function Initialize-Issue {
 
     switch -Wildcard ($problem) {
         '*hash check*' {
-            Test-ManifestHash
+            Write-Log 'Hash check failed'
+            Test-HashCheckFlow $problematicName
         }
-        '*extact_dir*' {}
+        '*extact_dir*' { }
         '*download*failed*' { } # TODO:
     }
     Write-Host $title $id $problematicName $problematicVersion $problem
