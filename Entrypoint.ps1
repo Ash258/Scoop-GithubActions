@@ -152,6 +152,18 @@ function Get-EnvironmentVariables {
     return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
+function Close-Issue {
+    <#
+    .SYNOPSIS
+        Close issue / PR.
+    .PARAMETER ID
+        ID of issue / PR.
+    #>
+    param([Int] $ID)
+
+    return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID" -Method Patch -Body @{ 'state' = 'closed' }
+}
+
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 function Test-HashCheckFlow {
@@ -162,12 +174,16 @@ function Test-HashCheckFlow {
     )
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
+
     $status = git status --porcelain -uno
     if ($status.Count -eq 1) {
         Write-Log 'Verified'
         # TODO: Push if possible
-        Add-Label -ID $IssueID -Label 'verified'
+        Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         Add-Comment -ID $IssueID -Message 'You are right'
+    } else {
+        Add-Comment -ID $IssueID -Message 'Cannot reproduce', '', "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        Close-Issue -ID $IssueID
     }
 }
 
