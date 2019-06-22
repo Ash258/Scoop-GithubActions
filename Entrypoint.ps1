@@ -140,11 +140,11 @@ if ($Type -eq '__TESTS__') { return }
 
 $API_BASE_URl = 'https://api.github.com'
 $API_VERSION = 'v3'
-$API_HEADER = "Accept: application/vnd.github.$API_VERSION+json; application/vnd.github.antiope-preview+json"
 $HEADER = @{
 	'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
+# Convert actual API request response to object
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
