@@ -224,11 +224,9 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    $bodyS = @{
+    Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/7/comments" -Method Post -Body @{
         'body' = (@("Scheduled comment each hour - $(Get-Date)", 'WORKSPACE', "$(Get-ChildItem $env:GITHUB_WORKSPACE)") -join "`r`n")
     }
-
-    Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $bodyS) -Method Post "$API_BASE_URl/repos/$REPOSITORY/issues/7/comments"
 }
 #endregion Function pool
 
