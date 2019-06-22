@@ -164,6 +164,24 @@ function Close-Issue {
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID" -Method Patch -Body @{ 'state' = 'closed' }
 }
 
+function Remove-Label {
+    <#
+    .SYNOPSIS
+        Remove label from issue / PR.
+    .PARAMETER ID
+        ID of issue / PR.
+    .PARAMETER Label
+        Array of labels to be removed.
+    #>
+    param([Int] $ID, [String[]] $Label)
+
+    $responses = @()
+    foreach ($lab in $Label) {
+        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
+    }
+
+    return $responses
+}
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -173,10 +191,6 @@ function Close-Issue {
 
 
 
-function Remove-Label {
-	param([Int] $IssueID)
-	# TODO:
-}
 
 function Test-HashCheckFlow {
     param (
@@ -202,6 +216,7 @@ function Test-HashCheckFlow {
         Write-Log 'Cannot reproduce'
 
         Add-Comment -ID $IssueID -Message 'Cannot reproduce', '', "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
     }
 }
