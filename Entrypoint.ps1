@@ -200,12 +200,17 @@ function Test-Hash {
     if (($changes).Count -eq 1) {
         Write-Log 'Verified'
 
-        hub add "$changes"
-        hub commit -m "$Manifest`: hash check failed`r`n- Closes #$IssueID"
-        hub push origin master
+        $message = 'You are right. Thanks for reporting.'
+        if ($env:GITH_EMAIL) {
+            hub add "$changes"
+            hub commit -m "$Manifest`: hash check failed`r`n- Closes #$IssueID`r`nAutomated commit by bot"
+            hub push origin master
+            $message += ''
+            $message += 'Pushed updated manifest'
+        }
 
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
-        Add-Comment -ID $IssueID -Message 'You are right.'
+        Add-Comment -ID $IssueID -Message $message
     } else {
         Write-Log 'Cannot reproduce'
 
@@ -244,6 +249,7 @@ function Initialize-Issue {
 
     if ($EVENT.action -ne 'opened') {
         Write-Log "Only action 'opened' is supported."
+        exit 0
     }
 
     $title = $EVENT.issue.title
