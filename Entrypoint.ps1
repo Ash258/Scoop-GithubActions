@@ -190,7 +190,7 @@ function Test-HashCheckFlow {
     $status = git status --porcelain -uno
     Write-Log $status
 
-    Write-Log @('', (Get-Content (Join-Path $MANIFESTS_LOCATION $Manifest) -Raw))
+    Write-Log @('', (Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw))
 
     exit 0
     if ($status.Count -eq 1) {
