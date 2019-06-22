@@ -104,10 +104,21 @@ function Add-Comment {
     #>
     param([Int] $ID, [String[]] $Message)
 
-    Write-Host $REPOSITORY
-    Write-Host $EVENT
-
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/comments" -Method Post -Body @{ 'body' = ($Message -join "`r`n") }
+}
+
+function Add-Label {
+    <#
+    .SYNOPSIS
+        Add label to issue / PR.
+    .PARAMETER ID
+        Id of issue / PR.
+    .PARAMETER Label
+        Label to be set.
+    #>
+    param([Int] $ID, [String[]] $Label)
+
+    return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" -Method Post -Body @{ 'labels' = $Label }
 }
 
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
@@ -119,12 +130,6 @@ function Add-Comment {
 
 
 
-
-function Add-Label {
-    param([Ing] $ID, [String[]] $Labels)
-
-    foreach ($label in $Labels) { Write-Log $label }
-}
 
 # TODO: Rename?
 function Initialize-Issue {
