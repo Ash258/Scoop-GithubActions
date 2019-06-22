@@ -166,7 +166,7 @@ function Close-Issue {
 }
 
 function Remove-Label {
-	<#
+    <#
     .SYNOPSIS
         Remove label from issue / PR.
     .PARAMETER ID
@@ -174,17 +174,15 @@ function Remove-Label {
     .PARAMETER Label
         Array of labels to be removed.
     #>
-	param([Int] $ID, [String[]] $Label)
+    param([Int] $ID, [String[]] $Label)
 
-	$responses = @()
-	foreach ($lab in $Label) {
-		$responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
-	}
+    $responses = @()
+    foreach ($lab in $Label) {
+        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
+    }
 
-	return $responses
+    return $responses
 }
-
-#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 function Test-Hash {
     param (
@@ -193,14 +191,9 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    Write-Log 'BEFORE' $before
-
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
 
-    Write-Log 'AFTER' $after
-    Write-Log ($after -eq $before)
-
-    $status = git status --porcelain -uno
+    $status = hub status --porcelain -uno
     Write-Log "Status: $status"
 
     if ((hub diff --name-only).Count -eq 1) {
@@ -212,11 +205,16 @@ function Test-Hash {
     } else {
         Write-Log 'Cannot reproduce'
 
-        Add-Comment -ID $IssueID -Message 'Cannot reproduce', '', "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        Add-Comment -ID $IssueID -Message @(
+            'Cannot reproduce',
+            '',
+            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        )
         Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
     }
 }
+#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
 
@@ -240,10 +238,9 @@ function Initialize-Issue {
 
     Write-log "ACTION: $($EVENT.action)"
 
-    # TODO: Uncomment before release / after proper debug
-    # if ($EVENT.action -ne 'opened') {
-    #     Write-Log "Only action 'opened' is supported."
-    # }
+    if ($EVENT.action -ne 'opened') {
+        Write-Log "Only action 'opened' is supported."
+    }
 
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
