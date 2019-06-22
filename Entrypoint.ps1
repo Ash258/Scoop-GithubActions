@@ -166,6 +166,18 @@ function Close-Issue {
 
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
+
+
+
+
+
+
+
+function Remove-Label {
+	param([Int] $IssueID)
+	# TODO:
+}
+
 function Test-HashCheckFlow {
     param (
         [Parameter(Mandatory = $true)]
@@ -178,6 +190,9 @@ function Test-HashCheckFlow {
     $status = git status --porcelain -uno
     Write-Log $status
 
+    Write-Log @('', (Get-Content (Join-Path $MANIFESTS_LOCATION $Manifest) -Raw))
+
+    exit 0
     if ($status.Count -eq 1) {
         Write-Log 'Verified'
 
