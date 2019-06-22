@@ -154,13 +154,6 @@ function Get-EnvironmentVariables {
 
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
-
-
-
-
-
-
-
 function Test-HashCheckFlow {
     param (
         [Parameter(Mandatory = $true)]
@@ -168,7 +161,18 @@ function Test-HashCheckFlow {
     )
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
+    hub status
+    git status --porcelain
 }
+
+
+
+
+
+
+
+
+
 
 function Initialize-Issue {
     Write-Log 'Issue initialized'
