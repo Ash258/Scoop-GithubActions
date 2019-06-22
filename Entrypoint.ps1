@@ -82,12 +82,14 @@ function Invoke-GithubRequest {
         # Authorization token is neeeded for posting comments and to increase limit of requests
         'Authorization' = "token $env:GITHUB_TOKEN"
     }
-
     $parameters = @{
         'Headers' = $headers
         'Method'  = $Method
         'Uri'     = "$api_base_url/$Query"
     }
+
+    Write-Debug $parameters.Uri
+
     if ($Body) { $parameters.Add('Body', (ConvertTo-Json $Body -Depth 8 -Compress)) }
 
     return Invoke-WebRequest @parameters
