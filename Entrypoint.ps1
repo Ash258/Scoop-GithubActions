@@ -176,12 +176,17 @@ function Test-HashCheckFlow {
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
 
     $status = git status --porcelain -uno
+    Write-Log $status
+
     if ($status.Count -eq 1) {
         Write-Log 'Verified'
+
         # TODO: Push if possible
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         Add-Comment -ID $IssueID -Message 'You are right'
     } else {
+        Write-Log 'Cannot reproduce'
+
         Add-Comment -ID $IssueID -Message 'Cannot reproduce', '', "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
         Close-Issue -ID $IssueID
     }
