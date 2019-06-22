@@ -2,6 +2,20 @@
 
 # Github actions for scoop buckets
 
+## Implemented actions
+
+## Issues (`Issues | IssueHandler`)
+
+1. Hash checks failed
+    1. When new issues is created with name (`<manifest>@<version>: hash check failed`)
+    1. checkhashes binary will be executed
+        1. There were updates
+            1. Create new Pull request with updated manifest
+            1. Comment on issue
+            1. If there is already such PR, just update its description for Closing directive
+        1. No updates
+            1. Comment and close issue
+
 Example workflow for everything.
 
 Email is needed for pushing
