@@ -119,7 +119,7 @@ function Initialize-Scheduled {
 
 $bodyS = @{
 		'body' = @"
-Scheduled comment each 5 minute - $(Get-Date)
+Scheduled comment each hour - $(Get-Date)
 
 WORKSPACE
 $(Get-ChildItem $env:GITHUB_WORKSPACE)
@@ -146,6 +146,7 @@ $HEADER = @{
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # user/repo
 $global:REPOSITORY = $env:GITHUB_REPOSITORY
+$global:BUCKET_FOLDER = $env:GITHUB_WORKSPACE
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
