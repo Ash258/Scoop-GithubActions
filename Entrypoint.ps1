@@ -193,11 +193,9 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    $before = Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw
     Write-Log 'BEFORE' $before
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
-    $after = Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw
 
     Write-Log 'AFTER' $after
     Write-Log ($after -eq $before)
@@ -205,9 +203,7 @@ function Test-Hash {
     $status = git status --porcelain -uno
     Write-Log "Status: $status"
 
-    Write-Log @('', (Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw))
-
-    if ($status -and $status.Count -eq 1) {
+    if ((hub diff --name-only).Count -eq 1) {
         Write-Log 'Verified'
 
         # TODO: Push if possible
@@ -326,6 +322,7 @@ function Initialize-Scheduled {
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
 
+New-Item '/root/scoop/cache' -Force | Out-Null
 Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 
 switch ($Type) {
