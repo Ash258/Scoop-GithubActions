@@ -123,6 +123,9 @@ function Initialize-PR {
 
     $body = @{
         'body' = (@(
+            "- Properties",
+            "    - [$status] Description",
+            "    - [$status] License",
             "- [$status] Checkver functional",
             "- [$status] Autoupdate working",
             "- [$status] Hashes are correct",
@@ -148,25 +151,31 @@ function Initialize-Scheduled {
 }
 #endregion Function pool
 
+#region Main
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
 
 $API_BASE_URl = 'https://api.github.com'
-$API_VERSION = 'v3'
 $HEADER = @{
     'Authorization' = "token $env:GITHUB_TOKEN"
 }
 
 # Convert actual API response to object
 $global:EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
-# user/repo
-$global:REPOSITORY = $env:GITHUB_REPOSITORY
-$global:BUCKET_ROOT = $env:GITHUB_WORKSPACE
+# Event type for automatic handler detection
 $global:EVENT_TYPE = $env:GITHUB_EVENT_NAME
+# user/repo format
+$global:REPOSITORY = $env:GITHUB_REPOSITORY
+# Location of bucket
+$global:BUCKET_ROOT = $env:GITHUB_WORKSPACE
 
-Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
-Write-Host $EVENT_TYPE -ForegroundColor DarkBlue
+# Backward compatability for manifests inside root of repository
+$nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
+$global:MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+
 Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
+Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
+Write-Host $MANIFESTS_LOCATION -ForegroundColor DarkBlue
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
@@ -181,3 +190,4 @@ switch ($Type) {
 # 	'push' { Initialize-Push }
 # 	'schedule' { Initialize-Scheduled }
 # }
+#endregion Main
