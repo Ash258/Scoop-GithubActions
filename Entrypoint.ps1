@@ -193,7 +193,14 @@ function Test-Hash {
         [Int] $IssueID
     )
 
+    $before = Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw
+    Write-Log 'BEFORE' $before
+
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
+    $after = Get-Content (Join-Path $MANIFESTS_LOCATION "$Manifest.json") -Raw
+
+    Write-Log 'AFTER' $after
+    Write-Log ($after -eq $before)
 
     $status = git status --porcelain -uno
     Write-Log "Status: $status"
