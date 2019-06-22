@@ -12,10 +12,11 @@ RUN apk add --no-cache --virtual .scoop-deps git p7zip \
     && apk add hub --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     && git clone 'https://github.com/lukesampson/scoop.git' '/SCOOP'
 
+COPY Entrypoint.ps1 /
+
 # Debug:
-# COPY Entrypoint.ps1 /
 # COPY LocalTestEnvironment.ps1 /
 # COPY cosi.json /
 # ENTRYPOINT [ "pwsh" ]
 
-ENTRYPOINT [ "pwsh", "/Entrypoint.ps1" ]
+ENTRYPOINT [ "pwsh", "-File", "/Entrypoint.ps1" ]
