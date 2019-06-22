@@ -125,9 +125,20 @@ function Add-Label {
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" -Method Post -Body @{ 'labels' = $Label }
 }
 
+function Get-AllChangedFilesInPR {
+    <#
+    .SYNOPSIS
+        Get list of all changed files inside pull request.
+    .PARAMETER ID
+        ID of pull request.
+    #>
+    param([Int] $ID)
+
+    $files = (Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls/$ID/files").Content | ConvertFrom-Json
+    return $files | Select-Object -Property filename, status
+}
+
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
-
-
 
 
 
@@ -209,16 +220,15 @@ function Initialize-Scheduled {
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
 
-Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
-Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
-Write-Host $MANIFESTS_LOCATION -ForegroundColor DarkBlue
-
 switch ($Type) {
     'Issue' { Initialize-Issue }
     'PR' { Initialize-PR }
     'Push' { Initialize-Push }
     'Scheduled' { Initialize-Scheduled }
 }
+
+Write-Host $EVENT_TYPE -f DarkRed
+Write-Host $MANIFESTS_LOCATION -f DarkRed
 
 # switch ($EVENT_TYPE) {
 # 	'issues' { Initialize-Issue }
