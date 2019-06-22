@@ -133,8 +133,15 @@ Write-Host $EVENT_TYPE -ForegroundColor DarkBlue
 Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
 
 switch ($Type) {
-    'Issue' { Initialize-Issue }
-    'PR' { Initialize-PR }
-    'Push' { Initialize-Push }
-    'Scheduled' { Initialize-Scheduled }
+	'Issue' { Initialize-Issue }
+	'PR' { Initialize-PR }
+	'Push' { Initialize-Push }
+	'Scheduled' { Initialize-Scheduled }
 }
+
+# switch ($EVENT_TYPE) {
+# 	'issues' { Initialize-Issue }
+# 	'pull_requests' { Initialize-PR }
+# 	'push' { Initialize-Push }
+# 	'schedule' { Initialize-Scheduled }
+# }
