@@ -6,19 +6,24 @@
 
 ## Issues (`Issues | IssueHandler`)
 
-1. Hash checks failed
-    1. When new issues is created with name (`<manifest>@<version>: hash check failed`)
-    1. checkhashes binary will be executed
-        1. There were updates
-            1. Create new Pull request with updated manifest
-            1. Comment on issue
-            1. If there is already such PR, just update its description for Closing directive
-        1. No updates
-            1. Comment and close issue
+- Hash check fails
+    1. Run checkhashes and check if there were some changes
+        1. Yes
+            1. List newest pull requests with name `<manifest>: Hash fix`
+                1. If there are some
+                    1. Select the latest one
+                    1. Update PR description with closing directive of new issue
+                    1. Comment on issue about this PR
+                1. If none
+                    1. Create new branch `<manifest>-hash-fix-<random>`
+                    1. Commit changes
+                    1. Create new PR
+        1. No
+            1. Comment on issue about hashes being right
+            1. Remove label `hash-fix-needed`
+            1. Close issue
 
-Example workflow for everything.
-
-Email is needed for pushing
+Example workflow for everything you will ever need as bucket maintainer [^1].
 
 ```hcl
 workflow "Issues" {
@@ -148,3 +153,5 @@ action "Excavate" {
     secrets = [ "GITHUB_TOKEN" ]
 }
 ```
+
+[^1]: Email is needed for pushing
