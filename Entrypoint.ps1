@@ -324,6 +324,13 @@ function Initialize-Scheduled {
 if ($Type -eq '__TESTS__') { return }
 
 New-Item '/root/scoop/cache' -Force | Out-Null
+
+if (-not ($env:GITH_EMAIL)) {
+    Write-Log 'Pushing is not possible without email environment'
+}
+git config --global user.email $env:GITH_EMAIL
+git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+
 Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 
 switch ($Type) {
