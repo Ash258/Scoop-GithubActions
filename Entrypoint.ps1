@@ -200,13 +200,33 @@ function Test-Hash {
     if (($changes).Count -eq 1) {
         Write-Log 'Verified'
 
-        $message = 'You are right. Thanks for reporting.'
-        if ($env:GITH_EMAIL) {
-            hub add "$changes"
-            hub commit -m "$Manifest`: hash check failed`r`n- Closes #$IssueID`r`nAutomated commit by bot"
-            hub push origin master
+        $message = @('You are right. Thanks for reporting.')
+        $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
+        $prs = $prs | Where-Object { $_.title -ceq "$Manifest`: Hash fix" }
+
+        # There is alreay PR for
+        if ($prs.Count -gt 0) {
+            # Only take latest updated
+            $pr = $prs | Select-Object  -First 1
+            $prID = $pr.number
+            $prBody = $pr.Body
+
             $message += ''
-            $message += 'Pushed updated manifest'
+            $message += "There is already pull request to fix this issue. (#$prID)"
+
+            # Update PR description
+            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{
+                "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n")
+            }
+        } else {
+            $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
+            hub checkout -B $branch
+
+            hub add $changes
+            hub commit -m "${Manifest}: hash fix"
+            hub push origin $branch
+
+            hub pull-request -m "$Manifest`: Hash fix" -m "- Closes #$IssueID" -b 'master' -h "$branch"
         }
 
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
