@@ -161,10 +161,25 @@ function Get-EnvironmentVariables {
 
 
 
+function Test-ManifestHash {
+    param([String] $Manifest)
 
+    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force
+}
+
+function Test-HashCheckFlow {
+
+}
 
 function Initialize-Issue {
     Write-Log 'Issue initialized'
+
+    Write-log "ACTION: $($EVENT.action)"
+
+    # if ($EVENT.action -ne 'opened') {
+    if ($EVENT.action -ne 'opened' -or $EVENT.action -ne 'reopened' ) { # TODO: Delete temporary debug
+        Write-Log "Only action 'opened' is supported."
+    }
 
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
@@ -175,8 +190,16 @@ function Initialize-Issue {
         ($null -eq $problem)
     ) {
         Write-Log 'Not compatible issue title'
+        exit 0
     }
 
+    switch -Wildcard ($problem) {
+        '*hash check*' {
+            Test-ManifestHash
+        }
+        '*extact_dir*' {}
+        '*download*failed*' { } # TODO:
+    }
     Write-Host $title $id $problematicName $problematicVersion $problem
 }
 
