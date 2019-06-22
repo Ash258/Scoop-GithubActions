@@ -241,7 +241,12 @@ function Test-Hash {
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
 
-            hub pull-request -m "${Manifest}: Hash fix" -m "- Closes #$IssueID" -b 'master' -h "$branch"
+            Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
+                'title' = "${Manifest}: Hash fix"
+                'head'  = $branch
+                'base'  = 'master'
+                'body'  = "- Closes #$IssueID"
+            }
         }
 
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
