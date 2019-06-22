@@ -130,6 +130,7 @@ $global:EVENT_TYPE = $env:GITHUB_EVENT_NAME
 
 Write-Host $env:GITHUB_EVENT_NAME -ForegroundColor DarkRed
 Write-Host $EVENT_TYPE -ForegroundColor DarkBlue
+Write-Host $env:SCOOP_HOME -ForegroundColor DarkBlue
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
