@@ -164,7 +164,7 @@ function Get-EnvironmentVariables {
 function Test-ManifestHash {
     param([String] $Manifest)
 
-    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force
+    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Force -UseCache
 }
 
 function Test-HashCheckFlow {
