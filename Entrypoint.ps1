@@ -50,6 +50,18 @@ function Write-Log {
     $Message | ForEach-Object { Write-Output "LOG: $_" }
 }
 
+function Initialize-NeededSettings {
+    New-Item '/root/scoop/cache' -Force | Out-Null
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if (-not ($env:GITH_EMAIL)) {
+        Write-Log 'Pushing is not possible without email environment'
+    } else {
+        git config --global user.email $env:GITH_EMAIL
+    }
+
+    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+}
+
 function New-CheckListItem {
     <#
     .SYNOPSIS
@@ -202,23 +214,26 @@ function Test-Hash {
 
         $message = @('You are right. Thanks for reporting.')
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        $prs = $prs | Where-Object { $_.title -ceq "$Manifest`: Hash fix" }
+        $prs = $prs | Where-Object { $_.title -ceq "${Manifest}: Hash fix" }
 
         # There is alreay PR for
         if ($prs.Count -gt 0) {
+            Write-Log 'PR - No same opened PRs'
+
             # Only take latest updated
             $pr = $prs | Select-Object  -First 1
             $prID = $pr.number
             $prBody = $pr.Body
+            # TODO: Additional checks if this PR is really fixing same issue
 
             $message += ''
             $message += "There is already pull request to fix this issue. (#$prID)"
 
             # Update PR description
-            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{
-                "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n")
-            }
+            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
         } else {
+            Write-Log 'PR - Create new branch'
+
             $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             hub checkout -B $branch
 
@@ -226,7 +241,7 @@ function Test-Hash {
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
 
-            hub pull-request -m "$Manifest`: Hash fix" -m "- Closes #$IssueID" -b 'master' -h "$branch"
+            hub pull-request -m "${Manifest}: Hash fix" -m "- Closes #$IssueID" -b 'master' -h "$branch"
         }
 
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
@@ -292,7 +307,6 @@ function Initialize-Issue {
         '*extact_dir*' { }
         '*download*failed*' { }
     }
-    Write-Host $title $id $problematicName $problematicVersion $problem
 }
 
 function Initialize-PR {
@@ -349,15 +363,7 @@ function Initialize-Scheduled {
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
 
-New-Item '/root/scoop/cache' -Force | Out-Null
-
-if (-not ($env:GITH_EMAIL)) {
-    Write-Log 'Pushing is not possible without email environment'
-}
-git config --global user.email $env:GITH_EMAIL
-git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-
-Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+Initialize-NeededSettings
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
@@ -365,9 +371,6 @@ switch ($Type) {
     'Push' { Initialize-Push }
     'Scheduled' { Initialize-Scheduled }
 }
-
-Write-Host $EVENT_TYPE -f DarkRed
-Write-Host $MANIFESTS_LOCATION -f DarkRed
 
 # switch ($EVENT_TYPE) {
 # 	'issues' { Initialize-Issue }
