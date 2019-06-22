@@ -176,10 +176,10 @@ function Initialize-Issue {
 
     Write-log "ACTION: $($EVENT.action)"
 
+    # TODO: Uncomment before release / after proper debug
     # if ($EVENT.action -ne 'opened') {
-    if ($EVENT.action -ne 'opened' -or $EVENT.action -ne 'reopened' ) { # TODO: Delete temporary debug
-        Write-Log "Only action 'opened' is supported."
-    }
+    #     Write-Log "Only action 'opened' is supported."
+    # }
 
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
