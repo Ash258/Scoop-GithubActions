@@ -44,15 +44,18 @@ When any of action failed comment and add label
 
 ## Excavator
 
+This is not real replacement of excavator. (Until i resolve how to store logs somehow)
 Should work:
 
 ```HCL
 workflow "Excavator" {
-    on = "schedule(@every 1h)"
+    on = "schedule(0 * * * *)"
     resolves = "Excavate"
 }
 
 action "Excavate" {
-    "use" = "ScoopInstaller/Excavator@master" # Create custom excavator
+    use = "Ash258/Scoop-GithubActions@master"
+    args = [ "Schedule" ]
+    secrets = [ "GITHUB_TOKEN" ]
 }
 ```
