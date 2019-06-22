@@ -148,6 +148,10 @@ function Get-AllChangedFilesInPR {
     return $files | Select-Object -Property filename, status
 }
 
+function Get-EnvironmentVariables {
+    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+}
+
 # ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -162,20 +166,10 @@ function Initialize-Issue {
     # TODO: Test listing of /github/workspace ...
 
     # Only continue if new issue is created
-    if ($EVENT.action -ne 'opened') {
-        Write-Log 'Every issues action except ''opened'' are ignored.'
-        exit 0
-    }
-    $envs = [Environment]::GetEnvironmentVariables().Keys
-    $table = @()
-    $table += '| Name | Value |'
-    $table += '| :--- | :--- |'
-    $envs | ForEach-Object {
-        $table += "| $_ | $([Environment]::GetEnvironmentVariable($_))|"
-    }
-
-    $table = $table -join "`r`n"
-    Write-Output $table
+    # if ($EVENT.action -ne 'opened') {
+    #     Write-Log 'Only ''opened'' action is supported.'
+    #     exit 0
+    # }
 
     # Invoke-WebRequest -Headers $HEADER -Body (ConvertTo-Json $BODY -Depth 8 -Compress) -Method Post "$API_BASE_URl/repos/Ash258/GithubActionsBucketForTesting/issues/5/comments"
 }
@@ -185,36 +179,36 @@ function Initialize-PR {
     .SYNOPSIS
         Handle pull requests actions.
     #>
-	Write-Log 'PR initialized'
+    Write-Log 'PR initialized'
 
-	# TODO: Get all changed files in PR
-	# Since binaries do not return any data on success flow needs to be this:
-	# Run check with force param
-	# if error, then just
-	# git status, if changed
-	# run checkver
-	# run checkhashes
-	# run formatjson?
+    # TODO: Get all changed files in PR
+    # Since binaries do not return any data on success flow needs to be this:
+    # Run check with force param
+    # if error, then just
+    # git status, if changed
+    # run checkver
+    # run checkhashes
+    # run formatjson?
 
     $EVENT | Format-Table | Out-String
     # $checksStatus = @()
 
     # & "$env:SCOOP_HOME\bin\checkver.ps1"
-	# $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
+    # $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
 
-	# $body = @{
-	# 	'body' = (@(
-	# 			"- Properties",
-	# 			"    - [$status] Description",
-	# 			"    - [$status] License",
-	# 			"- [$status] Checkver functional",
-	# 			"- [$status] Autoupdate working",
-	# 			"- [$status] Hashes are correct",
-	# 			"- [$status] Manifest is formatted"
-	# 		) -join "`r`n")
-	# }
+    # $body = @{
+    # 	'body' = (@(
+    # 			"- Properties",
+    # 			"    - [$status] Description",
+    # 			"    - [$status] License",
+    # 			"- [$status] Checkver functional",
+    # 			"- [$status] Autoupdate working",
+    # 			"- [$status] Hashes are correct",
+    # 			"- [$status] Manifest is formatted"
+    # 		) -join "`r`n")
+    # }
 
-	# Write-Log $body.body
+    # Write-Log $body.body
 }
 
 function Initialize-Push {
@@ -233,6 +227,8 @@ function Initialize-Scheduled {
 #region Main
 # For dot sourcing whole file inside tests
 if ($Type -eq '__TESTS__') { return }
+
+Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
