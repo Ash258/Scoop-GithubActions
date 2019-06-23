@@ -304,12 +304,13 @@ function Test-ExtractDir {
 	$message += '<details>'
 	$message += '<summary> List of files inside archives</summary>'
 
+    Write-Log ($manifest | Out-String)
     # TODO: Both architectures
 	$urls = url $manifest '64bit'
 	$extract_dirs = extract_dir $manifest '64bit'
 
-	Write-Log 'URLs:', $urls
-	Write-Log 'Directories:', $extract_dirs
+	Write-Log $urls
+	Write-Log $extract_dirs
 
 	# foreach ($url in $urls) {
 	# 	dl_with_cache $app $version $url $null $manifest.cookie $true
