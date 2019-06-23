@@ -59,6 +59,9 @@ function Initialize-NeededSettings {
         git config --global user.email $env:GITH_EMAIL
     }
 
+    # Load all scoop's modules
+    Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
+
     Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 }
 
@@ -280,7 +283,13 @@ function Test-Hash {
 
 
 
+function Test-ExtractDir {
+    param([String] $Manifest, [Int] $IssueID)
 
+    # Load manifest
+    # Get extract_dir property
+    # use `7z l` and do some regerx magic? or just some like compares
+}
 
 function Initialize-Issue {
     Write-Log 'Issue initialized'
@@ -309,7 +318,10 @@ function Initialize-Issue {
             Write-Log 'Hash check failed'
             Test-Hash $problematicName $id
         }
-        '*extact_dir*' { }
+        '*extract_dir*' {
+            Write-Log 'Hash check failed'
+            Test-ExtractDir $problematicName $id
+        }
         '*download*failed*' { }
     }
 }
