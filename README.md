@@ -85,7 +85,7 @@ git clone 'https://github.com/Ash258/GithubActionsBucketForTesting.git' '/github
 # Uncomment debug entries in Dockerfile
 ```
 
-Execute `docker build .; docker run -ti <idOfNewContainer>` and inside container `LocalTestEnvironment.ps1; . /Entrypoint.ps1 __TESTS__`
+Execute `docker run -ti (((docker build -q .) -split ':')[1])`.
 
 ## Issues
 

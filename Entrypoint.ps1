@@ -296,34 +296,46 @@ function Test-ExtractDir {
     # Load manifest
     $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
-    # Get extract_dir property
-    # Download all files
-    # test with use `7z l` and do some regerx magic? or just some like compares
-
-    $message = @('You are right. Thanks for reporting', '')
-    $message += '<details>'
-    $message += '<summary> List of files inside archives</summary>'
 
     # TODO: Both architectures
-    # if ($manifest.architecture)
+    # if ($manifest.architecture) {
+    # foreach ($arch in ('64bit','32bit')) {}
+    # }
     $version = 'EXTRACT_DIR'
     $urls = @(url $manifest_o '64bit')
     $extract_dirs = @(extract_dir $manifest_o '64bit')
 
-    Write-Log $urls
-    Write-Log $extract_dirs
-
     for ($i = 0; $i -lt $urls.Count; ++$i) {
+        $message = @()
         $url = $urls[$i]
         $dir = $extract_dirs[$i]
         dl_with_cache $Manifest $version $url $null $manifest_o.cookie $true
-        $cached = cache_path $Manifest $version $url
-        Test-Path $cached
-        Write-Log 'FILEPATH:' $cached
 
+        $cached = cache_path $Manifest $version $url | Resolve-Path | Select-Object -ExpandProperty Path
+        Write-Log "FILEPATH: $cached"
+
+        $full_output = @(7z l $cached)
         $output = @(7z l $cached -ir!"$dir")
 
-        $output | Select-Object -Last 1
+        $infoLine = $output | Select-Object -Last 1
+        $status = $infoLine -match '(?<files>\d+)\s+files(,\s+(?<folders>\d+)\s+folders)?'
+        if ($status) {
+            $files = $Matches.files
+            $folders = $Matches.folders
+        }
+
+        # There are no files and folders like
+        if ($files -eq 0 -and (!$folders -or $folders -eq 0)) {
+            Write-Log 'No folder'
+            $message += "You are right. There is no folder ``$dir`` inside <$url>"
+            $message += ''
+            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
+        } else {
+            $message += "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest```r`n"
+            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
+        }
+        Write-host $message -F DarkRed
+        # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
     }
 
     $message += '</details>'
