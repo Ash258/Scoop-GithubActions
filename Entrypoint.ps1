@@ -343,7 +343,7 @@ function Initialize-Issue {
 			Test-Hash $problematicName $id
 		}
 		'*extract_dir*' {
-			Write-Log 'Hash check failed'
+			Write-Log 'Extract dir error'
 			Test-ExtractDir $problematicName $id
 		}
 		'*download*failed*' { }
