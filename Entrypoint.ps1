@@ -51,7 +51,7 @@ function Write-Log {
 }
 
 function Initialize-NeededSettings {
-    New-Item '/root/scoop/cache' -Force -ItemType Directory | Out-Null
+    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     if (-not ($env:GITH_EMAIL)) {
         Write-Log 'Pushing is not possible without email environment'
@@ -313,12 +313,17 @@ function Test-ExtractDir {
     Write-Log $urls
     Write-Log $extract_dirs
 
-    foreach ($url in $urls) {
+    for ($i = 0; $i -lt $urls.Count; ++$i) {
+        $url = $urls[$i]
+        $dir = $extract_dirs[$i]
         dl_with_cache $Manifest $version $url $null $manifest_o.cookie $true
         $cached = cache_path $Manifest $version $url
+        Test-Path $cached
         Write-Log 'FILEPATH:' $cached
 
-        7z l $cached
+        $output = @(7z l $cached -ir!"$dir")
+
+        $output | Select-Object -Last 1
     }
 
     $message += '</details>'
