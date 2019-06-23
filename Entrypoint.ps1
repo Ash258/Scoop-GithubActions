@@ -304,10 +304,14 @@ function Test-ExtractDir {
 	$message += '<details>'
 	$message += '<summary> List of files inside archives</summary>'
 
-    Write-Log ($manifest | Out-String)
-    # TODO: Both architectures
+	# TODO: Both architectures
+    # if ($manifest.architecture)
 	$urls = url $manifest '64bit'
+	url $manifest '64bit'
+	$urls
 	$extract_dirs = extract_dir $manifest '64bit'
+    $extract_dirs
+    extract_dir $manifest '64bit'
 
 	Write-Log $urls
 	Write-Log $extract_dirs
