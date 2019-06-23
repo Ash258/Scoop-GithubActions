@@ -60,6 +60,7 @@ function Initialize-NeededSettings {
 	}
 
 	# Load all scoop's modules
+	Write-Log 'Importing all modules'
 	Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
 	Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
@@ -287,20 +288,21 @@ function Test-ExtractDir {
 	param([String] $Manifest, [Int] $IssueID)
 
 	# Load manifest
-	$manifest = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname | Get-Content -Raw | ConvertFrom-Json
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest = Get-Content $manifest_path -Raw | ConvertFrom-Json
 	# Get extract_dir property
 	# Download all files
 	# test with use `7z l` and do some regerx magic? or just some like compares
 
-    $message = @('You are right. Thanks for reporting', '')
-    $message += '<details>'
-    $message += '<summary> List of files inside archives</summary>'
+	$message = @('You are right. Thanks for reporting', '')
+	$message += '<details>'
+	$message += '<summary> List of files inside archives</summary>'
 
-    $urls = url $manifest $architecture
-    $extract_dirs = extract_dir $manifest $architecture
+	$urls = url $manifest $architecture
+	$extract_dirs = extract_dir $manifest $architecture
 
-    Write-Log 'URLs:', $urls
-    Write-Log 'Directories:', $extract_dirs
+	Write-Log 'URLs:', $urls
+	Write-Log 'Directories:', $extract_dirs
 
 	# foreach ($url in $urls) {
 	# 	dl_with_cache $app $version $url $null $manifest.cookie $true
