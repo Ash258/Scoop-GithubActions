@@ -278,7 +278,7 @@ function New-DetailsCommentString {
     #>
     param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
 
-	return @"
+    return @"
 <details>
     <summary>$Summary</summary>
 
@@ -310,52 +310,64 @@ function Test-ExtractDir {
     # Load manifest
     $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
-
-    # TODO: Both architectures
-    # if ($manifest.architecture) {
-    # foreach ($arch in ('64bit','32bit')) {}
-    # }
-    $version = 'EXTRACT_DIR'
-    $urls = @(url $manifest_o '64bit')
-    $extract_dirs = @(extract_dir $manifest_o '64bit')
     $message = @()
+    $failed = $false
 
-    for ($i = 0; $i -lt $urls.Count; ++$i) {
-        $url = $urls[$i]
-        $dir = $extract_dirs[$i]
-        dl_with_cache $Manifest $version $url $null $manifest_o.cookie $true
+    if ($manifest.architecture) {
+        $version = 'EXTRACT_DIR'
 
-        $cached = cache_path $Manifest $version $url | Resolve-Path | Select-Object -ExpandProperty Path
-        Write-Log "FILEPATH: $cached"
+        foreach ($arch in @('64bit', '32bit')) {
+            $urls = @(url $manifest_o $arch)
+            $extract_dirs = @(extract_dir $manifest_o $arch)
 
-        $full_output = @(7z l $cached)
-        $output = @(7z l $cached -ir!"$dir")
+            Write-Log $urls
+            Write-Log $extract_dirs
 
-        $infoLine = $output | Select-Object -Last 1
-        $status = $infoLine -match '(?<files>\d+)\s+files(,\s+(?<folders>\d+)\s+folders)?'
-        if ($status) {
-            $files = $Matches.files
-            $folders = $Matches.folders
+            for ($i = 0; $i -lt $urls.Count; ++$i) {
+                $url = $urls[$i]
+                $dir = $extract_dirs[$i]
+                dl_with_cache $Manifest $version $url $null $manifest_o.cookie $true
+
+                $cached = cache_path $Manifest $version $url | Resolve-Path | Select-Object -ExpandProperty Path
+                Write-Log "FILEPATH $url, ${arch}: $cached"
+
+                $full_output = @(7z l $cached)
+                $output = @(7z l $cached -ir!"$dir")
+
+                $infoLine = $output | Select-Object -Last 1
+                $status = $infoLine -match '(?<files>\d+)\s+files(,\s+(?<folders>\d+)\s+folders)?'
+                if ($status) {
+                    $files = $Matches.files
+                    $folders = $Matches.folders
+                }
+
+                # There are no files and folders like
+                if ($files -eq 0 -and (!$folders -or $folders -eq 0)) {
+                    Write-Log "No $dir in $url"
+
+                    $failed = $true
+                    $message += New-DetailsCommentString -Summary "Content of $arch $url" -Content $full_output
+                } else {
+                    Write-Log "Cannot reproduce $arch $url"
+
+                    Write-Log "$arch ${url}:"
+                    Write-Log $full_output
+                }
+                # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
+            }
         }
-
-        # There are no files and folders like
-        if ($files -eq 0 -and (!$folders -or $folders -eq 0)) {
-            Write-Log 'No folder'
-            $message += "You are right. There is no folder ``$dir`` inside <$url>"
-            $message += ''
-            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
-
-            Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
-        } else {
-            $message += "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest```r`n"
-            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
-
-            Close-Issue -ID $IssueID
-        }
-        # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
     }
 
-    Add-Comment -ID $IssueID -Message $message
+    if ($failed) {
+        $message = "You are right.", '', $message
+        # Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
+    } else {
+        $message = "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        $message += ''
+        $message += 'See action log for more info'
+    }
+
+    # Add-Comment -ID $IssueID -Message $message
 }
 
 function Initialize-Issue {
