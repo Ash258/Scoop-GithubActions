@@ -265,13 +265,15 @@ function Test-Hash {
 }
 
 function New-DetailsCommentString {
-    param([String] $Summary, [String[]] $Content)
+    param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
 
-    return @"
+	return @"
 <details>
     <summary>$Summary</summary>
+``````$Type
 $($Content -join "`r`n")
 </details>
+``````
 "@
 }
 
@@ -329,7 +331,7 @@ function Test-ExtractDir {
             Write-Log 'No folder'
             $message += "You are right. There is no folder ``$dir`` inside <$url>"
             $message += ''
-            $message += New-DetailsCommentString -Summary "Content of $url" -Content @('```test', $full_output, '```')
+            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
 
             Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed'
         } else {
