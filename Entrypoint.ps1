@@ -295,7 +295,7 @@ function Test-ExtractDir {
 
 	# Load manifest
 	$manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname
-	$manifest = Get-Content $manifest_path -Raw | ConvertFrom-Json
+	$manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 	# Get extract_dir property
 	# Download all files
 	# test with use `7z l` and do some regerx magic? or just some like compares
@@ -306,12 +306,15 @@ function Test-ExtractDir {
 
 	# TODO: Both architectures
     # if ($manifest.architecture)
-	$urls = url $manifest '64bit'
-	url $manifest '64bit'
+	$urls = url $manifest_o '64bit'
+    $extract_dirs = extract_dir $manifest_o '64bit'
+
+    Write-Log '********'
 	$urls
-	$extract_dirs = extract_dir $manifest '64bit'
+	url $manifest_o '64bit'
     $extract_dirs
-    extract_dir $manifest '64bit'
+    extract_dir $manifest_o '64bit'
+    Write-Log '********'
 
 	Write-Log $urls
 	Write-Log $extract_dirs
