@@ -4,7 +4,7 @@
 
 ## Implemented actions
 
-## Issues (`Issues | IssueHandler`)
+### Issues (`Issues | IssueHandler`)
 
 - Hash check fails
     1. Run checkhashes and check if there were some changes
