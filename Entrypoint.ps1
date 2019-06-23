@@ -329,12 +329,13 @@ function Test-ExtractDir {
             Write-Log 'No folder'
             $message += "You are right. There is no folder ``$dir`` inside <$url>"
             $message += ''
-            $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
+            $message += New-DetailsCommentString -Summary "Content of $url" -Content @('```test', $full_output, '```')
+
+            Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed'
         } else {
             $message += "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest```r`n"
             $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
         }
-        Write-host $message -F DarkRed
         # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
     }
 
