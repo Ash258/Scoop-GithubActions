@@ -307,6 +307,7 @@ function Test-ExtractDir {
 	$urls = url $manifest $architecture
 	$extract_dirs = extract_dir $manifest $architecture
 
+	Write-Log (url @{ 'url' = 'beta' } '64')
 	Write-Log 'URLs:', $urls
 	Write-Log 'Directories:', $extract_dirs
 
