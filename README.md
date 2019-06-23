@@ -72,13 +72,20 @@ action "Excavate" {
 
 ## How to debug locally
 
+Save this snippet as `LocalTestEnvironment.ps1`
+
 ```powershell
-$env:GITHUB_TOKEN = '<yourtoken>'
-$env:GITHUB_EVENT_PATH = "<repo_root>\cosi.json"
-.\Entrypoint.ps1 <Type>
 # Try to avoid all real requests into repository
 #    but GithubActionsBucketForTesting so feel free to do whatever you want with this repo
+[System.Environment]::SetEnvironmentVariable('GITHUB_TOKEN', '<yourtoken>', 'Process')
+[System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_PATH', "$PSScriptRoot\cosi.json", 'Process')
+[System.Environment]::SetEnvironmentVariable('GITHUB_REPOSITORY', 'Ash258/GithubActionsBucketForTesting', 'Process')
+$DebugPreference = 'Continue'
+git clone 'https://github.com/Ash258/GithubActionsBucketForTesting.git' '/github/workspace'
+# Uncomment debug entries in Dockerfile
 ```
+
+Execute `docker build .; docker run -ti <idOfNewContainer>` and inside container `LocalTestEnvironment.ps1; . /Entrypoint.ps1 __TESTS__`
 
 ## Issues
 
