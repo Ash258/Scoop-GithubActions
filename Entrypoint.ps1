@@ -329,10 +329,11 @@ function Initialize-Issue {
 
 	Write-log "ACTION: $($EVENT.action)"
 
-	if ($EVENT.action -ne 'opened') {
-		Write-Log "Only action 'opened' is supported."
-		exit 0
-	}
+    # TODO: UNCOMMENT
+	# if ($EVENT.action -ne 'opened') {
+	# 	Write-Log "Only action 'opened' is supported."
+	# 	exit 0
+	# }
 
 	$title = $EVENT.issue.title
 	$id = $EVENT.issue.number
