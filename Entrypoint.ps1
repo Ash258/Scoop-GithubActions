@@ -304,10 +304,10 @@ function Test-ExtractDir {
 	$message += '<details>'
 	$message += '<summary> List of files inside archives</summary>'
 
-	$urls = url $manifest $architecture
-	$extract_dirs = extract_dir $manifest $architecture
+    # TODO: Both architectures
+	$urls = url $manifest '64bit'
+	$extract_dirs = extract_dir $manifest '64bit'
 
-	Write-Log (url @{ 'url' = 'beta' } '64')
 	Write-Log 'URLs:', $urls
 	Write-Log 'Directories:', $extract_dirs
 
@@ -419,10 +419,7 @@ Initialize-NeededSettings
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
-Write-Log 'MODULES:', @(Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname)
 Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
-
-Write-Log (url @{ 'url' = 'alfa' } '64')
 
 switch ($Type) {
 	'Issue' { Initialize-Issue }
