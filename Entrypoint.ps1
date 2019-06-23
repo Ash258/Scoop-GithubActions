@@ -51,7 +51,7 @@ function Write-Log {
 }
 
 function Initialize-NeededSettings {
-	New-Item '/root/scoop/cache' -Force | Out-Null
+	New-Item '/root/scoop/cache' -Force -ItemType Directory | Out-Null
 	git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
 	if (-not ($env:GITH_EMAIL)) {
 		Write-Log 'Pushing is not possible without email environment'
@@ -60,7 +60,8 @@ function Initialize-NeededSettings {
 	}
 
 	# Load all scoop's modules
-	Write-Log 'Importing all modules'
+    Write-Log 'Importing all modules'
+    Write-Log 'MODULES:', @(Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname)
 	Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
 	Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
