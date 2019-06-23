@@ -308,7 +308,7 @@ function Test-ExtractDir {
     param([String] $Manifest, [Int] $IssueID)
 
     # Load manifest
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $message = @()
@@ -330,8 +330,8 @@ function Test-ExtractDir {
             $cached = cache_path $Manifest $version $url | Resolve-Path | Select-Object -ExpandProperty Path
             Write-Log "FILEPATH $url, ${arch}: $cached"
 
-            $full_output = @(7z l $cached)
-            $output = @(7z l $cached -ir!"$dir")
+            $full_output = @(7z l $cached | awk '{ print $3, $6 }' | grep '^D')
+            $output = @(7z l $cached -ir!"$dir" | awk '{ print $3, $6 }' | grep '^D')
 
             $infoLine = $output | Select-Object -Last 1
             $status = $infoLine -match '(?<files>\d+)\s+files(,\s+(?<folders>\d+)\s+folders)?'
@@ -354,14 +354,13 @@ function Test-ExtractDir {
                 Write-Log $full_output
                 Write-Log "$dir, $arch, $url OK"
             }
-            # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
         }
     }
 
     if ($failed) {
         Write-Log 'Failed' $failed
-        $message = "You are right.", '', $message
-        # Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
+        $message = "You are right. Can reproduce", '', $message
+        Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
     } else {
         Write-Log 'Everything all right' $failed
         $message = "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
@@ -369,7 +368,50 @@ function Test-ExtractDir {
         $message += 'See action log for more info'
     }
 
-    # Add-Comment -ID $IssueID -Message $message
+    Add-Comment -ID $IssueID -Message $message
+}
+
+# Need to mock function from core
+function global:Get-AppFilePath {
+    param ([String] $App = 'Aria2', [String] $File = 'aria2c')
+
+    return which $File
+}
+
+function Test-Downloading {
+    param([String] $Manifest, [Int] $IssueID)
+
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
+
+    $broken_urls = @()
+    foreach ($arch in @('64bit', '32bit')) {
+        $urls = @(url $manifest_o $arch)
+
+        foreach ($url in $urls) {
+            Write-Log "$url"
+
+            try {
+                dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
+            } catch {
+                $broken_urls += $url
+                continue
+            }
+        }
+    }
+
+    if ($broken_urls.Count -eq 0) {
+        Write-Log 'All OK'
+
+        Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support)'
+    } else {
+        Write-Log $broken_urls
+        Write-Log @('Broken URLS:', $broken_urls)
+
+        $string = $broken_urls | ForEach-Object { "- $_"}
+        Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
+        Add-Comment -ID $IssueID -Comment 'You are right. Following URLs are not accessible:', '', ($string -join "`r`n")
+    }
 }
 
 function Initialize-Issue {
@@ -402,9 +444,13 @@ function Initialize-Issue {
         }
         '*extract_dir*' {
             Write-Log 'Extract dir error'
-            Test-ExtractDir $problematicName $id
+            # TODO:
+            # Test-ExtractDir $problematicName $id
         }
-        '*download*failed*' { }
+        '*download*failed*' {
+            Write-Log 'Download failed'
+            Test-Downloading $problematicName $id
+        }
     }
 }
 
