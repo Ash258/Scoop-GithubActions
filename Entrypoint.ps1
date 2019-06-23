@@ -289,6 +289,42 @@ $($Content -join "`r`n")
 "@
 }
 
+function Test-Downloading {
+    param([String] $Manifest, [Int] $IssueID)
+
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
+
+    $broken_urls = @()
+    foreach ($arch in @('64bit', '32bit')) {
+        $urls = @(url $manifest_o $arch)
+
+        foreach ($url in $urls) {
+            Write-Log "$url"
+
+            try {
+                dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
+            } catch {
+                $broken_urls += $url
+                continue
+            }
+        }
+    }
+
+    if ($broken_urls.Count -eq 0) {
+        Write-Log 'All OK'
+
+        Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
+        # TODO: Close??
+    } else {
+        Write-Log @('Broken URLS:', $broken_urls)
+
+        $string = ($broken_urls | ForEach-Object { "- $_"}) -join "`r`n"
+        Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
+        Add-Comment -ID $IssueID -Comment 'Thanks for reporting. You are right. Following URLs are not accessible:', '', $string
+    }
+}
+
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -378,52 +414,15 @@ function global:Get-AppFilePath {
     return which $File
 }
 
-function Test-Downloading {
-    param([String] $Manifest, [Int] $IssueID)
-
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
-    $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
-
-    $broken_urls = @()
-    foreach ($arch in @('64bit', '32bit')) {
-        $urls = @(url $manifest_o $arch)
-
-        foreach ($url in $urls) {
-            Write-Log "$url"
-
-            try {
-                dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
-            } catch {
-                $broken_urls += $url
-                continue
-            }
-        }
-    }
-
-    if ($broken_urls.Count -eq 0) {
-        Write-Log 'All OK'
-
-        Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support)'
-    } else {
-        Write-Log $broken_urls
-        Write-Log @('Broken URLS:', $broken_urls)
-
-        $string = $broken_urls | ForEach-Object { "- $_"}
-        Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
-        Add-Comment -ID $IssueID -Comment 'You are right. Following URLs are not accessible:', '', ($string -join "`r`n")
-    }
-}
-
 function Initialize-Issue {
     Write-Log 'Issue initialized'
 
     Write-log "ACTION: $($EVENT.action)"
 
-    # TODO: UNCOMMENT
-    # if ($EVENT.action -ne 'opened') {
-    # 	Write-Log "Only action 'opened' is supported."
-    # 	exit 0
-    # }
+    if ($EVENT.action -ne 'opened') {
+        Write-Log "Only action 'opened' is supported."
+        exit 0
+    }
 
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
