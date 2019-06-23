@@ -304,9 +304,9 @@ function Test-ExtractDir {
     $version = 'EXTRACT_DIR'
     $urls = @(url $manifest_o '64bit')
     $extract_dirs = @(extract_dir $manifest_o '64bit')
+    $message = @()
 
     for ($i = 0; $i -lt $urls.Count; ++$i) {
-        $message = @()
         $url = $urls[$i]
         $dir = $extract_dirs[$i]
         dl_with_cache $Manifest $version $url $null $manifest_o.cookie $true
@@ -338,7 +338,7 @@ function Test-ExtractDir {
         # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
     }
 
-    $message += '</details>'
+    Add-Comment -ID $IssueID -Message $message
 }
 
 function Initialize-Issue {
