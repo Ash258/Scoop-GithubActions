@@ -265,11 +265,23 @@ function Test-Hash {
 }
 
 function New-DetailsCommentString {
+    <#
+    .SYNOPSIS
+        Create string surrounded with <details>.
+    .PARAMETER Summary
+        What should be displayed on button.
+    .PARAMETER Content
+        Content of details block.
+    .PARAMETER Type
+        Type of code fenced block (example `json`, `yml`, ...).
+        Needs to be valid markdown code fenced block type.
+    #>
     param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
 
 	return @"
 <details>
     <summary>$Summary</summary>
+
 ``````$Type
 $($Content -join "`r`n")
 </details>
@@ -333,10 +345,12 @@ function Test-ExtractDir {
             $message += ''
             $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
 
-            Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed'
+            Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
         } else {
             $message += "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest```r`n"
             $message += New-DetailsCommentString -Summary "Content of $url" -Content $full_output
+
+            Close-Issue -ID $IssueID
         }
         # 7z l /root/scoop/cache/FRD#EXTRACT_DIR#https_wordrider.net_download_FreeRapid-1.0beta.zip -ir!"FreeRapid-1.0beta" | awk '{print $3, $6}' | grep '^D'
     }
