@@ -6,7 +6,7 @@
 
 ### Issues (`Issues | IssueHandler`)
 
-- Hash check fails
+- **Hash check fails**
     1. Run checkhashes and check if there were some changes
         1. Yes
             1. List newest pull requests with name `<manifest>: Hash fix`
@@ -22,6 +22,14 @@
             1. Comment on issue about hashes being right
             1. Remove label `hash-fix-needed`
             1. Close issue
+- **Download failed**
+    1. Manifest will be loaded
+    1. Iterate in all architectures
+        1. Get url for specific architecture
+        1. Iterate in all of these urls
+            1. Try to download one
+            1. If there is error, add current url to list of broken urls
+    1. Comment will be posted to issue
 
 Example workflow for everything you will ever need as bucket maintainer.
 
@@ -98,7 +106,6 @@ Execute `docker run -ti (((docker build -q .) -split ':')[1])`.
                     1. If there is problem
                         1. Add label package-fix-needed and verified
                     1. If no, comment on issue and close it
-            1. `download via aria2 failed`
         1. $env:GITHUB_EVENT_PATH, <https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables>
 
 ## Pull requests

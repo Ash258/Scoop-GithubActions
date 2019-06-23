@@ -204,6 +204,8 @@ function Test-Hash {
     )
 
     & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
+    # TODO: Resolve eror state handling from withing binary
+    # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
 
     $status = hub status --porcelain -uno
     Write-Log "Status: $status"
