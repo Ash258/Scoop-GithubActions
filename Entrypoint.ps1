@@ -499,7 +499,7 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Push -Upstream "${REPOSITORY}:master"
+    & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Upstream "${REPOSITORY}:master" -Push
 
     Write-Log 'Auto pr - DONE'
 }
