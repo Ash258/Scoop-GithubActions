@@ -128,7 +128,6 @@ Github action will check if these requirements are met
 ## Excavator
 
 This is not real replacement of excavator. (Until i resolve how to store/expose logs somehow)
-Should work:
 
 ```HCL
 workflow "Excavator" {
