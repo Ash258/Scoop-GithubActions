@@ -499,9 +499,9 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/7/comments" -Method Post -Body @{
-        'body' = (@("Scheduled comment each hour - $(Get-Date)", 'WORKSPACE', "$(Get-ChildItem $env:GITHUB_WORKSPACE)") -join "`r`n")
-    }
+    & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Push -Upstream "${REPOSITORY}:master"
+
+    Write-Log 'Auto pr - DONE'
 }
 #endregion Function pool
 
