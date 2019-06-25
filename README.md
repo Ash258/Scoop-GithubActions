@@ -2,6 +2,8 @@
 
 # Github actions for scoop buckets
 
+Set of automated actions you will ever need as bucket maintainer.
+
 ## Implemented actions
 
 ### Issues (`Issues | IssueHandler`)
@@ -35,48 +37,47 @@ Example workflow for everything you will ever need as bucket maintainer.
 
 ```hcl
 workflow "Issues" {
-  on = "issues"
-  resolves = ["IssueHandler"]
+    on = "issues"
+    resolves = ["IssueHandler"]
 }
 
 workflow "Pull requests" {
-  resolves = ["PullRequestHandler"]
-  on = "pull_request"
+    resolves = ["PullRequestHandler"]
+    on = "pull_request"
 }
 
 workflow "Excavator" {
-  on = "schedule(0 * * * *)"
-  resolves = ["Excavate"]
+    on = "schedule(0 * * * *)" # Run auto-pr every hour, See: https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/#scheduling-a-workflow
+    resolves = ["Excavate"]
 }
 
 action "IssueHandler" {
-  uses = "Ash258/Scoop-GithubActions@master"
-  args = "Issue"
-  env = {
-      "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
-  }
-  secrets = ["GITHUB_TOKEN"]
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Issue"
+    env = {
+        "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
+    }
+    secrets = ["GITHUB_TOKEN"]
 }
 
 action "PullRequestHandler" {
-  uses = "Ash258/Scoop-GithubActions@master"
-  args = "PR"
-  env = {
-      "GITH_EMAIL" = "youremail@email.com"
-  }
-  secrets = ["GITHUB_TOKEN"]
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "PR"
+    env = {
+        "GITH_EMAIL" = "youremail@email.com"
+    }
+    secrets = ["GITHUB_TOKEN"]
 }
 
 action "Excavate" {
-  uses = "Ash258/Scoop-GithubActions@master"
-  args = "Scheduled"
-  env = {
-      "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter,
-      "GITH_EMAIL" = "youremail@email.com"
-  }
-  secrets = ["GITHUB_TOKEN"]
+    uses = "Ash258/Scoop-GithubActions@master"
+    args = "Scheduled"
+    env = {
+        "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter,
+        "GITH_EMAIL" = "youremail@email.com"
+    }
+    secrets = ["GITHUB_TOKEN"]
 }
-
 ```
 
 ## How to debug locally
@@ -130,37 +131,17 @@ This is not real replacement of excavator. (Until i resolve how to store/expose 
 Should work:
 
 ```HCL
-workflow "Issues" {
-    on = "issues"
-    resolves = [ "IssueHandler" ]
-}
-
-action "IssueHandler" {
-    uses = "Ash258/Scoop-GithubActions@master"
-    args = "Issue"
-    secrets = [ "GITHUB_TOKEN" ]
-}
-
-workflow "Pull requests" {
-    on = "pull_requests"
-    resolves = [ "PullRequestHandler" ]
-}
-
-action "PullRequestHandler" {
-    uses = "Ash258/Scoop-GithubActions@master"
-    args = "PR"
-    secrets = [ "GITHUB_TOKEN" ]
-}
-
 workflow "Excavator" {
     on = "schedule(0 * * * *)"
-    resolves = [ "Excavate" ]
+    resolves = ["Excavate"]
 }
 
-# Post comment to specific issue each 5 minutes
 action "Excavate" {
-    uses = "Ash258/Scoop-GithubActions@master"
+    uses = "Ash258/Scoop-GithubActions@0.3.58"
     args = "Scheduled"
-    secrets = [ "GITHUB_TOKEN" ]
+    env = {
+        "GITH_EMAIL" = "youremail@email.com"
+    }
+    secrets = ["GITHUB_TOKEN"]
 }
 ```
