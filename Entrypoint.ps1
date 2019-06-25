@@ -321,7 +321,7 @@ function Test-Downloading {
     } else {
         Write-Log @('Broken URLS:', $broken_urls)
 
-        $string = ($broken_urls | ForEach-Object { "- $_"}) -join "`r`n"
+        $string = ($broken_urls | ForEach-Object { "- $_" }) -join "`r`n"
         Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
         Add-Comment -ID $IssueID -Comment 'Thanks for reporting. You are right. Following URLs are not accessible:', '', $string
     }
@@ -499,8 +499,15 @@ function Initialize-Push {
 function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
-    # TODO: Special snowflakes
-    & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Upstream "${REPOSITORY}:master" -Push
+    # & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Upstream "${REPOSITORY}:master" -SpecialSnowflakes ($env:SPECIAL_SNOWFLAKES -split ',') -Push
+    $params = @{
+        'Dir'      = $MANIFESTS_LOCATION
+        'Upstream' = "${REPOSITORY}:master"
+        'Push'     = $true
+    }
+    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+
+    & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
 
     Write-Log 'Auto pr - DONE'
 }

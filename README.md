@@ -71,6 +71,7 @@ action "Excavate" {
   uses = "Ash258/Scoop-GithubActions@master"
   args = "Scheduled"
   env = {
+      "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter,
       "GITH_EMAIL" = "youremail@email.com"
   }
   secrets = ["GITHUB_TOKEN"]
