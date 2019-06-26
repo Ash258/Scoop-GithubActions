@@ -36,7 +36,7 @@ Set of automated actions you will ever need as bucket maintainer.
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
 - When pull request is created there will be executed these tests for all changed manifests
-    - If there are requred properties
+    - If there are required properties
         - License
         - Description
     - Hashes of files
