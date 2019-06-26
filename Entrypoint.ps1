@@ -24,27 +24,27 @@ $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUC
 #region Function pool
 #region ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 function Write-Log {
-	[Parameter(Mandatory, ValueFromRemainingArguments)]
-	param ([String[]] $Message)
+    [Parameter(Mandatory, ValueFromRemainingArguments)]
+    param ([String[]] $Message)
 
-	Write-Output ''
-	$Message | ForEach-Object { Write-Output "LOG: $_" }
+    Write-Output ''
+    $Message | ForEach-Object { Write-Output "LOG: $_" }
 }
 
 function Get-EnvironmentVariables {
-	return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
 function Initialize-NeededSettings {
-	New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
-	git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-	if (-not ($env:GITH_EMAIL)) {
-		Write-Log 'Pushing is not possible without email environment'
-	} else {
-		git config --global user.email $env:GITH_EMAIL
-	}
+    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if (-not ($env:GITH_EMAIL)) {
+        Write-Log 'Pushing is not possible without email environment'
+    } else {
+        git config --global user.email $env:GITH_EMAIL
+    }
 
-	Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 }
 
 function Resolve-IssueTitle {
@@ -159,10 +159,14 @@ function Get-AllChangedFilesInPR {
         Get list of all changed files inside pull request.
     .PARAMETER ID
         ID of pull request.
+    .PARAMETER Filter
+        Return only files which are not 'removed'
     #>
-    param([Int] $ID)
+    param([Int] $ID, [Switch] $Filter)
 
     $files = (Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls/$ID/files").Content | ConvertFrom-Json
+    if ($Filter) { $files = $files | Where-Object { $_.status -ne 'removed' } }
+
     return $files | Select-Object -Property filename, status
 }
 
@@ -486,11 +490,26 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    $prID = $EVENT.number
-    $files = Get-AllChangedFilesInPR $prID
+    if ($EVENT.actions -ne 'opened') {
+        Write-Log 'Only action ''opened'' is supported'
+        exit 0
+    }
 
-    Add-Comment -ID $prID -Message ($files | Out-String)
-    # TODO: Get all changed files in PR
+
+    $prID = $EVENT.number
+    $files = Get-AllChangedFilesInPR $prID -Filter
+
+    $files
+
+    Add-Comment $prId (@($files | ForEach-Object { "$($_.filename) | $($_.status)" }) -join "`r`n")
+
+    $checks = @()
+    $checks
+
+    foreach ($file in $files) {
+
+    }
+
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
     # if error, then just
@@ -498,11 +517,6 @@ function Initialize-PR {
     # run checkver
     # run checkhashes
     # run formatjson?
-
-    $files
-
-    $checks = @()
-    $checks
 
     # & "$env:SCOOP_HOME\bin\checkver.ps1"
     # $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
@@ -551,13 +565,13 @@ Write-Log 'FULL EVENT TO BE SAVED'
 $EVENT_RAW
 
 switch ($EVENT_TYPE) {
-	'issues' { Write-Log 'In future there will be issue handler initialized' }
-	'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
-	'push' { Write-Log 'In future there will be push handler initialized' }
-	'schedule' { Write-Log 'In future there will be schedule handler initialized' }
-	# 'issues' { Initialize-Issue }
-	# 'pull_requests' { Initialize-PR }
-	# 'push' { Initialize-Push }
-	# 'schedule' { Initialize-Scheduled }
+    'issues' { Write-Log 'In future there will be issue handler initialized' }
+    'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
+    'push' { Write-Log 'In future there will be push handler initialized' }
+    'schedule' { Write-Log 'In future there will be schedule handler initialized' }
+    # 'issues' { Initialize-Issue }
+    # 'pull_requests' { Initialize-PR }
+    # 'push' { Initialize-Push }
+    # 'schedule' { Initialize-Scheduled }
 }
 #endregion Main
