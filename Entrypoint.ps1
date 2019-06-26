@@ -458,9 +458,9 @@ function Initialize-PR {
     # Add some more human friendly message
     $message.Insert(0, 'Thanks for contributing.')
     if ($env:NON_ZERO_EXIT) {
-        $message.InsertRange(1, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
-    } else {
         $message.Insert(1, 'Your changes does not pass some checks')
+    } else {
+        $message.InsertRange(1, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
     }
 
     Add-Comment -ID $prID -Message $message
