@@ -191,7 +191,8 @@ function Remove-Label {
 
     $responses = @()
     foreach ($lab in $Label) {
-        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORy/issues/$ID/labels/$label" -Method Delete
+        # TODO: Check existence
+        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels/$label" -Method Delete
     }
 
     return $responses
@@ -248,8 +249,8 @@ function Test-Hash {
             # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
                 'title' = "${Manifest}: Hash fix"
-                'head'  = $branch
                 'base'  = 'master'
+                'head'  = $branch
                 'body'  = "- Closes #$IssueID"
             }
         }
@@ -485,6 +486,8 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
+    $prID = $EVENT.number
+    $files = Get-AllChangedFilesInPR $prID
     # TODO: Get all changed files in PR
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
@@ -494,8 +497,10 @@ function Initialize-PR {
     # run checkhashes
     # run formatjson?
 
-    $EVENT | Format-Table | Out-String
-    # $checksStatus = @()
+    $files
+
+    $checks = @()
+    $checks
 
     # & "$env:SCOOP_HOME\bin\checkver.ps1"
     # $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
@@ -538,7 +543,7 @@ switch ($Type) {
     'Scheduled' { Initialize-Scheduled }
 }
 
-# TODO: Remove after all events are captured and saved
+# TODO: Remove after all events are captured and saved and before release
 Write-Log 'FULL EVENT TO BE SAVED'
 
 $EVENT_RAW
