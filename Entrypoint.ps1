@@ -488,6 +488,8 @@ function Initialize-PR {
 
     $prID = $EVENT.number
     $files = Get-AllChangedFilesInPR $prID
+
+    Add-Comment -ID $prID -Message ($files | Out-String)
     # TODO: Get all changed files in PR
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
