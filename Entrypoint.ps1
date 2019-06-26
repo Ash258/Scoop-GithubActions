@@ -512,7 +512,7 @@ function Initialize-PR {
         # TODO: Resolve root of PR
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
-        $statuses = @{}
+        $statuses = [Ordered] @{}
 
         # $message += "### $($manifest.Basename)"
         # $message += ''
@@ -556,7 +556,7 @@ function Initialize-PR {
         Write-Log 'Format done'
         #endregion formatjson
 
-        $checks += @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
+        $checks += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
         Write-Log "Finished $($file.filename) checks"
     }
 
