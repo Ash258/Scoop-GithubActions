@@ -524,8 +524,7 @@ function Initialize-PR {
         $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-Log $outputH
         # everything should be all right when latest string in array will be OK
-        $OK = $outputH[-1] -like 'OK'
-        $message += New-CheckListItem 'Hashes' -OK:$OK
+        $message += New-CheckListItem 'Hashes' -OK:($outputH[-1] -like 'OK')
 
         Write-Log 'Hashes done'
         #endregion Hashes
@@ -533,19 +532,16 @@ function Initialize-PR {
         #region Checkver
         Write-Log 'Checkver'
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
-        $OK = $true
-        $outputV
-        if (($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")) {
-            Write-Log 'Checkver problem'
-            $OK = $false
-            $outputV
-            Write-Log $outputV
-        }
-        $message += New-CheckListItem 'Checkver' -OK:$OK
+        Write-log $outputV
+        # If there are more than 2 lines and second line is not version, there is problem
+        $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")))
         Write-Log 'Checkver done'
         #endregion
 
         #region formatjson
+        Write-Log 'Format'
+        # TODO:
+        Write-Log 'Format done'
         #endregion formatjson
 
         Write-Log "Finished $($file.filename) checks"
@@ -553,13 +549,6 @@ function Initialize-PR {
 
     Add-Comment -ID $prID -Message $message
     Write-Log 'PR action finished'
-
-    # Since binaries do not return any data on success flow needs to be this:
-    # run checkver
-    # run formatjson?
-
-    # & "$env:SCOOP_HOME\bin\checkver.ps1"
-    # $status = if ($LASTEXITCODE -eq 0) { 'x' } else { ' ' }
 
     # $body = @{
     # 	'body' = (@(
