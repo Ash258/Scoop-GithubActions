@@ -503,7 +503,7 @@ function Initialize-PR {
 
     foreach ($file in $files) {
         # Convert path into gci item to hold all needed information
-        $manifest = Get-ChildItem $BUCKET_ROOT $file
+        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $checks += $manifest
     }
     Add-Comment -ID $prID -Message ($checks -join "`r`n")
