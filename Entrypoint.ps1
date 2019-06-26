@@ -569,7 +569,7 @@ function Initialize-PR {
             $b = $check.Statuses.Item($status)
             Write-Log "$status | $b"
 
-            if (-not $b) { $NON_ZERO_EXIT = $true }
+            if (-not $b) { $env:NON_ZERO_EXIT = $true }
 
             $message += New-CheckListItem $status -OK:$b
         }
@@ -620,6 +620,6 @@ switch ($EVENT_TYPE) {
 	# 'schedule' { Initialize-Scheduled }
 }
 
-Write-Log $NON_ZERO_EXIT, 'EXIT'
-if ($NON_ZERO_EXIT) { exit 258 }
+Write-Log $env:NON_ZERO_EXIT, 'EXIT'
+if ($env:NON_ZERO_EXIT) { exit 258 }
 #endregion Main
