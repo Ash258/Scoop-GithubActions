@@ -521,7 +521,8 @@ function Initialize-PR {
 
         $changes = hub diff --name-only
         $OK = $true
-        if (($changes).Count -eq 1) {
+        Write-Log $changes
+        if ($changes.Count -eq 1) {
             Write-Log 'Hashes failed'
             $OK = $false
         }
