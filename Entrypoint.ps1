@@ -212,7 +212,7 @@ function Test-Hash {
 
     $changes = hub diff --name-only
     if (($changes).Count -eq 1) {
-        Write-Log 'Verified'
+        Write-Log 'Verified hash failed'
 
         $message = @('You are right. Thanks for reporting.')
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
@@ -220,7 +220,7 @@ function Test-Hash {
 
         # There is alreay PR for
         if ($prs.Count -gt 0) {
-            Write-Log 'PR - No same opened PRs'
+            Write-Log 'PR - Update description'
 
             # Only take latest updated
             $pr = $prs | Select-Object  -First 1
@@ -231,10 +231,11 @@ function Test-Hash {
             $message += ''
             $message += "There is already pull request to fix this issue. (#$prID)"
 
+            Write-Log $prID
             # Update PR description
             Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
         } else {
-            Write-Log 'PR - Create new branch'
+            Write-Log 'PR - Create new branch and pst PR'
 
             $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             hub checkout -B $branch
@@ -243,6 +244,7 @@ function Test-Hash {
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
 
+            # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
                 'title' = "${Manifest}: Hash fix"
                 'head'  = $branch
@@ -325,6 +327,26 @@ function Test-Downloading {
         Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
         Add-Comment -ID $IssueID -Comment 'Thanks for reporting. You are right. Following URLs are not accessible:', '', $string
     }
+}
+
+function Initialize-Scheduled {
+    <#
+    .SYNOPSIS
+        Excavator alternative. Based on schedule execute auto-prt function.
+    #>
+    Write-Log 'Scheduled initialized'
+
+    $params = @{
+        'Dir'      = $MANIFESTS_LOCATION
+        'Upstream' = "${REPOSITORY}:master"
+        'Push'     = $true
+    }
+    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+
+    & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
+    # TODO: Post some comment??
+
+    Write-Log 'Auto pr - DONE'
 }
 
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
@@ -494,22 +516,6 @@ function Initialize-PR {
 
 function Initialize-Push {
     Write-Log 'Push initialized'
-}
-
-function Initialize-Scheduled {
-    Write-Log 'Scheduled initialized'
-
-    # & "$env:SCOOP_HOME\bin\auto-pr.ps1" -Dir $MANIFESTS_LOCATION -Upstream "${REPOSITORY}:master" -SpecialSnowflakes ($env:SPECIAL_SNOWFLAKES -split ',') -Push
-    $params = @{
-        'Dir'      = $MANIFESTS_LOCATION
-        'Upstream' = "${REPOSITORY}:master"
-        'Push'     = $true
-    }
-    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
-
-    & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
-
-    Write-Log 'Auto pr - DONE'
 }
 #endregion Function pool
 
