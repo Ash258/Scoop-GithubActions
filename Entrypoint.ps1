@@ -502,9 +502,10 @@ function Initialize-PR {
     $checks = @()
 
     foreach ($file in $files) {
-        Write-Log "Starting $file checks"
+        Write-Log "Starting $($file.filename) checks"
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
+
         $check = @{ 'name' = $manifest.Basename }
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
         if ($object.description) {
@@ -520,9 +521,10 @@ function Initialize-PR {
 
         $manifest.Basename
         $checks += $check
-        Write-Log "finished $file checks"
+        Write-Log "Finished $($file.filename) checks"
     }
 
+    $checks
     Write-Log 'PR action finished'
 
     # Since binaries do not return any data on success flow needs to be this:
