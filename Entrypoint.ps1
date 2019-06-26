@@ -537,7 +537,7 @@ function Initialize-PR {
         Write-Log (($outputV.Count -gt 2), 'Count')
         Write-Log (($outputV[1] -notlike "*$($object.version)*"), 'Second')
 
-        $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")))
+        $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -gt 2) -and ($outputV[1] -notlike "*$($object.version)*")))
         Write-Log 'Checkver done'
         #endregion
 
