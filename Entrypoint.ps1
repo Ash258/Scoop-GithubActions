@@ -512,7 +512,8 @@ function Initialize-PR {
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
 
-        $message += $manifest.Basename
+        $message += "### $($manifest.Basename)"
+        $message += ''
 
         $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
