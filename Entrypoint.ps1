@@ -514,15 +514,18 @@ function Initialize-PR {
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
         #region Hashes
-        & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force
+        & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Update
 
         $status = hub status --porcelain -uno
         Write-Log "Status: $status"
 
         $changes = hub diff --name-only
         $OK = $true
-        if (($changes).Count -eq 1) { $OK = $false }
-        $message += New-CheckListItem 'hashes' -OK:$OK
+        if (($changes).Count -eq 1) {
+            Write-Log 'Hashes failed'
+            $OK = $false
+        }
+        $message += New-CheckListItem 'Hashes' -OK:$OK
         #endregion Hashes
 
         Write-Log "Finished $($file.filename) checks"
@@ -532,11 +535,7 @@ function Initialize-PR {
     Write-Log 'PR action finished'
 
     # Since binaries do not return any data on success flow needs to be this:
-    # Run check with force param
-    # if error, then just
-    # git status, if changed
     # run checkver
-    # run checkhashes
     # run formatjson?
 
     # & "$env:SCOOP_HOME\bin\checkver.ps1"
