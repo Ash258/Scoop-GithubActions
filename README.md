@@ -33,7 +33,21 @@ Set of automated actions you will ever need as bucket maintainer.
             1. If there is error, add current url to list of broken urls
     1. Comment will be posted to issue
 
-Example workflow for everything you will ever need as bucket maintainer.
+### Pull requests (`Pull requests | PullRequestHandler`)
+
+- When pull request is created there will be executed these tests for all changed manifests
+    - If there are requred properties
+        - License
+        - Description
+    - Hashes of files
+    - If checkver is working
+    - If autoupdate is working
+
+### Excavator (`Excavator | Excavate`)
+
+- Periodically execute automatic updates for all manifests
+
+## Example workflow for everything you will ever need as bucket maintainer
 
 ```hcl
 workflow "Issues" {
@@ -103,7 +117,6 @@ Execute `docker run -ti (((docker build -q .) -split ':')[1])`.
     1. Parse issue title
         1. `manifest@version: PROBLEM`
             1. `extract_dir error`
-                1. Download
                 1. Extract
                     1. If there is problem
                         1. Add label package-fix-needed and verified
@@ -124,23 +137,3 @@ Github action will check if these requirements are met
 1. Install❓❓
 1. Format❓❓
     1. This is covered by Appveyor
-
-## Excavator
-
-This is not real replacement of excavator. (Until i resolve how to store/expose logs somehow)
-
-```HCL
-workflow "Excavator" {
-    on = "schedule(0 * * * *)"
-    resolves = ["Excavate"]
-}
-
-action "Excavate" {
-    uses = "Ash258/Scoop-GithubActions@0.3.58"
-    args = "Scheduled"
-    env = {
-        "GITH_EMAIL" = "youremail@email.com"
-    }
-    secrets = ["GITHUB_TOKEN"]
-}
-```
