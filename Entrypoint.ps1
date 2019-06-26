@@ -534,6 +534,9 @@ function Initialize-PR {
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-log $outputV
         # If there are more than 2 lines and second line is not version, there is problem
+        Write-Log (($outputV.Count -gt 2), 'Count')
+        Write-Log (($outputV[1] -notlike "*$($object.version)*"), 'Second')
+
         $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")))
         Write-Log 'Checkver done'
         #endregion
