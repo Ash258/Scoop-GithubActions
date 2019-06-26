@@ -500,27 +500,31 @@ function Initialize-PR {
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     $checks = @()
+    $message = @()
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
+
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
 
         $check = @{ 'name' = $manifest.Basename }
-        $check.Add('Description', $object.Contains('Description'))
-        $check.Add('License', $object.Contains('License'))
+        $message += $manifest.Basename
 
-        $manifest.Basename
+        $check.Add('Description', $object.Contains('Description'))
+        $message += New-CheckListItem 'Description' -OK:$object.Contains('Description')
+        $check.Add('License', $object.Contains('License'))
+        $message += New-CheckListItem 'License' -OK:$object.Contains('License')
+
+        $manifest.Basename # DEBUG:
         $checks += $check
+        $message += ''
+
         Write-Log "Finished $($file.filename) checks"
     }
 
-    $message = @($file.filename)
-    foreach ($ch in $checks) {
-        $message += '- Properties'
-    }
-    $message
+    Add-Comment -ID $prID -Message $message
     Write-Log 'PR action finished'
 
     # Since binaries do not return any data on success flow needs to be this:
