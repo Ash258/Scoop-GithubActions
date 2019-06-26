@@ -445,11 +445,13 @@ function Initialize-PR {
         }
         $message += ''
     }
+
+    # Add some more human friendly message
+    $info = 'Thanks for contributing. Your changes does not pass some checks.', ''
     if ($env:NON_ZERO_EXIT) {
-        $message = 'Thanks for contributing. All changes looks good.', '', 'Wait for review from human collaborators.', $message
-    } else {
-        $message = 'Thanks for contributing. Your changes does not pass some checks.', '', $message
+        $info = 'Thanks for contributing. All changes looks good.', '', 'Wait for review from human collaborators.'
     }
+    $info += , $message
 
     Add-Comment -ID $prID -Message $message
 
