@@ -504,11 +504,22 @@ function Initialize-PR {
     foreach ($file in $files) {
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
-        $checks += $manifest
-    }
-    Add-Comment -ID $prID -Message ($checks -join "`r`n")
+        $check = @{ 'name' = $manifest.Basename }
+        $object = Get-Content $manifest -Raw | ConvertFrom-Json
+        if ($object.description) {
+            $check.Add('Prop', @{'Description' = $true })
+        } else {
+            $check.Add('Prop', @{'Description' = $false })
+        }
+        if ($object.license) {
+            $check.Prop.Add('License', $true)
+        } else {
+            $check.Prop.Add('License', $false)
+        }
 
-    $checks
+        $manifest.Basename
+        $checks += $check
+    }
 
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
