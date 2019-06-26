@@ -497,19 +497,18 @@ function Initialize-PR {
 
 
     $prID = $EVENT.number
-    # $files = Get-AllChangedFilesInPR $prID -Filter
-    $files = Get-AllChangedFilesInPR $prID
-
-    $files
-
-    Add-Comment $prId (@($files | ForEach-Object { "- $($_.filename) | $($_.status)" }) -join "`r`n")
-
+    # Do not run on removed files
+    $files = Get-AllChangedFilesInPR $prID -Filter
     $checks = @()
-    $checks
 
     foreach ($file in $files) {
-
+        # Convert path into gci item to hold all needed information
+        $manifest = Get-ChildItem $BUCKET_ROOT $file
+        $checks += $manifest
     }
+    Add-Comment -ID $prID -Message ($checks -join "`r`n")
+
+    $checks
 
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
