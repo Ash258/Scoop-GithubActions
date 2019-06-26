@@ -19,6 +19,8 @@ $BUCKET_ROOT = $env:GITHUB_WORKSPACE
 # Backward compatability for manifests inside root of repository
 $nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
 $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+
+$NON_ZERO_EXIT = $false
 #endregion Variables pool
 
 #region Function pool
@@ -544,8 +546,6 @@ function Initialize-PR {
         # If there are more than 2 lines and second line is not version, there is problem
         $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
         $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
-        # $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
-        # $message += New-CheckListItem 'Autoupdate' -OK:($outputV[-1] -notlike 'ERROR*')
 
         Write-Log 'Checkver done'
         #endregion
@@ -557,6 +557,7 @@ function Initialize-PR {
         #endregion formatjson
 
         $checks += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
+
         Write-Log "Finished $($file.filename) checks"
     }
 
@@ -565,28 +566,19 @@ function Initialize-PR {
         $message += "### $($check.Name)"
         $message += ''
         foreach ($status in $check.Statuses.Keys) {
-            Write-Log $status, $check.Statuses.Item($status)
-            $message += New-CheckListItem $status -OK:($check.Statuses.Item($status))
+            $b = $check.Statuses.Item($status)
+            Write-Log "$status | $b"
+
+            if (-not $b) { $NON_ZERO_EXIT = $true }
+
+            $message += New-CheckListItem $status -OK:$b
         }
         $message += ''
     }
 
     Add-Comment -ID $prID -Message $message
+
     Write-Log 'PR action finished'
-
-    # $body = @{
-    # 	'body' = (@(
-    # 			"- Properties",
-    # 			"    - [$status] Description",
-    # 			"    - [$status] License",
-    # 			"- [$status] Checkver functional",
-    # 			"- [$status] Autoupdate working",
-    # 			"- [$status] Hashes are correct",
-    # 			"- [$status] Manifest is formatted"
-    # 		) -join "`r`n")
-    # }
-
-    # Write-Log $body.body
 }
 
 function Initialize-Push {
@@ -618,13 +610,15 @@ Write-Log 'FULL EVENT TO BE SAVED'
 $EVENT_RAW
 
 switch ($EVENT_TYPE) {
-    'issues' { Write-Log 'In future there will be issue handler initialized' }
-    'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
-    'push' { Write-Log 'In future there will be push handler initialized' }
-    'schedule' { Write-Log 'In future there will be schedule handler initialized' }
-    # 'issues' { Initialize-Issue }
-    # 'pull_requests' { Initialize-PR }
-    # 'push' { Initialize-Push }
-    # 'schedule' { Initialize-Scheduled }
+	'issues' { Write-Log 'In future there will be issue handler initialized' }
+	'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
+	'push' { Write-Log 'In future there will be push handler initialized' }
+	'schedule' { Write-Log 'In future there will be schedule handler initialized' }
+	# 'issues' { Initialize-Issue }
+	# 'pull_requests' { Initialize-PR }
+	# 'push' { Initialize-Push }
+	# 'schedule' { Initialize-Scheduled }
 }
+
+if ($NON_ZERO_EXIT) { exit 1 }
 #endregion Main
