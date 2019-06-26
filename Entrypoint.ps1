@@ -22,6 +22,30 @@ $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUC
 
 #region Function pool
 #region ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+function Write-Log {
+	[Parameter(Mandatory, ValueFromRemainingArguments)]
+	param ([String[]] $Message)
+
+	Write-Output ''
+	$Message | ForEach-Object { Write-Output "LOG: $_" }
+}
+
+function Get-EnvironmentVariables {
+	return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+}
+
+function Initialize-NeededSettings {
+	New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
+	git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+	if (-not ($env:GITH_EMAIL)) {
+		Write-Log 'Pushing is not possible without email environment'
+	} else {
+		git config --global user.email $env:GITH_EMAIL
+	}
+
+	Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+}
+
 function Resolve-IssueTitle {
     <#
     .SYNOPSIS
@@ -40,26 +64,6 @@ function Resolve-IssueTitle {
     } else {
         return $null, $null, $null
     }
-}
-
-function Write-Log {
-    [Parameter(Mandatory, ValueFromRemainingArguments)]
-    param ([String[]] $Message)
-
-    Write-Output ''
-    $Message | ForEach-Object { Write-Output "LOG: $_" }
-}
-
-function Initialize-NeededSettings {
-    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if (-not ($env:GITH_EMAIL)) {
-        Write-Log 'Pushing is not possible without email environment'
-    } else {
-        git config --global user.email $env:GITH_EMAIL
-    }
-
-    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
 }
 
 function New-CheckListItem {
@@ -159,10 +163,6 @@ function Get-AllChangedFilesInPR {
 
     $files = (Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls/$ID/files").Content | ConvertFrom-Json
     return $files | Select-Object -Property filename, status
-}
-
-function Get-EnvironmentVariables {
-    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
 function Close-Issue {
@@ -332,7 +332,7 @@ function Test-Downloading {
 function Initialize-Scheduled {
     <#
     .SYNOPSIS
-        Excavator alternative. Based on schedule execute auto-prt function.
+        Excavator alternative. Based on schedule execute auto-pr function.
     #>
     Write-Log 'Scheduled initialized'
 
@@ -536,6 +536,11 @@ switch ($Type) {
     'Push' { Initialize-Push }
     'Scheduled' { Initialize-Scheduled }
 }
+
+# TODO: Remove after all events are captured and saved
+Write-Log 'FULL EVENT TO BE SAVED'
+
+Get-Content $env:GITHUB_EVENT_PATH -Raw
 
 # switch ($EVENT_TYPE) {
 # 	'issues' { Initialize-Issue }
