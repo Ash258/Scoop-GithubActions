@@ -375,8 +375,7 @@ function Initialize-PR {
 
     if ($EVENT.actions -ne 'opened') {
         Write-Log 'Only action ''opened'' is supported'
-        # TODO: Uncomment
-        # exit 0
+        exit 0
     }
 
     Write-log 'Files in PR:'
