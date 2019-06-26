@@ -492,7 +492,7 @@ function Initialize-PR {
 
     if ($EVENT.actions -ne 'opened') {
         Write-Log 'Only action ''opened'' is supported'
-        exit 0
+        # exit 0
     }
 
 
