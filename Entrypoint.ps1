@@ -499,7 +499,6 @@ function Initialize-PR {
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    $checks = @()
     $message = @()
 
     foreach ($file in $files) {
@@ -509,17 +508,22 @@ function Initialize-PR {
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
 
-        $check = @{ 'name' = $manifest.Basename }
         $message += $manifest.Basename
 
-        $check.Add('Description', [bool] $object.description)
         $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
-        $check.Add('License', [bool] $object.license)
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
-        $manifest.Basename # DEBUG:
-        $checks += $check
-        $message += ''
+        #region Hashes
+        & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force
+
+        $status = hub status --porcelain -uno
+        Write-Log "Status: $status"
+
+        $changes = hub diff --name-only
+        $OK = $true
+        if (($changes).Count -eq 1) { $OK = $false }
+        $message += New-CheckListItem 'hashes' -OK:$OK
+        #endregion Hashes
 
         Write-Log "Finished $($file.filename) checks"
     }
