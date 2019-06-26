@@ -497,11 +497,12 @@ function Initialize-PR {
 
 
     $prID = $EVENT.number
-    $files = Get-AllChangedFilesInPR $prID -Filter
+    # $files = Get-AllChangedFilesInPR $prID -Filter
+    $files = Get-AllChangedFilesInPR $prID
 
     $files
 
-    Add-Comment $prId (@($files | ForEach-Object { "$($_.filename) | $($_.status)" }) -join "`r`n")
+    Add-Comment $prId (@($files | ForEach-Object { "- $($_.filename) | $($_.status)" }) -join "`r`n")
 
     $checks = @()
     $checks
