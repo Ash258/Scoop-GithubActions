@@ -502,6 +502,7 @@ function Initialize-PR {
     $checks = @()
 
     foreach ($file in $files) {
+        Write-Log "Starting $file checks"
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $check = @{ 'name' = $manifest.Basename }
@@ -519,7 +520,10 @@ function Initialize-PR {
 
         $manifest.Basename
         $checks += $check
+        Write-Log "finished $file checks"
     }
+
+    Write-Log 'PR action finished'
 
     # Since binaries do not return any data on success flow needs to be this:
     # Run check with force param
