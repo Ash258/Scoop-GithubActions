@@ -453,7 +453,7 @@ function Initialize-PR {
     }
     $info += , $message
 
-    Add-Comment -ID $prID -Message $message
+    Add-Comment -ID $prID -Message $info
 
     Write-Log 'PR action finished'
 }
