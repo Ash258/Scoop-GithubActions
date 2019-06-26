@@ -521,15 +521,19 @@ function Initialize-PR {
         #region Hashes
         Write-Log 'Hashes'
         $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        # everything should be all right when latest string in array will be OK
+        $OK = $outputH[-1] -like 'OK'
         $outputH
-        Write-Log $outputH
+        $outputH[-1]
         $message += New-CheckListItem 'Hashes' -OK:$OK
+        Write-Log 'Hashes done'
         #endregion Hashes
 
         #region Checkver
         Write-Log 'Checkver'
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         $OK = $true
+        $outputV
         if (($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")) {
             Write-Log 'Checkver problem'
             $OK = $false
@@ -537,6 +541,7 @@ function Initialize-PR {
             Write-Log $outputV
         }
         $message += New-CheckListItem 'Checkver' -OK:$OK
+        Write-Log 'Checkver done'
         #endregion
 
         #region formatjson
