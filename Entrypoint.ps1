@@ -69,6 +69,15 @@ function Resolve-IssueTitle {
     }
 }
 
+function New-Array {
+    <#
+    .SYNOPSIS
+        Return new array list for better operations.
+    #>
+
+    return New-Object System.Collections.ArrayList
+}
+
 function New-CheckListItem {
     <#
     .SYNOPSIS
@@ -431,29 +440,30 @@ function Initialize-PR {
     }
 
     # Create nice comment to post
-    $message = @()
+    $message = New-Array
     foreach ($check in $checks) {
-        $message += "### $($check.Name)"
-        $message += ''
+        $message.Add("### $($check.Name)")
+        $message.Add('')
         foreach ($status in $check.Statuses.Keys) {
             $b = $check.Statuses.Item($status)
             Write-Log "$status | $b"
 
             if (-not $b) { $env:NON_ZERO_EXIT = $true }
 
-            $message += New-CheckListItem $status -OK:$b
+            $message.Add((New-CheckListItem $status -OK:$b))
         }
-        $message += ''
+        $message.Add('')
     }
 
     # Add some more human friendly message
-    $info = 'Thanks for contributing. Your changes does not pass some checks.', ''
+    $message.Insert(0, 'Thanks for contributing.')
     if ($env:NON_ZERO_EXIT) {
-        $info = 'Thanks for contributing. All changes looks good.', '', 'Wait for review from human collaborators.'
+        $message.InsertRange(1, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
+    } else {
+        $message.Insert(1, 'Your changes does not pass some checks')
     }
-    $info += , $message
 
-    Add-Comment -ID $prID -Message $info
+    Add-Comment -ID $prID -Message $message
 
     Write-Log 'PR action finished'
 }
