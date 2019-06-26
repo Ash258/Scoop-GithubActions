@@ -620,5 +620,6 @@ switch ($EVENT_TYPE) {
 	# 'schedule' { Initialize-Scheduled }
 }
 
-if ($NON_ZERO_EXIT) { exit 1 }
+Write-Log $NON_ZERO_EXIT, 'EXIT'
+if ($NON_ZERO_EXIT) { exit 258 }
 #endregion Main
