@@ -357,6 +357,100 @@ function Initialize-Scheduled {
     Write-Log 'Auto pr - DONE'
 }
 
+function Initialize-PR {
+    <#
+    .SYNOPSIS
+        Handle pull requests actions.
+    #>
+    Write-Log 'PR initialized'
+
+    if ($EVENT.actions -ne 'opened') {
+        Write-Log 'Only action ''opened'' is supported'
+        # TODO: Uncomment
+        # exit 0
+    }
+
+    Write-log 'Files in PR:'
+    Get-ChildItem $BUCKET_ROOT
+    Get-ChildItem $MANIFESTS_LOCATION
+
+    $prID = $EVENT.number
+    # Do not run on removed files
+    $files = Get-AllChangedFilesInPR $prID -Filter
+    # $message = @()
+    $checks = @()
+
+    foreach ($file in $files) {
+        Write-Log "Starting $($file.filename) checks"
+
+        # Convert path into gci item to hold all needed information
+        # TODO: Resolve root of PR
+        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
+        $object = Get-Content $manifest -Raw | ConvertFrom-Json
+        $statuses = [Ordered] @{ }
+
+        #region Property checks
+        $statuses.Add('Description', ([bool] $object.description))
+        $statuses.Add('License', ([bool] $object.license))
+        #endregion Property checks
+
+        #region Hashes
+        Write-Log 'Hashes'
+
+        $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        Write-Log $outputH
+
+        # everything should be all right when latest string in array will be OK
+        $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
+
+        Write-Log 'Hashes done'
+        #endregion Hashes
+
+        #region Checkver
+        Write-Log 'Checkver'
+        # TODO: Autoupdate
+        $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+        Write-log $outputV
+
+        # If there are more than 2 lines and second line is not version, there is problem
+        $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
+        $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
+
+        Write-Log 'Checkver done'
+        #endregion
+
+        #region formatjson
+        Write-Log 'Format'
+        # TODO:
+        Write-Log 'Format done'
+        #endregion formatjson
+
+        $checks += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
+
+        Write-Log "Finished $($file.filename) checks"
+    }
+
+    # Create nice comment to post
+    $message = @()
+    foreach ($check in $checks) {
+        $message += "### $($check.Name)"
+        $message += ''
+        foreach ($status in $check.Statuses.Keys) {
+            $b = $check.Statuses.Item($status)
+            Write-Log "$status | $b"
+
+            if (-not $b) { $env:NON_ZERO_EXIT = $true }
+
+            $message += New-CheckListItem $status -OK:$b
+        }
+        $message += ''
+    }
+
+    Add-Comment -ID $prID -Message $message
+
+    Write-Log 'PR action finished'
+}
+
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -485,102 +579,6 @@ function Initialize-Issue {
     }
 }
 
-function Initialize-PR {
-    <#
-    .SYNOPSIS
-        Handle pull requests actions.
-    #>
-    Write-Log 'PR initialized'
-
-    if ($EVENT.actions -ne 'opened') {
-        Write-Log 'Only action ''opened'' is supported'
-        # exit 0
-    }
-
-    Write-log 'Files in PR:'
-    Get-ChildItem $BUCKET_ROOT
-    Get-ChildItem $MANIFESTS_LOCATION
-
-    $prID = $EVENT.number
-    # Do not run on removed files
-    $files = Get-AllChangedFilesInPR $prID -Filter
-    # $message = @()
-    $checks = @()
-
-    foreach ($file in $files) {
-        Write-Log "Starting $($file.filename) checks"
-
-        # Convert path into gci item to hold all needed information
-        # TODO: Resolve root of PR
-        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
-        $object = Get-Content $manifest -Raw | ConvertFrom-Json
-        $statuses = [Ordered] @{}
-
-        # $message += "### $($manifest.Basename)"
-        # $message += ''
-
-        $statuses.Add('Description', ([bool] $object.description))
-        $statuses.Add('License', ([bool] $object.license))
-
-        # $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
-        # $message += New-CheckListItem 'License' -OK:([bool] $object.license)
-
-        #region Hashes
-        Write-Log 'Hashes'
-
-        $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
-        Write-Log $outputH
-        # everything should be all right when latest string in array will be OK
-        # $message += New-CheckListItem 'Hashes' -OK:($outputH[-1] -like 'OK')
-
-        $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
-        Write-Log 'Hashes done'
-        #endregion Hashes
-
-        #region Checkver
-        Write-Log 'Checkver'
-        # TODO: Autoupdate
-        $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
-        Write-log $outputV
-
-        # If there are more than 2 lines and second line is not version, there is problem
-        $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
-        $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
-
-        Write-Log 'Checkver done'
-        #endregion
-
-        #region formatjson
-        Write-Log 'Format'
-        # TODO:
-        Write-Log 'Format done'
-        #endregion formatjson
-
-        $checks += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
-
-        Write-Log "Finished $($file.filename) checks"
-    }
-
-    $message = @()
-    foreach ($check in $checks) {
-        $message += "### $($check.Name)"
-        $message += ''
-        foreach ($status in $check.Statuses.Keys) {
-            $b = $check.Statuses.Item($status)
-            Write-Log "$status | $b"
-
-            if (-not $b) { $env:NON_ZERO_EXIT = $true }
-
-            $message += New-CheckListItem $status -OK:$b
-        }
-        $message += ''
-    }
-
-    Add-Comment -ID $prID -Message $message
-
-    Write-Log 'PR action finished'
-}
-
 function Initialize-Push {
     Write-Log 'Push initialized'
 }
@@ -609,17 +607,17 @@ Write-Log 'FULL EVENT TO BE SAVED'
 
 $EVENT_RAW
 
+# TODO: Uncomment correct one
 switch ($EVENT_TYPE) {
-	'issues' { Write-Log 'In future there will be issue handler initialized' }
-	'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
-	'push' { Write-Log 'In future there will be push handler initialized' }
-	'schedule' { Write-Log 'In future there will be schedule handler initialized' }
-	# 'issues' { Initialize-Issue }
-	# 'pull_requests' { Initialize-PR }
-	# 'push' { Initialize-Push }
-	# 'schedule' { Initialize-Scheduled }
+    'issues' { Write-Log 'In future there will be issue handler initialized' }
+    'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
+    'push' { Write-Log 'In future there will be push handler initialized' }
+    'schedule' { Write-Log 'In future there will be schedule handler initialized' }
+    # 'issues' { Initialize-Issue }
+    # 'pull_requests' { Initialize-PR }
+    # 'push' { Initialize-Push }
+    # 'schedule' { Initialize-Scheduled }
 }
 
-Write-Log $env:NON_ZERO_EXIT, 'EXIT'
 if ($env:NON_ZERO_EXIT) { exit 258 }
 #endregion Main
