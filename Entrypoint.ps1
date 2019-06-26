@@ -515,6 +515,8 @@ function Initialize-PR {
 
         #region Hashes
         & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Update
+        Write-Log ((Get-FileHash $manifest.Fullaname).Hash.ToLower()), 'DL'
+        Write-Log $object.hash, 'MAN'
 
         $status = hub status --porcelain -uno
         Write-Log "Status: $status"
