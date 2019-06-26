@@ -6,8 +6,9 @@ param (
 )
 
 #region Variables pool
+$EVENT_RAW = Get-Content $env:GITHUB_EVENT_PATH -Raw
 # Convert actual API response to object
-$EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+$EVENT = ConvertFrom-Json $EVENT_RAW
 # Event type for automatic handler detection
 $EVENT_TYPE = $env:GITHUB_EVENT_NAME
 # user/repo format
@@ -540,12 +541,16 @@ switch ($Type) {
 # TODO: Remove after all events are captured and saved
 Write-Log 'FULL EVENT TO BE SAVED'
 
-Get-Content $env:GITHUB_EVENT_PATH -Raw
+$EVENT_RAW
 
-# switch ($EVENT_TYPE) {
-# 	'issues' { Initialize-Issue }
-# 	'pull_requests' { Initialize-PR }
-# 	'push' { Initialize-Push }
-# 	'schedule' { Initialize-Scheduled }
-# }
+switch ($EVENT_TYPE) {
+	'issues' { Write-Log 'In future there will be issue handler initialized' }
+	'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
+	'push' { Write-Log 'In future there will be push handler initialized' }
+	'schedule' { Write-Log 'In future there will be schedule handler initialized' }
+	# 'issues' { Initialize-Issue }
+	# 'pull_requests' { Initialize-PR }
+	# 'push' { Initialize-Push }
+	# 'schedule' { Initialize-Scheduled }
+}
 #endregion Main
