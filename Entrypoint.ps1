@@ -502,7 +502,7 @@ function Initialize-PR {
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    $message = @()
+    # $message = @()
     $checks = @()
 
     foreach ($file in $files) {
@@ -514,14 +514,14 @@ function Initialize-PR {
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
         $statuses = @{}
 
-        $message += "### $($manifest.Basename)"
-        $message += ''
+        # $message += "### $($manifest.Basename)"
+        # $message += ''
 
         $statuses.Add('Description', ([bool] $object.description))
         $statuses.Add('License', ([bool] $object.license))
 
-        $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
-        $message += New-CheckListItem 'License' -OK:([bool] $object.license)
+        # $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
+        # $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
         #region Hashes
         Write-Log 'Hashes'
@@ -529,7 +529,7 @@ function Initialize-PR {
         $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-Log $outputH
         # everything should be all right when latest string in array will be OK
-        $message += New-CheckListItem 'Hashes' -OK:($outputH[-1] -like 'OK')
+        # $message += New-CheckListItem 'Hashes' -OK:($outputH[-1] -like 'OK')
 
         $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
         Write-Log 'Hashes done'
@@ -544,8 +544,8 @@ function Initialize-PR {
         # If there are more than 2 lines and second line is not version, there is problem
         $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
         $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
-        $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
-        $message += New-CheckListItem 'Autoupdate' -OK:($outputV[-1] -notlike 'ERROR*')
+        # $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
+        # $message += New-CheckListItem 'Autoupdate' -OK:($outputV[-1] -notlike 'ERROR*')
 
         Write-Log 'Checkver done'
         #endregion
@@ -560,9 +560,14 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
+    $message = @()
     foreach ($check in $checks) {
-        Write-log 'ITERATION'
-        Write-Log $check.Name, $check.Statuses.Description, $check.Statuses.License, $check.Statuses.Hashes, $check.Statuses.Checkver, $check.Statuses.Autoupdate
+        $message += "### $($check.Name)"
+        $message += ''
+        foreach ($status in $check.Statuses.Keys) {
+            $message += New-CheckListItem $status $check.Statuses.Item($status)
+        }
+        $message += ''
     }
 
     Add-Comment -ID $prID -Message $message
