@@ -520,12 +520,13 @@ function Initialize-PR {
 
         #region Hashes
         Write-Log 'Hashes'
+
         $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        Write-Log $outputH
         # everything should be all right when latest string in array will be OK
         $OK = $outputH[-1] -like 'OK'
-        $outputH
-        $outputH[-1]
         $message += New-CheckListItem 'Hashes' -OK:$OK
+
         Write-Log 'Hashes done'
         #endregion Hashes
 
