@@ -495,6 +495,8 @@ function Initialize-PR {
         # exit 0
     }
 
+    Write-log 'Files in PR:'
+    Get-ChildItem $BUCKET_ROOT
 
     $prID = $EVENT.number
     # Do not run on removed files
@@ -505,6 +507,7 @@ function Initialize-PR {
         Write-Log "Starting $($file.filename) checks"
 
         # Convert path into gci item to hold all needed information
+        # TODO: Resolve root of PR
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
 
@@ -514,22 +517,26 @@ function Initialize-PR {
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
         #region Hashes
-        & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Update
-        Write-Log ((Get-FileHash $manifest.Fullname).Hash.ToLower()), 'DL'
-        Write-Log $object.hash, 'MAN'
-
-        $status = hub status --porcelain -uno
-        Write-Log "Status: $status"
-
-        $changes = hub diff --name-only
-        $OK = $true
-        Write-Log $changes
-        if ($changes.Count -eq 1) {
-            Write-Log 'Hashes failed'
-            $OK = $false
-        }
+        $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        $outputH
+        Write-Log $outputH
         $message += New-CheckListItem 'Hashes' -OK:$OK
         #endregion Hashes
+
+        #region Checkver
+        $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        $OK = $true
+        if ($outputV.Count -ge 2) {
+            Write-Log 'Checkver problem'
+            $OK = $false
+            $outputV
+            Write-Log $outputV
+        }
+        $message += New-CheckListItem 'Checkver' -OK:$OK
+        #endregion
+
+        #region formatjson
+        #endregion formatjson
 
         Write-Log "Finished $($file.filename) checks"
     }
