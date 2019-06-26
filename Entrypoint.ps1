@@ -566,7 +566,7 @@ function Initialize-PR {
         $message += ''
         foreach ($status in $check.Statuses.Keys) {
             Write-Log $status, $check.Statuses.Item($status)
-            $message += New-CheckListItem $status $check.Statuses.Item($status)
+            $message += New-CheckListItem $status -OK:($check.Statuses.Item($status))
         }
         $message += ''
     }
