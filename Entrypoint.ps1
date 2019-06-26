@@ -512,10 +512,10 @@ function Initialize-PR {
         $check = @{ 'name' = $manifest.Basename }
         $message += $manifest.Basename
 
-        $check.Add('Description', $object.Contains('Description'))
-        $message += New-CheckListItem 'Description' -OK:$object.Contains('Description')
-        $check.Add('License', $object.Contains('License'))
-        $message += New-CheckListItem 'License' -OK:$object.Contains('License')
+        $check.Add('Description', [bool] $object.description)
+        $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
+        $check.Add('License', [bool] $object.license)
+        $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
         $manifest.Basename # DEBUG:
         $checks += $check
