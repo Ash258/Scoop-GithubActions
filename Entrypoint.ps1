@@ -497,6 +497,7 @@ function Initialize-PR {
 
     Write-log 'Files in PR:'
     Get-ChildItem $BUCKET_ROOT
+    Get-ChildItem $MANIFESTS_LOCATION
 
     $prID = $EVENT.number
     # Do not run on removed files
@@ -517,6 +518,7 @@ function Initialize-PR {
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
 
         #region Hashes
+        Write-Log 'Hashes'
         $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         $outputH
         Write-Log $outputH
@@ -524,9 +526,10 @@ function Initialize-PR {
         #endregion Hashes
 
         #region Checkver
+        Write-Log 'Checkver'
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         $OK = $true
-        if ($outputV.Count -ge 2) {
+        if (($outputV.Count -gt 2) -or ($outputV[1] -notlike "*$($object.version)*")) {
             Write-Log 'Checkver problem'
             $OK = $false
             $outputV
