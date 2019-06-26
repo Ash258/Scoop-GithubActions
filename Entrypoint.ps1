@@ -503,6 +503,7 @@ function Initialize-PR {
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     $message = @()
+    $checks = @()
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
@@ -511,9 +512,13 @@ function Initialize-PR {
         # TODO: Resolve root of PR
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
+        $statuses = @{}
 
         $message += "### $($manifest.Basename)"
         $message += ''
+
+        $statuses.Add('Description', ([bool] $object.description))
+        $statuses.Add('License', ([bool] $object.license))
 
         $message += New-CheckListItem 'Description' -OK:([bool] $object.description)
         $message += New-CheckListItem 'License' -OK:([bool] $object.license)
@@ -526,6 +531,7 @@ function Initialize-PR {
         # everything should be all right when latest string in array will be OK
         $message += New-CheckListItem 'Hashes' -OK:($outputH[-1] -like 'OK')
 
+        $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
         Write-Log 'Hashes done'
         #endregion Hashes
 
@@ -536,8 +542,11 @@ function Initialize-PR {
         Write-log $outputV
 
         # If there are more than 2 lines and second line is not version, there is problem
+        $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
+        $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
         $message += New-CheckListItem 'Checkver' -OK:((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
         $message += New-CheckListItem 'Autoupdate' -OK:($outputV[-1] -notlike 'ERROR*')
+
         Write-Log 'Checkver done'
         #endregion
 
@@ -547,7 +556,13 @@ function Initialize-PR {
         Write-Log 'Format done'
         #endregion formatjson
 
+        $checks += @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
         Write-Log "Finished $($file.filename) checks"
+    }
+
+    foreach ($check in $checks) {
+        Write-log 'ITERATION'
+        Write-Log $check.Name, $check.Statuses.Description, $check.Statuses.License, $check.Statuses.Hashes, $check.Statuses.Checkver, $check.Statuses.Autoupdate
     }
 
     Add-Comment -ID $prID -Message $message
