@@ -385,6 +385,7 @@ function Initialize-PR {
     }
 
     $cloneLocation = '/github/forked_workspace'
+    # rather skip hub: git clone --branch $head.ref $head.repo.clone_url $cloneLocation
     hub clone --branch $head.ref $head.repo.clone_url $cloneLocation
     Push-Location $cloneLocation
     #>
