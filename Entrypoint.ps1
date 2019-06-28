@@ -373,7 +373,7 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    if ($EVENT.actions -ne 'opened') {
+    if ($EVENT.action -ne 'opened') {
         Write-Log 'Only action ''opened'' is supported'
         exit 0
     }
