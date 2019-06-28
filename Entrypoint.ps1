@@ -378,6 +378,17 @@ function Initialize-PR {
         exit 0
     }
 
+    <#TODO: Handle cloning of forked repository
+    $head = $.pull_request.head
+    if ($head.repo.fork) {
+        $REPOSITOR_forked = "$($head.repo.full_name):$($head.ref)"
+    }
+
+    $cloneLocation = '/github/forked_workspace'
+    hub clone --branch $head.ref $head.repo.clone_url $cloneLocation
+    Push-Location $cloneLocation
+    #>
+
     Write-log 'Files in PR:'
     Get-ChildItem $BUCKET_ROOT
     Get-ChildItem $MANIFESTS_LOCATION
@@ -393,7 +404,6 @@ function Initialize-PR {
         Write-Log "Starting $($file.filename) checks"
 
         # Convert path into gci item to hold all needed information
-        # TODO: Resolve root of PR
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
         $statuses = [Ordered] @{ }
