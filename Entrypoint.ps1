@@ -611,17 +611,17 @@ Initialize-NeededSettings
 Write-Log 'Importing all modules'
 Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
+# TODO: Remove after all events are captured and saved and before release
+Write-Log 'FULL EVENT TO BE SAVED'
+
+$EVENT_RAW
+
 switch ($Type) {
     'Issue' { Initialize-Issue }
     'PR' { Initialize-PR }
     'Push' { Initialize-Push }
     'Scheduled' { Initialize-Scheduled }
 }
-
-# TODO: Remove after all events are captured and saved and before release
-Write-Log 'FULL EVENT TO BE SAVED'
-
-$EVENT_RAW
 
 # TODO: Uncomment correct one
 switch ($EVENT_TYPE) {
