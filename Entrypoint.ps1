@@ -379,7 +379,7 @@ function Initialize-PR {
     }
 
     <#TODO: Handle cloning of forked repository
-    $head = $.pull_request.head
+    $head = $EVENT.pull_request.head
     if ($head.repo.fork) {
         $REPOSITOR_forked = "$($head.repo.full_name):$($head.ref)"
     }
