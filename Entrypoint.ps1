@@ -385,6 +385,7 @@ function Initialize-PR {
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
+    $files
     # $message = @()
     $checks = @()
 
