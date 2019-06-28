@@ -1,4 +1,5 @@
 ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗ DO NOT USE YET. Wait for 1.0 tag releae ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
+You could participate in testing using `@stable` version or any of already released tags from release page.
 
 # Github actions for scoop buckets
 
