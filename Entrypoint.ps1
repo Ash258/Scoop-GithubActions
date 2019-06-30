@@ -396,11 +396,11 @@ function Initialize-PR {
     Get-ChildItem $BUCKET_ROOT
     Get-ChildItem $MANIFESTS_LOCATION
 
+    $checks = @()
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    $files
-    $checks = @()
+    Write-Log $files
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
