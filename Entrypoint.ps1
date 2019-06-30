@@ -380,17 +380,19 @@ function Initialize-PR {
 
     <#TODO: Handle cloning of forked repository
     $head = $EVENT.pull_request.head
-    if ($head.repo.fork) {
-        $REPOSITOR_forked = "$($head.repo.full_name):$($head.ref)"
-    }
+    if ($head.repo.fork) { $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)" }
 
     $cloneLocation = '/github/forked_workspace'
-    # rather skip hub: git clone --branch $head.ref $head.repo.clone_url $cloneLocation
-    hub clone --branch $head.ref $head.repo.clone_url $cloneLocation
+    git clone --branch $head.ref $head.repo.clone_url $cloneLocation
+    $BUCKET_ROOT = $cloneLocation
     Push-Location $cloneLocation
+    $MANIFESTS_LOCATION = if (Test-Path (Join-Path $BUCKET_ROOT 'bucket')) { Join-Path $BUCKET_ROOT 'bucket' } else { $BUCKET_ROOT }
     #>
 
+    Get-Location
+
     Write-log 'Files in PR:'
+
     Get-ChildItem $BUCKET_ROOT
     Get-ChildItem $MANIFESTS_LOCATION
 
@@ -398,7 +400,6 @@ function Initialize-PR {
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     $files
-    # $message = @()
     $checks = @()
 
     foreach ($file in $files) {
@@ -411,6 +412,7 @@ function Initialize-PR {
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
+        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
         #endregion Property checks
 
@@ -428,7 +430,6 @@ function Initialize-PR {
 
         #region Checkver
         Write-Log 'Checkver'
-        # TODO: Autoupdate
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
         Write-log $outputV
 
@@ -441,7 +442,11 @@ function Initialize-PR {
 
         #region formatjson
         Write-Log 'Format'
-        # TODO:
+        # TODO: implement format check using array compare if possible (or just strings with raws)
+        # TODO: I am not sure if this will handle tabs and everything what could go wrong.
+        #$raw = Get-Content $manifest.Fullname -Raw
+        #$new_raw = $object | ConvertToPrettyJson
+        #$statuses.Add('Format', ($raw -eq $new_raw))
         Write-Log 'Format done'
         #endregion formatjson
 
