@@ -359,6 +359,7 @@ function Initialize-Scheduled {
         'Push'     = $true
     }
     if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+    if ($env:SKIP_UPDATED) { $params.Add('SkipUpdated', ([bool] $env:SKIP_UPDATED)) }
 
     & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
     # TODO: Post some comment??
