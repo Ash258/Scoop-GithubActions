@@ -1,4 +1,8 @@
-❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗ DO NOT USE YET. Wait for 1.0 tag releae ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
+<p align="center">
+❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗ DO NOT USE YET. Wait for 1.0.0 tag release ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
+</p>
+
+You could participate in testing using `@stable` version or any of already released tags from release page.
 
 # Github actions for scoop buckets
 
@@ -66,7 +70,7 @@ workflow "Excavator" {
 }
 
 action "IssueHandler" {
-    uses = "Ash258/Scoop-GithubActions@master"
+    uses = "Ash258/Scoop-GithubActions@stable"
     args = "Issue"
     env = {
         "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
@@ -75,7 +79,7 @@ action "IssueHandler" {
 }
 
 action "PullRequestHandler" {
-    uses = "Ash258/Scoop-GithubActions@master"
+    uses = "Ash258/Scoop-GithubActions@stable"
     args = "PR"
     env = {
         "GITH_EMAIL" = "youremail@email.com"
@@ -84,10 +88,11 @@ action "PullRequestHandler" {
 }
 
 action "Excavate" {
-    uses = "Ash258/Scoop-GithubActions@master"
+    uses = "Ash258/Scoop-GithubActions@stable"
     args = "Scheduled"
     env = {
-        "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter,
+        "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter
+        "SKIP_UPDATED" = "1" # Optional parameter, Could be anything as value
         "GITH_EMAIL" = "youremail@email.com"
     }
     secrets = ["GITHUB_TOKEN"]

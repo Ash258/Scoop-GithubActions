@@ -359,6 +359,7 @@ function Initialize-Scheduled {
         'Push'     = $true
     }
     if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+    if ($env:SKIP_UPDATED) { $params.Add('SkipUpdated', $true) }
 
     & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
     # TODO: Post some comment??
@@ -378,27 +379,41 @@ function Initialize-PR {
         exit 0
     }
 
+    <#TODO: Handle cloning of forked repository
+    $head = $EVENT.pull_request.head
+    if ($head.repo.fork) { $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)" }
+
+    $cloneLocation = '/github/forked_workspace'
+    git clone --branch $head.ref $head.repo.clone_url $cloneLocation
+    $BUCKET_ROOT = $cloneLocation
+    Push-Location $cloneLocation
+    $MANIFESTS_LOCATION = if (Test-Path (Join-Path $BUCKET_ROOT 'bucket')) { Join-Path $BUCKET_ROOT 'bucket' } else { $BUCKET_ROOT }
+    #>
+
+    Get-Location
+
     Write-log 'Files in PR:'
+
     Get-ChildItem $BUCKET_ROOT
     Get-ChildItem $MANIFESTS_LOCATION
 
+    $checks = @()
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    # $message = @()
-    $checks = @()
+    Write-Log $files
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
         # Convert path into gci item to hold all needed information
-        # TODO: Resolve root of PR
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         $object = Get-Content $manifest -Raw | ConvertFrom-Json
         $statuses = [Ordered] @{ }
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
+        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
         #endregion Property checks
 
@@ -416,7 +431,6 @@ function Initialize-PR {
 
         #region Checkver
         Write-Log 'Checkver'
-        # TODO: Autoupdate
         $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
         Write-log $outputV
 
@@ -429,7 +443,11 @@ function Initialize-PR {
 
         #region formatjson
         Write-Log 'Format'
-        # TODO:
+        # TODO: implement format check using array compare if possible (or just strings with raws)
+        # TODO: I am not sure if this will handle tabs and everything what could go wrong.
+        #$raw = Get-Content $manifest.Fullname -Raw
+        #$new_raw = $object | ConvertToPrettyJson
+        #$statuses.Add('Format', ($raw -eq $new_raw))
         Write-Log 'Format done'
         #endregion formatjson
 
