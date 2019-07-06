@@ -479,14 +479,19 @@ function Initialize-PR {
         Write-Log "Starting $($file.filename) checks"
 
         # Convert path into gci item to hold all needed information
-        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
-        $object = Get-Content $manifest -Raw | ConvertFrom-Json
         $statuses = [Ordered] @{ }
+        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
+        Write-Log 'Manifest', $manifest
+
+        $object = Get-Content $manifest -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        # TODO: Handle convert fail
+        # It is not manifest at all
+        # Manifest is broken
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
-        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
+        # TODO: More advanced license checks
         #endregion Property checks
 
         #region Hashes
@@ -507,11 +512,13 @@ function Initialize-PR {
         Write-log $outputV
 
         # If there are more than 2 lines and second line is not version, there is problem
-        $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
+        $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
+        $statuses.Add('Checkver', $checkver)
+
         switch -Wildcard ($outputV[-1]) {
             'ERROR*' { $autoupdate = $false }
             "couldn't match*" { $autoupdate = $false }
-            default { $autoupdate = $true }
+            default { $autoupdate = $checkver }
         }
         $statuses.Add('Autoupdate', $autoupdate)
 
@@ -556,6 +563,9 @@ function Initialize-PR {
     } else {
         $message.InsertRange(0, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
     }
+    # TODO: Comment URL to action log
+    # $url = "https://github.com/$REPOSITORY/runs/$RUN_ID"
+    # Add-IntoArray $message "_You can find log of all checks in '$url'_"
 
     Add-Comment -ID $prID -Message $message
 
