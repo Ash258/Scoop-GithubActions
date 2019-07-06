@@ -272,7 +272,8 @@ function Remove-Label {
     $responses = New-Array
     $issueLabels = (Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" | Select-Object -ExpandProperty Content | ConvertFrom-Json).name
     foreach ($lab in $Label) {
-        if ($issueLabels -contains $lab) { # https://developer.github.com/v3/issues/labels/#list-labels-on-an-issue
+        if ($issueLabels -contains $lab) {
+            # https://developer.github.com/v3/issues/labels/#list-labels-on-an-issue
             Add-IntoArray $responses (Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels/$label" -Method Delete)
         }
     }
@@ -280,6 +281,29 @@ function Remove-Label {
     return $responses
 }
 #endregion Github API
+
+#region Actions
+function Initialize-Scheduled {
+    <#
+    .SYNOPSIS
+        Excavator alternative. Based on schedule execute auto-pr function.
+    #>
+    Write-Log 'Scheduled initialized'
+
+    $params = @{
+        'Dir'         = $MANIFESTS_LOCATION
+        'Upstream'    = "${REPOSITORY}:master"
+        'Push'        = $true
+        'SkipUpdated' = [bool] $env:SKIP_UPDATED
+    }
+    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+
+    & (Join-Path $BINARIES_FOLDER 'auto-pr.ps1') @params
+    # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
+
+    Write-Log 'Auto pr - DONE'
+}
+#endregion Actions
 #endregion DO NOT TOUCH
 
 function Resolve-IssueTitle {
@@ -410,27 +434,6 @@ function Test-Downloading {
     }
 }
 
-function Initialize-Scheduled {
-    <#
-    .SYNOPSIS
-        Excavator alternative. Based on schedule execute auto-pr function.
-    #>
-    Write-Log 'Scheduled initialized'
-
-    $params = @{
-        'Dir'      = $MANIFESTS_LOCATION
-        'Upstream' = "${REPOSITORY}:master"
-        'Push'     = $true
-    }
-    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
-    if ($env:SKIP_UPDATED) { $params.Add('SkipUpdated', $true) }
-
-    & (Join-Path $BINARIES_FOLDER 'auto-pr.ps1') @params
-    # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
-
-    Write-Log 'Auto pr - DONE'
-}
-
 function Initialize-PR {
     <#
     .SYNOPSIS
@@ -484,7 +487,7 @@ function Initialize-PR {
         #region Hashes
         Write-Log 'Hashes'
 
-        $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-Log $outputH
 
         # everything should be all right when latest string in array will be OK
@@ -495,7 +498,7 @@ function Initialize-PR {
 
         #region Checkver
         Write-Log 'Checkver'
-        $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+        $outputV = @(& (Join-Path $BINARIES_FOLDER 'checkver.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
         Write-log $outputV
 
         # If there are more than 2 lines and second line is not version, there is problem
@@ -523,25 +526,25 @@ function Initialize-PR {
     # Create nice comment to post
     $message = New-Array
     foreach ($check in $checks) {
-        $message.Add("### $($check.Name)")
-        $message.Add('')
+        Add-IntoArray $message "### $($check.Name)"
+        Add-IntoArray $message ''
+
         foreach ($status in $check.Statuses.Keys) {
             $b = $check.Statuses.Item($status)
             Write-Log "$status | $b"
 
             if (-not $b) { $env:NON_ZERO_EXIT = $true }
 
-            $message.Add((New-CheckListItem $status -OK:$b))
+            Add-IntoArray $message (New-CheckListItem $status -OK:$b)
         }
-        $message.Add('')
+        Add-IntoArray $message ''
     }
 
     # Add some more human friendly message
-    $message.Insert(0, 'Thanks for contributing.')
     if ($env:NON_ZERO_EXIT) {
-        $message.Insert(1, 'Your changes does not pass some checks')
+        $message.Insert(0, 'Your changes does not pass some checks')
     } else {
-        $message.InsertRange(1, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
+        $message.InsertRange(0, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
     }
 
     Add-Comment -ID $prID -Message $message
