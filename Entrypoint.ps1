@@ -446,16 +446,20 @@ function Initialize-PR {
         exit 0
     }
 
-    <#TODO: Handle cloning of forked repository
+    #region Forked repo
     $head = $EVENT.pull_request.head
     if ($head.repo.fork) { $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)" }
+    Write-Log $REPOSITORY_forked
 
     $cloneLocation = '/github/forked_workspace'
     git clone --branch $head.ref $head.repo.clone_url $cloneLocation
     $BUCKET_ROOT = $cloneLocation
     Push-Location $cloneLocation
-    $MANIFESTS_LOCATION = if (Test-Path (Join-Path $BUCKET_ROOT 'bucket')) { Join-Path $BUCKET_ROOT 'bucket' } else { $BUCKET_ROOT }
-    #>
+
+    $buck = Join-Path $BUCKET_ROOT 'bucket'
+
+    $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
+    #endregion Forked repo
 
     Get-Location
 
@@ -696,10 +700,7 @@ Initialize-NeededSettings
 Write-Log 'Importing all modules'
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
-# TODO: Remove after all events are captured and saved and before release
-Write-Log 'FULL EVENT TO BE SAVED'
-
-$EVENT_RAW
+Write-Log 'FULL EVENT:' $EVENT_RAW
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
