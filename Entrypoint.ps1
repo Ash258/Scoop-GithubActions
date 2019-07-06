@@ -27,6 +27,7 @@ $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUC
 #region Function pool
 #region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
 #region DO NOT TOUCH
+#region General Helpers
 function Write-Log {
     <#
     .SYNOPSIS
@@ -39,14 +40,6 @@ function Write-Log {
 
     Write-Output ''
     $Message | ForEach-Object { Write-Output "LOG: $_" }
-
-    function Get-EnvironmentVariables {
-        <#
-    .SYNOPSIS
-        List all environment variables. Mainly debug purpose.
-    #>
-        return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
-    }
 }
 
 function Get-EnvironmentVariables {
@@ -128,7 +121,7 @@ function Initialize-NeededSettings {
 }
 
 function New-CheckListItem {
-    <#
+	<#
     .SYNOPSIS
         Helper functino for creating markdown check lists.
     .PARAMETER Check
@@ -138,13 +131,14 @@ function New-CheckListItem {
     .PARAMETER IndentLevel
         Define nested list level.
     #>
-    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
+	param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
 
-    $ind = ' ' * $IndentLevel * 4
-    $char = if ($OK) { 'x' } else { ' ' }
+	$ind = ' ' * $IndentLevel * 4
+	$char = if ($OK) { 'x' } else { ' ' }
 
-    return "$ind- [$char] $Check"
+	return "$ind- [$char] $Check"
 }
+#endregion General Helpers
 
 #region Github API
 function Invoke-GithubRequest {
@@ -210,7 +204,7 @@ function Get-AllChangedFilesInPR {
     .PARAMETER ID
         ID of pull request.
     .PARAMETER Filter
-        Return only files which are not 'removed'
+        Return only files which are not 'removed'.
     #>
     param([Int] $ID, [Switch] $Filter)
 
@@ -490,7 +484,6 @@ function Initialize-PR {
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
-        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
         # TODO: More advanced license checks
         #endregion Property checks
