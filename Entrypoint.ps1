@@ -11,21 +11,30 @@ $EVENT_RAW = Get-Content $env:GITHUB_EVENT_PATH -Raw
 $EVENT = ConvertFrom-Json $EVENT_RAW
 # Event type for automatic handler detection
 $EVENT_TYPE = $env:GITHUB_EVENT_NAME
+
 # user/repo format
 $REPOSITORY = $env:GITHUB_REPOSITORY
 # Location of bucket
 $BUCKET_ROOT = $env:GITHUB_WORKSPACE
+# Binaries from scoop. No need to rely on bucket specific binaries
+$BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
 
 # Backward compatability for manifests inside root of repository
 $nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
 $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
-
-$NON_ZERO_EXIT = $false
 #endregion Variables pool
 
 #region Function pool
-#region ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+#region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
+#region DO NOT TOUCH
+#region General Helpers
 function Write-Log {
+    <#
+    .SYNOPSIS
+        Persist message in docker log. For debug mainly
+    .PARAMETER Message
+        Array of strings to be saved into docker log.
+    #>
     [Parameter(Mandatory, ValueFromRemainingArguments)]
     param ([String[]] $Message)
 
@@ -34,39 +43,11 @@ function Write-Log {
 }
 
 function Get-EnvironmentVariables {
-    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
-}
-
-function Initialize-NeededSettings {
-    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if (-not ($env:GITH_EMAIL)) {
-        Write-Log 'Pushing is not possible without email environment'
-    } else {
-        git config --global user.email $env:GITH_EMAIL
-    }
-
-    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
-}
-
-function Resolve-IssueTitle {
     <#
     .SYNOPSIS
-        Parse issue title and return manifest name, version and problem.
-    .PARAMETER Title
-        Title to be parsed.
-    .EXAMPLE
-        Resolve-IssueTitle 'recuva@2.4: hash check failed'
+        List all environment variables. Mainly debug purpose.
     #>
-    param([String] $Title)
-
-    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
-
-    if ($result) {
-        return $Matches.name, $Matches.version, $Matches.problem
-    } else {
-        return $null, $null, $null
-    }
+    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
 function New-Array {
@@ -78,24 +59,88 @@ function New-Array {
     return New-Object System.Collections.ArrayList
 }
 
-function New-CheckListItem {
+function Add-IntoArray {
     <#
+    .SYNOPSIS
+        Append list with given item.
+    .PARAMETER List
+        List to be expanded.
+    .PARAMETER Item
+        Item to be added into list.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [AllowEmptyCollection()]
+        [System.Collections.ArrayList] $List,
+        [System.Object] $Item
+    )
+
+    $List.Add($Item) | Out-Null
+}
+
+function New-DetailsCommentString {
+    <#
+    .SYNOPSIS
+        Create string surrounded with <details>.
+    .PARAMETER Summary
+        What should be displayed on expand button.
+    .PARAMETER Content
+        Content of details block.
+    .PARAMETER Type
+        Type of code fenced block (example `json`, `yml`, ...).
+        Needs to be valid markdown code fenced block type.
+    #>
+    param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
+
+    return @"
+<details>
+    <summary>$Summary</summary>
+
+``````$Type
+$($Content -join "`r`n")
+</details>
+``````
+"@
+}
+
+function Initialize-NeededSettings {
+    <#
+    .SYNOPSIS
+        Initialize all settings, environment so everything work as expected.
+    #>
+    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if (-not ($env:GITH_EMAIL)) {
+        Write-Log 'Pushing is not possible without email environment'
+    } else {
+        git config --global user.email $env:GITH_EMAIL
+    }
+
+    # Log all environment variables
+    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+}
+
+function New-CheckListItem {
+	<#
     .SYNOPSIS
         Helper functino for creating markdown check lists.
     .PARAMETER Check
         Name of check.
     .PARAMETER OK
         Check was met.
+    .PARAMETER IndentLevel
+        Define nested list level.
     #>
-    param ([String] $Check, [Switch] $OK)
+	param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
 
-    if ($OK) {
-        return "- [x] $Check"
-    } else {
-        return "- [ ] $Check"
-    }
+	$ind = ' ' * $IndentLevel * 4
+	$char = if ($OK) { 'x' } else { ' ' }
+
+	return "$ind- [$char] $Check"
 }
+#endregion General Helpers
 
+#region Github API
 function Invoke-GithubRequest {
     <#
     .SYNOPSIS
@@ -136,6 +181,7 @@ function Add-Comment {
     <#
     .SYNOPSIS
         Add comment into specific issue / PR.
+        https://developer.github.com/v3/issues/comments/
     .PARAMETER ID
         ID of issue / PR.
     .PARAMETER Message
@@ -150,28 +196,15 @@ function Add-Comment {
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/comments" -Method Post -Body @{ 'body' = ($Message -join "`r`n") }
 }
 
-function Add-Label {
-    <#
-    .SYNOPSIS
-        Add label to issue / PR.
-    .PARAMETER ID
-        Id of issue / PR.
-    .PARAMETER Label
-        Label to be set.
-    #>
-    param([Int] $ID, [String[]] $Label)
-
-    return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" -Method Post -Body @{ 'labels' = $Label }
-}
-
 function Get-AllChangedFilesInPR {
     <#
     .SYNOPSIS
         Get list of all changed files inside pull request.
+        https://developer.github.com/v3/pulls/#list-pull-requests-files
     .PARAMETER ID
         ID of pull request.
     .PARAMETER Filter
-        Return only files which are not 'removed'
+        Return only files which are not 'removed'.
     #>
     param([Int] $ID, [Switch] $Filter)
 
@@ -185,6 +218,7 @@ function Close-Issue {
     <#
     .SYNOPSIS
         Close issue / PR.
+        https://developer.github.com/v3/issues/#edit-an-issue
     .PARAMETER ID
         ID of issue / PR.
     #>
@@ -193,24 +227,96 @@ function Close-Issue {
     return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID" -Method Patch -Body @{ 'state' = 'closed' }
 }
 
+function Add-Label {
+    <#
+    .SYNOPSIS
+        Add label to issue / PR.
+        https://developer.github.com/v3/issues/labels/#add-labels-to-an-issue
+    .PARAMETER ID
+        Id of issue / PR.
+    .PARAMETER Label
+        Label to be set.
+    #>
+    param(
+        [Int] $ID,
+        [ValidateNotNullOrEmpty()] # > Must contain at least one label
+        [String[]] $Label
+    )
+
+    return Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" -Method Post -Body @{ 'labels' = $Label }
+}
+
 function Remove-Label {
     <#
     .SYNOPSIS
         Remove label from issue / PR.
+        https://developer.github.com/v3/issues/labels/#remove-a-label-from-an-issue
     .PARAMETER ID
         ID of issue / PR.
     .PARAMETER Label
         Array of labels to be removed.
     #>
-    param([Int] $ID, [String[]] $Label)
+    param(
+        [Int] $ID,
+        [ValidateNotNullOrEmpty()]
+        [String[]] $Label
+    )
 
-    $responses = @()
+    $responses = New-Array
+    $issueLabels = (Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" | Select-Object -ExpandProperty Content | ConvertFrom-Json).name
     foreach ($lab in $Label) {
-        # TODO: Check existence
-        $responses += Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels/$label" -Method Delete
+        if ($issueLabels -contains $lab) {
+            # https://developer.github.com/v3/issues/labels/#list-labels-on-an-issue
+            Add-IntoArray $responses (Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels/$label" -Method Delete)
+        }
     }
 
     return $responses
+}
+#endregion Github API
+
+#region Actions
+function Initialize-Scheduled {
+    <#
+    .SYNOPSIS
+        Excavator alternative. Based on schedule execute auto-pr function.
+    #>
+    Write-Log 'Scheduled initialized'
+
+    $params = @{
+        'Dir'         = $MANIFESTS_LOCATION
+        'Upstream'    = "${REPOSITORY}:master"
+        'Push'        = $true
+        'SkipUpdated' = [bool] $env:SKIP_UPDATED
+    }
+    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+
+    & (Join-Path $BINARIES_FOLDER 'auto-pr.ps1') @params
+    # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
+
+    Write-Log 'Auto pr - DONE'
+}
+#endregion Actions
+#endregion DO NOT TOUCH
+
+function Resolve-IssueTitle {
+    <#
+    .SYNOPSIS
+        Parse issue title and return manifest name, version and problem.
+    .PARAMETER Title
+        Title to be parsed.
+    .EXAMPLE
+        Resolve-IssueTitle 'recuva@2.4: hash check failed'
+    #>
+    param([String] $Title)
+
+    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
+
+    if ($result) {
+        return $Matches.name, $Matches.version, $Matches.problem
+    } else {
+        return $null, $null, $null
+    }
 }
 
 function Test-Hash {
@@ -220,7 +326,7 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    & "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $Manifest -Dir $MANIFESTS_LOCATION -Update
+    & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $Manifest -Dir $MANIFESTS_LOCATION -Update
     # TODO: Resolve eror state handling from withing binary
     # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
 
@@ -285,31 +391,6 @@ function Test-Hash {
     }
 }
 
-function New-DetailsCommentString {
-    <#
-    .SYNOPSIS
-        Create string surrounded with <details>.
-    .PARAMETER Summary
-        What should be displayed on button.
-    .PARAMETER Content
-        Content of details block.
-    .PARAMETER Type
-        Type of code fenced block (example `json`, `yml`, ...).
-        Needs to be valid markdown code fenced block type.
-    #>
-    param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
-
-    return @"
-<details>
-    <summary>$Summary</summary>
-
-``````$Type
-$($Content -join "`r`n")
-</details>
-``````
-"@
-}
-
 function Test-Downloading {
     param([String] $Manifest, [Int] $IssueID)
 
@@ -346,27 +427,6 @@ function Test-Downloading {
     }
 }
 
-function Initialize-Scheduled {
-    <#
-    .SYNOPSIS
-        Excavator alternative. Based on schedule execute auto-pr function.
-    #>
-    Write-Log 'Scheduled initialized'
-
-    $params = @{
-        'Dir'      = $MANIFESTS_LOCATION
-        'Upstream' = "${REPOSITORY}:master"
-        'Push'     = $true
-    }
-    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
-    if ($env:SKIP_UPDATED) { $params.Add('SkipUpdated', $true) }
-
-    & "$env:SCOOP_HOME\bin\auto-pr.ps1" @params
-    # TODO: Post some comment??
-
-    Write-Log 'Auto pr - DONE'
-}
-
 function Initialize-PR {
     <#
     .SYNOPSIS
@@ -375,22 +435,28 @@ function Initialize-PR {
     Write-Log 'PR initialized'
 
     if ($EVENT.action -ne 'opened') {
+        # TODO: Comment
         Write-Log 'Only action ''opened'' is supported'
         exit 0
     }
 
-    <#TODO: Handle cloning of forked repository
+    #region Forked repo
     $head = $EVENT.pull_request.head
-    if ($head.repo.fork) { $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)" }
+    if ($head.repo.fork) {
+        Write-Log 'Forked repository'
 
-    $cloneLocation = '/github/forked_workspace'
-    git clone --branch $head.ref $head.repo.clone_url $cloneLocation
-    $BUCKET_ROOT = $cloneLocation
-    Push-Location $cloneLocation
-    $MANIFESTS_LOCATION = if (Test-Path (Join-Path $BUCKET_ROOT 'bucket')) { Join-Path $BUCKET_ROOT 'bucket' } else { $BUCKET_ROOT }
-    #>
+        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
+        Write-Log $REPOSITORY_forked
 
-    Get-Location
+        $cloneLocation = '/github/forked_workspace'
+        git clone --branch $head.ref $head.repo.clone_url $cloneLocation
+        $BUCKET_ROOT = $cloneLocation
+        $buck = Join-Path $BUCKET_ROOT 'bucket'
+        $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
+
+        Push-Location $cloneLocation
+    }
+    #endregion Forked repo
 
     Write-log 'Files in PR:'
 
@@ -406,21 +472,26 @@ function Initialize-PR {
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
+        $statuses = [Ordered] @{ }
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
-        $object = Get-Content $manifest -Raw | ConvertFrom-Json
-        $statuses = [Ordered] @{ }
+        Write-Log 'Manifest', $manifest
+
+        $object = Get-Content $manifest -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        # TODO: Handle convert fail
+        # It is not manifest at all
+        # Manifest is broken
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
-        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
+        # TODO: More advanced license checks
         #endregion Property checks
 
         #region Hashes
         Write-Log 'Hashes'
 
-        $outputH = @(& "$env:SCOOP_HOME\bin\checkhashes.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-Log $outputH
 
         # everything should be all right when latest string in array will be OK
@@ -431,12 +502,19 @@ function Initialize-PR {
 
         #region Checkver
         Write-Log 'Checkver'
-        $outputV = @(& "$env:SCOOP_HOME\bin\checkver.ps1" -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+        $outputV = @(& (Join-Path $BINARIES_FOLDER 'checkver.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
         Write-log $outputV
 
         # If there are more than 2 lines and second line is not version, there is problem
-        $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
-        $statuses.Add('Autoupdate', ($outputV[-1] -notlike 'ERROR*'))
+        $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
+        $statuses.Add('Checkver', $checkver)
+
+        switch -Wildcard ($outputV[-1]) {
+            'ERROR*' { $autoupdate = $false }
+            "couldn't match*" { $autoupdate = $false }
+            default { $autoupdate = $checkver }
+        }
+        $statuses.Add('Autoupdate', $autoupdate)
 
         Write-Log 'Checkver done'
         #endregion
@@ -459,33 +537,36 @@ function Initialize-PR {
     # Create nice comment to post
     $message = New-Array
     foreach ($check in $checks) {
-        $message.Add("### $($check.Name)")
-        $message.Add('')
+        Add-IntoArray $message "### $($check.Name)"
+        Add-IntoArray $message ''
+
         foreach ($status in $check.Statuses.Keys) {
             $b = $check.Statuses.Item($status)
             Write-Log "$status | $b"
 
             if (-not $b) { $env:NON_ZERO_EXIT = $true }
 
-            $message.Add((New-CheckListItem $status -OK:$b))
+            Add-IntoArray $message (New-CheckListItem $status -OK:$b)
         }
-        $message.Add('')
+        Add-IntoArray $message ''
     }
 
     # Add some more human friendly message
-    $message.Insert(0, 'Thanks for contributing.')
     if ($env:NON_ZERO_EXIT) {
-        $message.Insert(1, 'Your changes does not pass some checks')
+        $message.Insert(0, 'Your changes does not pass some checks')
     } else {
-        $message.InsertRange(1, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
+        $message.InsertRange(0, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
     }
+    # TODO: Comment URL to action log
+    # $url = "https://github.com/$REPOSITORY/runs/$RUN_ID"
+    # Add-IntoArray $message "_You can find log of all checks in '$url'_"
 
     Add-Comment -ID $prID -Message $message
 
     Write-Log 'PR action finished'
 }
 
-#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆⬆⬆
+#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
 
 
 
@@ -627,12 +708,9 @@ Initialize-NeededSettings
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
-Get-ChildItem "$env:SCOOP_HOME\lib" '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
+Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
-# TODO: Remove after all events are captured and saved and before release
-Write-Log 'FULL EVENT TO BE SAVED'
-
-$EVENT_RAW
+Write-Log 'FULL EVENT:', $EVENT_RAW
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
