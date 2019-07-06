@@ -440,7 +440,8 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    if ($EVENT.action -ne 'opened') { # TODO: Comment
+    if ($EVENT.action -ne 'opened') {
+        # TODO: Comment
         Write-Log 'Only action ''opened'' is supported'
         exit 0
     }
@@ -507,7 +508,12 @@ function Initialize-PR {
 
         # If there are more than 2 lines and second line is not version, there is problem
         $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
-        $statuses.Add('Autoupdate', (($outputV[-1] -notlike 'ERROR*') -or ($outputV[-1] -notlike 'couldn''t match')))
+        switch -Wildcard ($outputV[-1]) {
+            'ERROR*' { $autoupdate = $false }
+            "couldn't match" { $autoupdate = $false }
+            default { $autoupdate = $true }
+        }
+        $statuses.Add('Autoupdate', $autoupdate)
 
         Write-Log 'Checkver done'
         #endregion
