@@ -510,7 +510,7 @@ function Initialize-PR {
         $statuses.Add('Checkver', ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)"))))
         switch -Wildcard ($outputV[-1]) {
             'ERROR*' { $autoupdate = $false }
-            "couldn't match" { $autoupdate = $false }
+            "couldn't match*" { $autoupdate = $false }
             default { $autoupdate = $true }
         }
         $statuses.Add('Autoupdate', $autoupdate)
