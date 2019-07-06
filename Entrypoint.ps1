@@ -11,6 +11,7 @@ $EVENT_RAW = Get-Content $env:GITHUB_EVENT_PATH -Raw
 $EVENT = ConvertFrom-Json $EVENT_RAW
 # Event type for automatic handler detection
 $EVENT_TYPE = $env:GITHUB_EVENT_NAME
+
 # user/repo format
 $REPOSITORY = $env:GITHUB_REPOSITORY
 # Location of bucket
@@ -21,8 +22,6 @@ $BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
 # Backward compatability for manifests inside root of repository
 $nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
 $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
-
-$NON_ZERO_EXIT = $false
 #endregion Variables pool
 
 #region Function pool
@@ -441,27 +440,28 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    if ($EVENT.action -ne 'opened') {
+    if ($EVENT.action -ne 'opened') { # TODO: Comment
         Write-Log 'Only action ''opened'' is supported'
         exit 0
     }
 
     #region Forked repo
     $head = $EVENT.pull_request.head
-    if ($head.repo.fork) { $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)" }
-    Write-Log $REPOSITORY_forked
+    if ($head.repo.fork) {
+        Write-Log 'Forked repository'
 
-    $cloneLocation = '/github/forked_workspace'
-    git clone --branch $head.ref $head.repo.clone_url $cloneLocation
-    $BUCKET_ROOT = $cloneLocation
-    Push-Location $cloneLocation
+        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
+        Write-Log $REPOSITORY_forked
 
-    $buck = Join-Path $BUCKET_ROOT 'bucket'
+        $cloneLocation = '/github/forked_workspace'
+        git clone --branch $head.ref $head.repo.clone_url $cloneLocation
+        $BUCKET_ROOT = $cloneLocation
+        $buck = Join-Path $BUCKET_ROOT 'bucket'
+        $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
 
-    $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
+        Push-Location $cloneLocation
+    }
     #endregion Forked repo
-
-    Get-Location
 
     Write-log 'Files in PR:'
 
@@ -700,7 +700,7 @@ Initialize-NeededSettings
 Write-Log 'Importing all modules'
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
-Write-Log 'FULL EVENT:' $EVENT_RAW
+Write-Log 'FULL EVENT:', $EVENT_RAW
 
 switch ($Type) {
     'Issue' { Initialize-Issue }
