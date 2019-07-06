@@ -478,8 +478,8 @@ function Initialize-PR {
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
-        # Convert path into gci item to hold all needed information
         $statuses = [Ordered] @{ }
+        # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         Write-Log 'Manifest', $manifest
 
