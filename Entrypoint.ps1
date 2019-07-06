@@ -490,6 +490,7 @@ function Initialize-PR {
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
+        # TODO: More advanced license checks
         $statuses.Add('License', ([bool] $object.license))
         # TODO: More advanced license checks
         #endregion Property checks
