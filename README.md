@@ -10,6 +10,21 @@ Set of automated actions you will ever need as bucket maintainer.
 
 ## Implemented actions
 
+### Excavator (`Excavator | Excavate`)
+
+- Periodically execute automatic updates for all manifests
+
+### Pull requests (`Pull requests | PullRequestHandler`)
+
+- When pull request is created there will be executed these tests for all changed manifests.
+    - Required properties
+        - License
+        - Description
+    - Hashes
+    - Checkver functionality
+    - Autoupdate functionality
+- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
+
 ### Issues (`Issues | IssueHandler`)
 
 - **Hash check fails**
@@ -37,20 +52,6 @@ Set of automated actions you will ever need as bucket maintainer.
             1. If there is error, add current url to list of broken urls
     1. Comment will be posted to issue
 
-### Pull requests (`Pull requests | PullRequestHandler`)
-
-- When pull request is created there will be executed these tests for all changed manifests
-    - If there are required properties
-        - License
-        - Description
-    - Hashes of files
-    - If checkver is working
-    - If autoupdate is working
-
-### Excavator (`Excavator | Excavate`)
-
-- Periodically execute automatic updates for all manifests
-
 ## Example workflow for everything you will ever need as bucket maintainer
 
 ```hcl
@@ -62,6 +63,11 @@ workflow "Issues" {
 workflow "Pull requests" {
     resolves = ["PullRequestHandler"]
     on = "pull_request"
+}
+
+workflow "Pull requests comment" {
+    resolves = ["PullRequestHandler"]
+    on = "issue_comment"
 }
 
 workflow "Excavator" {
@@ -127,18 +133,3 @@ Execute `docker run -ti (((docker build -q .) -split ':')[1])`.
                         1. Add label package-fix-needed and verified
                     1. If no, comment on issue and close it
         1. $env:GITHUB_EVENT_PATH, <https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables>
-
-## Pull requests
-
-Will be executed when pull_request is (opened, reopened)
-
-Github action will check if these requirements are met
-
-1. Properties
-    1. Description
-    1. License
-1. Checkver
-1. Checkhashes
-1. Install❓❓
-1. Format❓❓
-    1. This is covered by Appveyor
