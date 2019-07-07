@@ -503,6 +503,8 @@ function Initialize-PR {
 
         $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
         if ($null -eq $object) {
+            Write-Log 'Coversion failed'
+
             # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
             if ($manifest.Extension -eq 'json') {
                 Write-Log 'Invalid JSON'
