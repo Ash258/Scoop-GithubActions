@@ -487,6 +487,7 @@ function Initialize-PR {
     Get-ChildItem $MANIFESTS_LOCATION
 
     $checks = @()
+    $invalid = @()
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
@@ -501,9 +502,16 @@ function Initialize-PR {
         Write-Log 'Manifest', $manifest
 
         $object = Get-Content $manifest -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
-        # TODO: Handle convert fail
-        # It is not manifest at all
-        # Manifest is broken
+        if ($null -eq $object) {
+            # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
+            if ($manifest.Extension -eq 'json') {
+                Write-Log 'Invalid JSON'
+                $invalid += $manifest.Basename
+            } else {
+                Write-Log 'Not manifest at all'
+            }
+            continue
+        }
 
         #region Property checks
         $statuses.Add('Description', ([bool] $object.description))
@@ -557,6 +565,13 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
+    # No checks at all
+    # There were no manifests compatible
+    if (($checks.Count -eq 0) -or ($invalid.Count -eq 0)) {
+        Write-Log 'No compatible files in PR'
+        exit 0
+    }
+
     # Create nice comment to post
     $message = New-Array
     foreach ($check in $checks) {
@@ -572,6 +587,13 @@ function Initialize-PR {
             Add-IntoArray $message (New-CheckListItem $status -OK:$b)
         }
         Add-IntoArray $message ''
+    }
+
+    if ($invalid.Count -gt 0) {
+        Add-IntoArray $message '### Invalid manifests'
+        Add-IntoArray $message ''
+
+        Add-IntoArray $message ($invalid | ForEach-Object { "- $_" })
     }
 
     # Add some more human friendly message
