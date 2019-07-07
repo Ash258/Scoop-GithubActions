@@ -443,9 +443,13 @@ function Initialize-PR {
             Write-Log 'Commented PR'
             if ($EVENT.comment.body -eq '/verify') {
                 Write-Log 'Verify comment'
+                if ($EVENT.issue.pull_request) {
+                    Write-Log 'Pull request comment'
 
-                $commented = $true
-                $EVENT = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+                    $commented = $true
+                    $EVENT = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+                }
+
             } else {
                 Write-Log 'Not support comment body.'
                 exit 0
