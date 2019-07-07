@@ -121,7 +121,7 @@ function Initialize-NeededSettings {
 }
 
 function New-CheckListItem {
-	<#
+    <#
     .SYNOPSIS
         Helper functino for creating markdown check lists.
     .PARAMETER Check
@@ -131,12 +131,12 @@ function New-CheckListItem {
     .PARAMETER IndentLevel
         Define nested list level.
     #>
-	param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
+    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
 
-	$ind = ' ' * $IndentLevel * 4
-	$char = if ($OK) { 'x' } else { ' ' }
+    $ind = ' ' * $IndentLevel * 4
+    $char = if ($OK) { 'x' } else { ' ' }
 
-	return "$ind- [$char] $Check"
+    return "$ind- [$char] $Check"
 }
 #endregion General Helpers
 
@@ -434,14 +434,31 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    if ($EVENT.action -ne 'opened') {
-        # TODO: Comment
-        Write-Log 'Only action ''opened'' is supported'
-        exit 0
+    $commented = $false
+    switch ($EVENT.action) {
+        'opened' {
+            Write-Log 'Opened PR'
+        }
+        'created' {
+            Write-Log 'Commented PR'
+            if ($EVENT.comment.body -eq '/verify') {
+                Write-Log 'Verify comment'
+
+                $commented = $true
+                $EVENT = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+            } else {
+                Write-Log 'Not support comment body.'
+                exit 0
+            }
+        }
+        default {
+            Write-Log 'Only action ''opened'' is supported'
+            exit 0
+        }
     }
 
     #region Forked repo
-    $head = $EVENT.pull_request.head
+    $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
 
