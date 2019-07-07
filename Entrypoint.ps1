@@ -501,7 +501,7 @@ function Initialize-PR {
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         Write-Log 'Manifest', $manifest
 
-        $object = Get-Content $manifest -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
         if ($null -eq $object) {
             # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
             if ($manifest.Extension -eq 'json') {
@@ -567,6 +567,9 @@ function Initialize-PR {
 
     # No checks at all
     # There were no manifests compatible
+    Write-Log $checks
+    Write-Log $invalid
+
     if (($checks.Count -eq 0) -and ($invalid.Count -eq 0)) {
         Write-Log 'No compatible files in PR'
         exit 0
@@ -590,6 +593,8 @@ function Initialize-PR {
     }
 
     if ($invalid.Count -gt 0) {
+        Write-Log 'PR contains invalid manifests'
+
         Add-IntoArray $message '### Invalid manifests'
         Add-IntoArray $message ''
 
