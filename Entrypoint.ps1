@@ -441,7 +441,7 @@ function Initialize-PR {
         }
         'created' {
             Write-Log 'Commented PR'
-            if ($EVENT.comment.body -eq '/verify') {
+            if ($EVENT.comment.body -like '/verify*') {
                 Write-Log 'Verify comment'
                 if ($EVENT.issue.pull_request) {
                     Write-Log 'Pull request comment'
