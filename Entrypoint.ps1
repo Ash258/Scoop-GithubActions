@@ -617,6 +617,7 @@ function Initialize-PR {
         Add-Label -ID $prID -Label 'package-fix-neeed'
     } else {
         $message.InsertRange(0, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
+        Remove-Label -ID $prID -Label 'package-fix-neeed'
         Add-Label -ID $prID -Label 'review-needed'
     }
     # TODO: Comment URL to action log
