@@ -448,8 +448,10 @@ function Initialize-PR {
 
                     $commented = $true
                     $EVENT = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+                } else {
+                    Write-Log 'Issue comment'
+                    exit 0
                 }
-
             } else {
                 Write-Log 'Not support comment body.'
                 exit 0
