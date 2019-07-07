@@ -567,7 +567,7 @@ function Initialize-PR {
 
     # No checks at all
     # There were no manifests compatible
-    if (($checks.Count -eq 0) -or ($invalid.Count -eq 0)) {
+    if (($checks.Count -eq 0) -and ($invalid.Count -eq 0)) {
         Write-Log 'No compatible files in PR'
         exit 0
     }
