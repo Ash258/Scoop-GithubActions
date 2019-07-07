@@ -496,13 +496,16 @@ function Initialize-PR {
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
+        # Reset variables
+        $manifest = $null
+        $object = $null
         $statuses = [Ordered] @{ }
+
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         Write-Log 'Manifest', $manifest
 
         $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
-        $object
         if ($null -eq $object) {
             Write-Log 'Coversion failed'
 
