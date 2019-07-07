@@ -502,6 +502,7 @@ function Initialize-PR {
         Write-Log 'Manifest', $manifest
 
         $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        $object
         if ($null -eq $object) {
             Write-Log 'Coversion failed'
 
