@@ -511,7 +511,7 @@ function Initialize-PR {
 
             # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
             Write-Log 'EXT:', $manifest.Extension
-            if ($manifest.Extension -eq 'json') {
+            if ($manifest.Extension -eq '.json') {
                 Write-Log 'Invalid JSON'
                 $invalid += $manifest.Basename
             } else {
