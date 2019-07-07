@@ -39,7 +39,7 @@ function Write-Log {
     param ([String[]] $Message)
 
     Write-Output ''
-    $Message | ForEach-Object { Write-Output "LOG: $_" }
+    $Message | ForEach-Object { Write-Output "LOG: $($_ | Out-String)" }
 }
 
 function Get-EnvironmentVariables {
@@ -516,6 +516,7 @@ function Initialize-PR {
             } else {
                 Write-Log 'Not manifest at all'
             }
+            Write-Log "Skipped $($file.filename)"
             continue
         }
 
@@ -571,11 +572,11 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
+    Write-Log 'Checks', $checks
+    Write-Log 'Invalids', $invalid
+
     # No checks at all
     # There were no manifests compatible
-    Write-Log $checks
-    Write-Log $invalid
-
     if (($checks.Count -eq 0) -and ($invalid.Count -eq 0)) {
         Write-Log 'No compatible files in PR'
         exit 0
@@ -600,6 +601,8 @@ function Initialize-PR {
 
     if ($invalid.Count -gt 0) {
         Write-Log 'PR contains invalid manifests'
+
+        $env:NON_ZERO_EXIT = $true
 
         Add-IntoArray $message '### Invalid manifests'
         Add-IntoArray $message ''
