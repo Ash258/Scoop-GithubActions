@@ -781,6 +781,7 @@ Write-Log 'FULL EVENT:', $EVENT_RAW
 switch ($EVENT_TYPE) {
     'issues' { Initialize-Issue }
     'pull_request' { Initialize-PR }
+    'issue_comment' { Initialize-PR }
     'schedule' { Initialize-Scheduled }
     'push' { Initialize-Push }
     default { Write-Log 'Not supported action type' }
