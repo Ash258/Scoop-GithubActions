@@ -783,6 +783,7 @@ switch ($EVENT_TYPE) {
     'pull_requests' { Initialize-PR }
     'schedule' { Initialize-Scheduled }
     'push' { Initialize-Push }
+    default { Write-Log 'Not supported action type' }
 }
 
 if ($env:NON_ZERO_EXIT) { exit 258 }
