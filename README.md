@@ -6,13 +6,13 @@ You could participate in testing using `@stable` version or any of already relea
 
 # Github actions for scoop buckets
 
-Set of automated actions you will ever need as bucket maintainer.
+Set of automated actions you will ever need as bucket maintainer. Using `stable` tag instead of specific version is highly recommended.
 
 ## Implemented actions
 
 ### Excavator (`Excavator | Excavate`)
 
-- Periodically execute automatic updates for all manifests
+- Periodically execute automatic updates for all manifests.
 
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
@@ -20,7 +20,7 @@ Set of automated actions you will ever need as bucket maintainer.
     - Required properties
         - License
         - Description
-    - Hashes
+    - Hashes for all download urls
     - Checkver functionality
     - Autoupdate functionality
 - All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
@@ -104,11 +104,11 @@ action "Excavate" {
 
 ## How to debug locally
 
-Save this snippet as `LocalTestEnvironment.ps1`
-
 ```powershell
-# Try to avoid all real requests into repository
-#    but GithubActionsBucketForTesting so feel free to do whatever you want with this repo
+# LocalTestEnvironment.ps1
+
+# Try to avoid all real requests into real repository
+#    All events inside repository will use GithubActionsBucketForTesting repository for testing purpose
 [System.Environment]::SetEnvironmentVariable('GITHUB_TOKEN', '<yourtoken>', 'Process')
 [System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_PATH', "$PSScriptRoot\cosi.json", 'Process')
 [System.Environment]::SetEnvironmentVariable('GITHUB_REPOSITORY', 'Ash258/GithubActionsBucketForTesting', 'Process')
@@ -117,7 +117,7 @@ git clone 'https://github.com/Ash258/GithubActionsBucketForTesting.git' '/github
 # Uncomment debug entries in Dockerfile
 ```
 
-Execute `docker run -ti (((docker build -q .) -split ':')[1])`.
+Execute `docker run -ti (((docker build -q .) -split ':')[1])` or `docker build . -t 'actions:master'; docker run -ti actions`.
 
 ## Issues
 
