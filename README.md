@@ -13,10 +13,12 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 ### Excavator (`Excavator | Excavate`)
 
 - Periodically execute automatic updates for all manifests.
+- <https://github.com/ScoopInstaller/Excavator> alternative.
+    - If you do not have custom server / device which could run docker or scheduled task for auto-pr 24/7.
 
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
-- When pull request is created there will be executed these tests for all changed manifests.
+- When pull request is created following tests will be executed for all changed manifests.
     - Required properties
         - License
         - Description
@@ -28,8 +30,8 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 ### Issues (`Issues | IssueHandler`)
 
 - **Hash check fails**
-    1. Run checkhashes and check if there were some changes
-        1. Yes
+    1. Run checkhashes and analyze result
+        1. Hash mismatch
             1. List newest pull requests with name `<manifest>: Hash fix`
                 1. If there are some
                     1. Select the latest one
@@ -39,16 +41,13 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
                     1. Create new branch `<manifest>-hash-fix-<random>`
                     1. Commit changes
                     1. Create new PR
-        1. No
+        1. No problem
             1. Comment on issue about hashes being right
             1. Remove label `hash-fix-needed`
             1. Close issue
 - **Download failed**
-    1. Manifest will be loaded
-    1. Iterate in all architectures
-        1. Get url for specific architecture
-        1. Iterate in all of these urls
-            1. Try to download one
+    1. Get all urls in manifest
+        1. Download them
             1. If there is error, add current url to list of broken urls
     1. Comment will be posted to issue
 
