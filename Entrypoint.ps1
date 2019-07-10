@@ -626,7 +626,7 @@ function Initialize-PR {
 
     Add-Comment -ID $prID -Message $message
 
-    Write-Log 'PR action finished'
+    Write-Log 'PR finished'
 }
 
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
@@ -755,10 +755,13 @@ function Initialize-Issue {
             Test-Downloading $problematicName $id
         }
     }
+
+    Write-Log 'Issue finished'
 }
 
 function Initialize-Push {
     Write-Log 'Push initialized'
+    Write-Log 'Push finished'
 }
 #endregion Function pool
 
@@ -775,23 +778,11 @@ Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandP
 
 Write-Log 'FULL EVENT:', $EVENT_RAW
 
-switch ($Type) {
-    'Issue' { Initialize-Issue }
-    'PR' { Initialize-PR }
-    'Push' { Initialize-Push }
-    'Scheduled' { Initialize-Scheduled }
-}
-
-# TODO: Uncomment correct one
 switch ($EVENT_TYPE) {
-    'issues' { Write-Log 'In future there will be issue handler initialized' }
-    'pull_requests' { Write-Log 'In future there will be PR handler initialized' }
-    'push' { Write-Log 'In future there will be push handler initialized' }
-    'schedule' { Write-Log 'In future there will be schedule handler initialized' }
-    # 'issues' { Initialize-Issue }
-    # 'pull_requests' { Initialize-PR }
-    # 'push' { Initialize-Push }
-    # 'schedule' { Initialize-Scheduled }
+    'issues' { Initialize-Issue }
+    'pull_requests' { Initialize-PR }
+    'schedule' { Initialize-Scheduled }
+    'push' { Initialize-Push }
 }
 
 if ($env:NON_ZERO_EXIT) { exit 258 }
