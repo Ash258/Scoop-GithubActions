@@ -61,13 +61,13 @@ workflow "Issues" {
 }
 
 workflow "Pull requests" {
-    resolves = ["PullRequestHandler"]
     on = "pull_request"
+    resolves = ["PullRequestHandler"]
 }
 
 workflow "Pull requests comment" {
-    resolves = ["PullRequestHandler"]
     on = "issue_comment"
+    resolves = ["PullRequestHandler"]
 }
 
 workflow "Excavator" {
@@ -77,31 +77,28 @@ workflow "Excavator" {
 
 action "IssueHandler" {
     uses = "Ash258/Scoop-GithubActions@stable"
-    args = "Issue"
+    secrets = ["GITHUB_TOKEN"]
     env = {
         "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
     }
-    secrets = ["GITHUB_TOKEN"]
 }
 
 action "PullRequestHandler" {
     uses = "Ash258/Scoop-GithubActions@stable"
-    args = "PR"
+    secrets = ["GITHUB_TOKEN"]
     env = {
         "GITH_EMAIL" = "youremail@email.com"
     }
-    secrets = ["GITHUB_TOKEN"]
 }
 
 action "Excavate" {
     uses = "Ash258/Scoop-GithubActions@stable"
-    args = "Scheduled"
+    secrets = ["GITHUB_TOKEN"]
     env = {
         "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter
         "SKIP_UPDATED" = "1" # Optional parameter, Could be anything as value
         "GITH_EMAIL" = "youremail@email.com"
     }
-    secrets = ["GITHUB_TOKEN"]
 }
 ```
 
