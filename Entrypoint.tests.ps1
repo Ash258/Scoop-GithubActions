@@ -1,6 +1,6 @@
 # Install-Module -Repository PSGallery -Scope CurrentUser -Force -Name Pester, PSScriptAnalyzer -SkipPublisherCheck
-
-. "$PSScriptRoot\Entrypoint.ps1" '__TESTS__'
+$env:TESTS = $true
+. (Join-Path $PSScriptRoot 'Entrypoint.ps1')
 
 describe 'Helper functoins test' {
     it 'Parse issue title' {
