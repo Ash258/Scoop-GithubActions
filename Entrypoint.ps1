@@ -1,9 +1,3 @@
-# TODO: Remove and make it automatically
-param (
-    [ValidateSet('Issue', 'PR', 'Push', '__TESTS__', 'Scheduled')]
-    [String] $Type
-)
-
 #region Variables pool
 $EVENT_RAW = Get-Content $env:GITHUB_EVENT_PATH -Raw
 # Convert actual API response to object
@@ -766,7 +760,7 @@ function Initialize-Push {
 
 #region Main
 # For dot sourcing whole file inside tests
-if ($Type -eq '__TESTS__') { return }
+if ($env:TESTS) { return }
 
 Initialize-NeededSettings
 
