@@ -1,6 +1,5 @@
 # TODO: Remove and make it automatically
 param (
-    [Parameter(Mandatory)]
     [ValidateSet('Issue', 'PR', 'Push', '__TESTS__', 'Scheduled')]
     [String] $Type
 )
