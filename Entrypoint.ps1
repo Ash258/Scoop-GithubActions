@@ -544,7 +544,7 @@ function Initialize-PR {
         Write-Log 'Hashes'
 
         $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
-        Write-Log $outputH
+        Write-Log 'Output' $outputH
 
         # everything should be all right when latest string in array will be OK
         $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
@@ -555,7 +555,7 @@ function Initialize-PR {
         #region Checkver
         Write-Log 'Checkver'
         $outputV = @(& (Join-Path $BINARIES_FOLDER 'checkver.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
-        Write-log $outputV
+        Write-log 'Output' $outputV
 
         # If there are more than 2 lines and second line is not version, there is problem
         $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
@@ -604,7 +604,7 @@ function Initialize-PR {
 
         foreach ($status in $check.Statuses.Keys) {
             $b = $check.Statuses.Item($status)
-            Write-Log "$status | $b"
+            Write-Log $status $b
 
             if (-not $b) { $env:NON_ZERO_EXIT = $true }
 
@@ -712,7 +712,7 @@ function Test-ExtractDir {
 
     if ($failed) {
         Write-Log 'Failed' $failed
-        $message = "You are right. Can reproduce", '', $message
+        $message = 'You are right. Can reproduce', '', $message
         Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
     } else {
         Write-Log 'Everything all right' $failed
