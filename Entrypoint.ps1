@@ -37,7 +37,7 @@ function Write-Log {
 
     # If it is only summary it is informative log
     if ($Summary -and ($null -eq $Message)) {
-        Write-Output "LOG: $Summary"
+        Write-Output "INFO: $Summary"
         # Simple string and summary should be one liner
     } elseif (($Message.Count -eq 1) -and ($Message[0] -is [String])) {
         Write-Output "${Summary}: $Message"
@@ -116,7 +116,7 @@ function Initialize-NeededSettings {
     .SYNOPSIS
         Initialize all settings, environment so everything work as expected.
     #>
-    New-Item '/root/scoop/cache', '/github/home/scoop/cache', "$env:SCOOP/buckets" -Force -ItemType Directory | Out-Null
+    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     if (-not ($env:GITH_EMAIL)) {
         Write-Log 'Pushing is not possible without email environment'
