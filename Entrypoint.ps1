@@ -482,7 +482,7 @@ function Initialize-PR {
         Write-Log 'Forked repository'
 
         $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
-        Write-Log $REPOSITORY_forked
+        Write-Log 'Repo' $REPOSITORY_forked
 
         $cloneLocation = '/github/forked_workspace'
         git clone --branch $head.ref $head.repo.clone_url $cloneLocation
