@@ -38,10 +38,11 @@ function Write-Log {
     # If it is only summary it is informative log
     if ($Summary -and ($null -eq $Message)) {
         Write-Output "INFO: $Summary"
-        # Simple string and summary should be one liner
     } elseif (($Message.Count -eq 1) -and ($Message[0] -isnot [Hashtable])) {
+        # Simple non hashtable object and summary should be one liner
         Write-Output "${Summary}: $Message"
     } else {
+        # Detailed output using format table
         Write-Output "Log of ${Summary}:"
         $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`r`n"
         Write-Output ($mess | ForEach-Object { "    $_" })
