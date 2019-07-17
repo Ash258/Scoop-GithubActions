@@ -39,7 +39,7 @@ function Write-Log {
     if ($Summary -and ($null -eq $Message)) {
         Write-Output "INFO: $Summary"
         # Simple string and summary should be one liner
-    } elseif (($Message.Count -eq 1) -and ($Message[0] -is [String])) {
+    } elseif (($Message.Count -eq 1) -and ($Message[0] -isnot [Hashtable])) {
         Write-Output "${Summary}: $Message"
     } else {
         Write-Output "Log of ${Summary}:"
