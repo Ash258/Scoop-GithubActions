@@ -586,7 +586,8 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
-    Write-Log 'Checks' $checks
+    Write-Log 'Name of check' $checks.name
+    Write-Log 'Statuses' $checks.Statuses
     Write-Log 'Invalids' $invalid
 
     # No checks at all
