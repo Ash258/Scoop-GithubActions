@@ -24,15 +24,30 @@ $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUC
 function Write-Log {
     <#
     .SYNOPSIS
-        Persist message in docker log. For debug mainly
+        Persist message in docker log. For debug mainly.
+    .PARAMETER Summary
+        Header of log.
     .PARAMETER Message
-        Array of strings to be saved into docker log.
+        Array of objects to be saved into docker log.
     #>
-    [Parameter(Mandatory, ValueFromRemainingArguments)]
-    param ([String[]] $Message)
+    param(
+        [String] $Summary = '',
+        [Object[]] $Message
+    )
+
+    # If it is only summary it is informative log
+    if ($Summary -and ($null -eq $Message)) {
+        Write-Output "LOG: $Summary"
+        # Simple string and summary should be one liner
+    } elseif (($Message.Count -eq 1) -and ($Message[0] -is [String])) {
+        Write-Output "${Summary}: $Message"
+    } else {
+        Write-Output "Log of ${Summary}:"
+        $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`r`n"
+        Write-Output ($mess | ForEach-Object { "    $_" })
+    }
 
     Write-Output ''
-    $Message | ForEach-Object { Write-Output "LOG: $($_ | Out-String)" }
 }
 
 function Get-EnvironmentVariables {
@@ -110,7 +125,7 @@ function Initialize-NeededSettings {
     }
 
     # Log all environment variables
-    Write-Log (Get-EnvironmentVariables | Format-Table -AutoSize | Out-String).Trim()
+    Write-Log 'Environment' (Get-EnvironmentVariables)
 }
 
 function New-CheckListItem {
@@ -123,13 +138,16 @@ function New-CheckListItem {
         Check was met.
     .PARAMETER IndentLevel
         Define nested list level.
+    .PARAMETER Simple
+        Simple list item will be used instead of check list.
     #>
-    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0)
+    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
 
     $ind = ' ' * $IndentLevel * 4
     $char = if ($OK) { 'x' } else { ' ' }
+    $item = if ($Simple) { '' } else { "[$char] " }
 
-    return "$ind- [$char] $Check"
+    return "$ind- $item$Check"
 }
 #endregion General Helpers
 
@@ -324,7 +342,7 @@ function Test-Hash {
     # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
 
     $status = hub status --porcelain -uno
-    Write-Log "Status: $status"
+    Write-Log 'Status' $status
 
     $changes = hub diff --name-only
     if (($changes).Count -eq 1) {
@@ -347,11 +365,11 @@ function Test-Hash {
             $message += ''
             $message += "There is already pull request to fix this issue. (#$prID)"
 
-            Write-Log $prID
+            Write-Log 'PR ID' $prID
             # Update PR description
             Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
         } else {
-            Write-Log 'PR - Create new branch and pst PR'
+            Write-Log 'PR - Create new branch and post PR'
 
             $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             hub checkout -B $branch
@@ -395,7 +413,7 @@ function Test-Downloading {
         $urls = @(url $manifest_o $arch)
 
         foreach ($url in $urls) {
-            Write-Log "$url"
+            Write-Log 'url' $url
 
             try {
                 dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
@@ -412,7 +430,7 @@ function Test-Downloading {
         Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
         # TODO: Close??
     } else {
-        Write-Log @('Broken URLS:', $broken_urls)
+        Write-Log 'Broken URLS' $broken_urls
 
         $string = ($broken_urls | ForEach-Object { "- $_" }) -join "`r`n"
         Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
@@ -434,8 +452,10 @@ function Initialize-PR {
         }
         'created' {
             Write-Log 'Commented PR'
+
             if ($EVENT.comment.body -like '/verify*') {
                 Write-Log 'Verify comment'
+
                 if ($EVENT.issue.pull_request) {
                     Write-Log 'Pull request comment'
 
@@ -446,7 +466,7 @@ function Initialize-PR {
                     exit 0
                 }
             } else {
-                Write-Log 'Not support comment body.'
+                Write-Log 'Not supported comment body'
                 exit 0
             }
         }
@@ -484,7 +504,7 @@ function Initialize-PR {
     $prID = $EVENT.number
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    Write-Log $files
+    Write-Log 'PR Files' $files
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
@@ -496,14 +516,14 @@ function Initialize-PR {
 
         # Convert path into gci item to hold all needed information
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
-        Write-Log 'Manifest', $manifest
+        Write-Log 'Manifest' $manifest
 
         $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
         if ($null -eq $object) {
-            Write-Log 'Coversion failed'
+            Write-Log 'Conversion failed'
 
             # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
-            Write-Log 'EXT:', $manifest.Extension
+            Write-Log 'Extension' $manifest.Extension
             if ($manifest.Extension -eq '.json') {
                 Write-Log 'Invalid JSON'
                 $invalid += $manifest.Basename
@@ -566,8 +586,8 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
-    Write-Log 'Checks', $checks
-    Write-Log 'Invalids', $invalid
+    Write-Log 'Checks' $checks
+    Write-Log 'Invalids' $invalid
 
     # No checks at all
     # There were no manifests compatible
@@ -713,11 +733,10 @@ function global:Get-AppFilePath {
 
 function Initialize-Issue {
     Write-Log 'Issue initialized'
-
-    Write-log "ACTION: $($EVENT.action)"
+    Write-log 'ACTION' $EVENT.action
 
     if ($EVENT.action -ne 'opened') {
-        Write-Log "Only action 'opened' is supported."
+        Write-Log "Only action 'opened' is supported"
         exit 0
     }
 
@@ -769,7 +788,7 @@ Initialize-NeededSettings
 Write-Log 'Importing all modules'
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
 
-Write-Log 'FULL EVENT:', $EVENT_RAW
+Write-Log 'FULL EVENT' $EVENT_RAW
 
 switch ($EVENT_TYPE) {
     'issues' { Initialize-Issue }
