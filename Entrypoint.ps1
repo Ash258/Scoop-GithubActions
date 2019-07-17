@@ -101,7 +101,7 @@ function Initialize-NeededSettings {
     .SYNOPSIS
         Initialize all settings, environment so everything work as expected.
     #>
-    New-Item '/root/scoop/cache', '/github/home/scoop/cache' -Force -ItemType Directory | Out-Null
+    New-Item '/root/scoop/cache', '/github/home/scoop/cache', "$env:SCOOP/buckets" -Force -ItemType Directory | Out-Null
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     if (-not ($env:GITH_EMAIL)) {
         Write-Log 'Pushing is not possible without email environment'
@@ -110,7 +110,7 @@ function Initialize-NeededSettings {
     }
 
     # Log all environment variables
-    Write-Log (Get-EnvironmentVariables | ForEach-Object { "$($_.Key) | $($_.Value)" })
+    Write-Log (Get-EnvironmentVariables | Format-Table -AutoSize)
 }
 
 function New-CheckListItem {
@@ -476,8 +476,8 @@ function Initialize-PR {
 
     Write-log 'Files in PR:'
 
-    Get-ChildItem $BUCKET_ROOT
-    Get-ChildItem $MANIFESTS_LOCATION
+    (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
+    (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
 
     $checks = @()
     $invalid = @()
