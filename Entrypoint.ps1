@@ -110,7 +110,7 @@ function Initialize-NeededSettings {
     }
 
     # Log all environment variables
-    Write-Log (Get-EnvironmentVariables | Format-Table -AutoSize)
+    Write-Log (Get-EnvironmentVariables | Format-Table -AutoSize | Out-String).Trim()
 }
 
 function New-CheckListItem {
