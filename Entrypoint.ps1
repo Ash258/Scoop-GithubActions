@@ -11,10 +11,9 @@ $REPOSITORY = $env:GITHUB_REPOSITORY
 $BUCKET_ROOT = $env:GITHUB_WORKSPACE
 # Binaries from scoop. No need to rely on bucket specific binaries
 $BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
+$MANIFESTS_LOCATION = Join-Path $BUCKET_ROOT 'bucket'
 
-# Backward compatability for manifests inside root of repository
-$nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
-$MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+$NON_ZERO = 258
 
 #region Comments
 # TODO: Add all possible comments, which could be repeated.
@@ -60,7 +59,7 @@ function Get-EnvironmentVariables {
     .SYNOPSIS
         List all environment variables. Mainly debug purpose.
     #>
-    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+    return Get-ChildItem env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
 function New-Array {
@@ -107,7 +106,7 @@ function New-DetailsCommentString {
 
     return @"
 <details>
-    <summary>$Summary</summary>
+<summary>$Summary</summary>
 
 ``````$Type
 $($Content -join "`r`n")
@@ -123,10 +122,10 @@ function Initialize-NeededSettings {
     #>
     @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if (-not ($env:GITH_EMAIL)) {
-        Write-Log 'Pushing is not possible without email environment'
-    } else {
+    if ($env:GITH_EMAIL) {
         git config --global user.email $env:GITH_EMAIL
+    } else {
+        Write-Log 'Pushing is not possible without email environment'
     }
 
     # Log all environment variables
@@ -137,8 +136,8 @@ function New-CheckListItem {
     <#
     .SYNOPSIS
         Helper functino for creating markdown check lists.
-    .PARAMETER Check
-        Name of check.
+    .PARAMETER Item
+        Name of list item.
     .PARAMETER OK
         Check was met.
     .PARAMETER IndentLevel
@@ -146,13 +145,13 @@ function New-CheckListItem {
     .PARAMETER Simple
         Simple list item will be used instead of check list.
     #>
-    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
+    param ([String] $Item, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
 
     $ind = ' ' * $IndentLevel * 4
     $char = if ($OK) { 'x' } else { ' ' }
     $item = if ($Simple) { '' } else { "[$char] " }
 
-    return "$ind- $item$Check"
+    return "$ind- $item$Item"
 }
 #endregion General Helpers
 
@@ -343,7 +342,7 @@ function Test-Hash {
     )
 
     & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $Manifest -Dir $MANIFESTS_LOCATION -Update
-    # TODO: Resolve eror state handling from withing binary
+    # TODO: Resolve eror state handling from within binary
     # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
 
     $status = hub status --porcelain -uno
@@ -787,6 +786,11 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
+if (-not (Test-Path $MANIFESTS_LOCATION)) {
+    Write-Log 'Buckets without nested bucket folder are not supported.' 'See "https://github.com/Ash258/GenericBucket" for the most optimal bucket structure.'
+    exit $NON_ZERO
+}
+
 Initialize-NeededSettings
 
 # Load all scoop's modules.
@@ -805,5 +809,5 @@ switch ($EVENT_TYPE) {
     default { Write-Log 'Not supported action type' }
 }
 
-if ($env:NON_ZERO_EXIT) { exit 258 }
+if ($env:NON_ZERO_EXIT) { exit $NON_ZERO }
 #endregion Main
