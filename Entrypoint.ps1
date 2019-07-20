@@ -15,6 +15,10 @@ $BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
 # Backward compatability for manifests inside root of repository
 $nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
 $MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+
+#region Comments
+# TODO: Add all possible comments, which could be repeated.
+#endregion Comments
 #endregion Variables pool
 
 #region Function pool
@@ -44,7 +48,7 @@ function Write-Log {
     } else {
         # Detailed output using format table
         Write-Output "Log of ${Summary}:"
-        $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`r`n"
+        $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`n"
         Write-Output ($mess | ForEach-Object { "    $_" })
     }
 
