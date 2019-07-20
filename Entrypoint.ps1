@@ -862,7 +862,7 @@ if (Test-Path $MANIFESTS_LOCATION) {
     $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
     $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
 
-    $issues | Format-Table
+    $issues | Format-List
 
     if ($issues.Count -gt 0) {
         New-Issue -Title $adopt -Body @(
