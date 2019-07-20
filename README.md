@@ -109,6 +109,8 @@ action "Excavate" {
 # Try to avoid all real requests into real repository
 #    All events inside repository will use GithubActionsBucketForTesting repository for testing purpose
 [System.Environment]::SetEnvironmentVariable('GITHUB_TOKEN', '<yourtoken>', 'Process')
+[System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_NAME', '<EVENT YOU WANT TO DEBUG>', 'Process')
+# Create Cosi.json with any request from events folder
 [System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_PATH', "$PSScriptRoot\cosi.json", 'Process')
 [System.Environment]::SetEnvironmentVariable('GITHUB_REPOSITORY', 'Ash258/GithubActionsBucketForTesting', 'Process')
 $DebugPreference = 'Continue'
