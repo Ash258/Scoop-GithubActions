@@ -424,7 +424,7 @@ function Test-Downloading {
             Write-Log 'url' $url
 
             try {
-                dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
+                dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
             } catch {
                 $broken_urls += $url
                 continue
