@@ -240,7 +240,7 @@ function New-Issue {
         [String[]] $Assignee
     )
 
-    $body = @{
+    $params = @{
         'title'     = $Title
         'body'      = ($Body -join "`r`n")
         'milestone' = $Milestone
@@ -248,7 +248,7 @@ function New-Issue {
         'assignees' = $Assignee
     }
 
-    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $body
+    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
 }
 
 function Close-Issue {
