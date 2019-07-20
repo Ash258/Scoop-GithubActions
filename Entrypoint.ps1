@@ -231,7 +231,7 @@ function Get-AllChangedFilesInPR {
 }
 
 function New-Issue {
-	<#
+    <#
     .SYNOPSIS
         Create new issue in current repository.
         https://developer.github.com/v3/issues/#create-an-issue
@@ -249,24 +249,24 @@ function New-Issue {
         List of user logins to be automatically assigned.
         Authenticated user needs push access.
     #>
-	param(
-		[Parameter(Mandatory)]
-		[String] $Title,
-		[String[]] $Body = '',
-		[Int] $Milestone,
-		[String[]] $Label = @(),
-		[String[]] $Assignee = @()
-	)
+    param(
+        [Parameter(Mandatory)]
+        [String] $Title,
+        [String[]] $Body = '',
+        [Int] $Milestone,
+        [String[]] $Label = @(),
+        [String[]] $Assignee = @()
+    )
 
-	$params = @{
-		'title'     = $Title
-		'body'      = ($Body -join "`r`n")
-		'labels'    = $Label
-		'assignees' = $Assignee
-	}
-	if ($Milestone) { $params.Add('milestone', $Milestone) }
+    $params = @{
+        'title'     = $Title
+        'body'      = ($Body -join "`r`n")
+        'labels'    = $Label
+        'assignees' = $Assignee
+    }
+    if ($Milestone) { $params.Add('milestone', $Milestone) }
 
-	return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
+    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
 }
 
 function Close-Issue {
@@ -853,7 +853,9 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
-if (-not (Test-Path $MANIFESTS_LOCATION)) {
+if (Test-Path $MANIFESTS_LOCATION) {
+    Write-Log 'Bucket contains nested bucket folder'
+} else {
     Write-Log 'Buckets without nested bucket folder are not supported.'
 
     $adopt = 'Adopt nested bucket structure'
