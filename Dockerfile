@@ -8,8 +8,9 @@ LABEL org.label-schema.maintainer="Jakub <Ash258> Čábera <cabera.jakub@gmail.c
 
 ENV SCOOP /SCOOP
 ENV SCOOP_HOME /SCOOP/apps/scoop/current
+ENV SCOOP_DEBUG 1
 
-RUN apk add --no-cache --virtual .scoop-deps git p7zip \
+RUN apk add --no-cache --virtual .scoop-deps git p7zip aria2 \
     && apk add hub --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     && git clone 'https://github.com/lukesampson/scoop.git' ${SCOOP_HOME}
 
@@ -17,7 +18,6 @@ COPY Entrypoint.ps1 /
 
 # Debug:
 # COPY LocalTestEnvironment.ps1 /
-# COPY Test.ps1 /
 # COPY cosi.json /
 # ENTRYPOINT [ "pwsh" ]
 

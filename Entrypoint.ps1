@@ -435,7 +435,18 @@ function Test-Downloading {
     if ($broken_urls.Count -eq 0) {
         Write-Log 'All OK'
 
-        Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
+        $message = @(
+            'Cannot reproduce.',
+            '',
+            'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))',
+            'Downloading problems could be caused by:'
+            '',
+            '- Proxy',
+            '- Network error',
+            '- Site is blocked (Great Firewall of China for example)'
+        )
+
+        Add-Comment -ID $IssueID -Comment $message
         # TODO: Close??
     } else {
         Write-Log 'Broken URLS' $broken_urls
