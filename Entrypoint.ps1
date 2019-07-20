@@ -231,24 +231,42 @@ function Get-AllChangedFilesInPR {
 }
 
 function New-Issue {
-    param(
-        [Parameter(Mandatory)]
-        [String] $Title,
-        [String[]] $Body = '',
-        [Int] $Milestone,
-        [String[]] $Label = @(),
-        [String[]] $Assignee = @()
-    )
+	<#
+    .SYNOPSIS
+        Create new issue in current repository.
+        https://developer.github.com/v3/issues/#create-an-issue
+    .PARAMETER Title
+        The title of issue.
+    .PARAMETER Body
+        Issue description.
+    .PARAMETER Milestone
+        Number of milestone to associate with issue.
+        Authenticated user needs push access.
+    .PARAMETER Label
+        List of labels to be automatically added.
+        Authenticated user needs push access.
+    .PARAMETER Assignee
+        List of user logins to be automatically assigned.
+        Authenticated user needs push access.
+    #>
+	param(
+		[Parameter(Mandatory)]
+		[String] $Title,
+		[String[]] $Body = '',
+		[Int] $Milestone,
+		[String[]] $Label = @(),
+		[String[]] $Assignee = @()
+	)
 
-    $params = @{
-        'title'     = $Title
-        'body'      = ($Body -join "`r`n")
-        'labels'    = $Label
-        'assignees' = $Assignee
-    }
-    if ($Milestone) { $params.Add('milestone', $Milestone)}
+	$params = @{
+		'title'     = $Title
+		'body'      = ($Body -join "`r`n")
+		'labels'    = $Label
+		'assignees' = $Assignee
+	}
+	if ($Milestone) { $params.Add('milestone', $Milestone) }
 
-    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
+	return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
 }
 
 function Close-Issue {
@@ -835,15 +853,25 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
-if ((Test-Path $MANIFESTS_LOCATION)) {
+if (-not (Test-Path $MANIFESTS_LOCATION)) {
     Write-Log 'Buckets without nested bucket folder are not supported.'
 
-    $desc = @(
-        'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.'
-        '',
-        'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
-    )
-    New-Issue -Title 'Adopt nested bucket structure' -Body $desc
+    $adopt = 'Adopt nested bucket structure'
+    $issues = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+    $issues = $issues | Select-Object Content | ConvertFrom-Json
+    $issues = $issues | Where-Object { $_.title -eq $adopt }
+
+    if ($issues.Count -gt 0) {
+        $desc = @(
+            '',
+            'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+            'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.'
+        )
+        New-Issue -Title $adopt -Body $desc
+    } else {
+        Write-Log 'Issue already exists'
+    }
+
     exit $NON_ZERO
 }
 
