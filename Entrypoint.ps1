@@ -405,7 +405,7 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    $man = Get-ChildItem $BUCKET_ROOT $Manifest
+    $man = Get-ChildItem $MANIFESTS_LOCATION "$Manifest*"
 
     $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $man.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
     Write-Log 'Output' $outputH
