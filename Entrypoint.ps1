@@ -560,7 +560,9 @@ function Initialize-PR {
 
     Write-Log 'Pure PR Event' $EVENT
 
-    #region Forked repo
+    #region Forked repo / branch selection
+    Write-Log 'COIS' $EVENT.head
+
     $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
@@ -576,6 +578,7 @@ function Initialize-PR {
 
         Push-Location $cloneLocation
     }
+
     #endregion Forked repo
 
     Write-log 'Files in PR:'
