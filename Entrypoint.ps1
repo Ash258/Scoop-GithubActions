@@ -375,28 +375,7 @@ function Initialize-Scheduled {
 
     Write-Log 'Auto pr - DONE'
 }
-#endregion Actions
-#endregion DO NOT TOUCH
-
-function Resolve-IssueTitle {
-    <#
-    .SYNOPSIS
-        Parse issue title and return manifest name, version and problem.
-    .PARAMETER Title
-        Title to be parsed.
-    .EXAMPLE
-        Resolve-IssueTitle 'recuva@2.4: hash check failed'
-    #>
-    param([String] $Title)
-
-    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
-
-    if ($result) {
-        return $Matches.name, $Matches.version, $Matches.problem
-    } else {
-        return $null, $null, $null
-    }
-}
+#region Issue
 
 function Test-Hash {
     param (
@@ -465,6 +444,29 @@ function Test-Hash {
             }
         }
         Add-Comment -ID $IssueID -Message $message
+    }
+}
+#endregion Issue
+#endregion Actions
+#endregion DO NOT TOUCH
+
+function Resolve-IssueTitle {
+    <#
+    .SYNOPSIS
+        Parse issue title and return manifest name, version and problem.
+    .PARAMETER Title
+        Title to be parsed.
+    .EXAMPLE
+        Resolve-IssueTitle 'recuva@2.4: hash check failed'
+    #>
+    param([String] $Title)
+
+    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
+
+    if ($result) {
+        return $Matches.name, $Matches.version, $Matches.problem
+    } else {
+        return $null, $null, $null
     }
 }
 
