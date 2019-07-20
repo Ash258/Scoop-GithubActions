@@ -859,17 +859,17 @@ if (Test-Path $MANIFESTS_LOCATION) {
     Write-Log 'Buckets without nested bucket folder are not supported.'
 
     $adopt = 'Adopt nested bucket structure'
-    $issues = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
-    $issues = ConvertFrom-Json $issues.Content
-    $issues = $issues | Where-Object { $_.title -eq $adopt }
+    $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+    $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
+
+    $issues | Format-Table
 
     if ($issues.Count -gt 0) {
-        $desc = @(
+        New-Issue -Title $adopt -Body @(
+            'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.',
             '',
             'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
-            'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.'
         )
-        New-Issue -Title $adopt -Body $desc
     } else {
         Write-Log 'Issue already exists'
     }
