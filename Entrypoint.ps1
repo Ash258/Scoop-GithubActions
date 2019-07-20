@@ -860,7 +860,7 @@ if (Test-Path $MANIFESTS_LOCATION) {
 
     $adopt = 'Adopt nested bucket structure'
     $issues = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
-    $issues = $issues | Select-Object Content | ConvertFrom-Json
+    $issues = ConvertFrom-Json $issues.Content
     $issues = $issues | Where-Object { $_.title -eq $adopt }
 
     if ($issues.Count -gt 0) {
