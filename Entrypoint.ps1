@@ -243,10 +243,10 @@ function New-Issue {
     $params = @{
         'title'     = $Title
         'body'      = ($Body -join "`r`n")
-        'milestone' = $Milestone
         'labels'    = $Label
         'assignees' = $Assignee
     }
+    if ($Milestone) { $params.Add('milestone', $Milestone)}
 
     return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
 }
