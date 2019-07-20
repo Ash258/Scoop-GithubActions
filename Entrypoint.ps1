@@ -558,6 +558,8 @@ function Initialize-PR {
         }
     }
 
+    Write-Log 'Pure PR Event' $EVENT
+
     #region Forked repo
     $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     if ($head.repo.fork) {
