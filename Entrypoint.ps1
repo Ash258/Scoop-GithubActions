@@ -235,9 +235,9 @@ function New-Issue {
         [Parameter(Mandatory)]
         [String] $Title,
         [String[]] $Body = '',
-        [Int] $Milestone,
-        [String[]] $Label,
-        [String[]] $Assignee
+        [Int] $Milestone = @(),
+        [String[]] $Label = @(),
+        [String[]] $Assignee = @()
     )
 
     $params = @{
