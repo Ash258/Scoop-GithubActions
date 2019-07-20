@@ -230,6 +230,27 @@ function Get-AllChangedFilesInPR {
     return $files | Select-Object -Property filename, status
 }
 
+function New-Issue {
+    param(
+        [Parameter(Mandatory)]
+        [String] $Title,
+        [String[]] $Body = '',
+        [Int] $Milestone,
+        [String[]] $Label,
+        [String[]] $Assignee
+    )
+
+    $body = @{
+        'title'     = $Title
+        'body'      = ($Body -join "`r`n")
+        'milestone' = $Milestone
+        'labels'    = $Label
+        'assignees' = $Assignee
+    }
+
+    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $body
+}
+
 function Close-Issue {
     <#
     .SYNOPSIS
@@ -747,10 +768,10 @@ function Test-ExtractDir {
 function Initialize-MockedFunctionsFromCore {
     # Remove functions
     $FUNCTIONS_TO_BE_REMOVED | ForEach-Object { Remove-Item function:$_ }
-	function global:Get-AppFilePath {
-		param ([String] $App = 'Aria2', [String] $File = 'aria2c')
+    function global:Get-AppFilePath {
+        param ([String] $App = 'Aria2', [String] $File = 'aria2c')
 
-		return which $File
+        return which $File
     }
 
     function global:Get-HelperPath {
@@ -814,8 +835,15 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
-if (-not (Test-Path $MANIFESTS_LOCATION)) {
-    Write-Log 'Buckets without nested bucket folder are not supported.' 'See "https://github.com/Ash258/GenericBucket" for the most optimal bucket structure.'
+if ((Test-Path $MANIFESTS_LOCATION)) {
+    Write-Log 'Buckets without nested bucket folder are not supported.'
+
+    $desc = @(
+        'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.'
+        '',
+        'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+    )
+    New-Issue -Title 'Adopt nested bucket structure' -Body $desc
     exit $NON_ZERO
 }
 
