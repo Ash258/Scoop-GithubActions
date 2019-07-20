@@ -91,6 +91,47 @@ function Add-IntoArray {
     $List.Add($Item) | Out-Null
 }
 
+function Initialize-NeededSettings {
+    <#
+    .SYNOPSIS
+        Initialize all settings, environment so everything work as expected.
+    #>
+    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if ($env:GITH_EMAIL) {
+        git config --global user.email $env:GITH_EMAIL
+    } else {
+        Write-Log 'Pushing is not possible without email environment'
+    }
+
+    # Log all environment variables
+    Write-Log 'Environment' (Get-EnvironmentVariables)
+}
+
+function Test-NestedBucket {
+    if (Test-Path $MANIFESTS_LOCATION) {
+        Write-Log 'Bucket contains nested bucket folder'
+    } else {
+        Write-Log 'Buckets without nested bucket folder are not supported.'
+
+        $adopt = 'Adopt nested bucket structure'
+        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
+
+        if ($issues -and ($issues.Count -gt 0)) {
+            Write-Log 'Issue already exists'
+        } else {
+            New-Issue -Title $adopt -Body @(
+                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
+                '',
+                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+            )
+        }
+
+        exit $NON_ZERO
+    }
+}
+
 function New-DetailsCommentString {
     <#
     .SYNOPSIS
@@ -114,23 +155,6 @@ $($Content -join "`r`n")
 </details>
 ``````
 "@
-}
-
-function Initialize-NeededSettings {
-    <#
-    .SYNOPSIS
-        Initialize all settings, environment so everything work as expected.
-    #>
-    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if ($env:GITH_EMAIL) {
-        git config --global user.email $env:GITH_EMAIL
-    } else {
-        Write-Log 'Pushing is not possible without email environment'
-    }
-
-    # Log all environment variables
-    Write-Log 'Environment' (Get-EnvironmentVariables)
 }
 
 function New-CheckListItem {
@@ -352,30 +376,6 @@ function Initialize-Scheduled {
     Write-Log 'Auto pr - DONE'
 }
 #endregion Actions
-
-function Test-NestedBucket {
-    if (Test-Path $MANIFESTS_LOCATION) {
-        Write-Log 'Bucket contains nested bucket folder'
-    } else {
-        Write-Log 'Buckets without nested bucket folder are not supported.'
-
-        $adopt = 'Adopt nested bucket structure'
-        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
-        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
-
-        if ($issues -and ($issues.Count -gt 0)) {
-            Write-Log 'Issue already exists'
-        } else {
-            New-Issue -Title $adopt -Body @(
-                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
-                '',
-                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
-            )
-        }
-
-        exit $NON_ZERO
-    }
-}
 #endregion DO NOT TOUCH
 
 function Resolve-IssueTitle {
@@ -405,17 +405,25 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $Manifest -Dir $MANIFESTS_LOCATION -Update
-    # TODO: Resolve eror state handling from within binary
-    # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
+    $man = Get-ChildItem $BUCKET_ROOT $Manifest
 
-    $status = hub status --porcelain -uno
-    Write-Log 'Status' $status
+    $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $man.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+    Write-Log 'Output' $outputH
 
-    $changes = hub diff --name-only
-    if (($changes).Count -eq 1) {
+    if (($outputH[-2] -like 'OK') -and ($outputH[-1] -like 'Writing*')) {
+        Write-Log 'Cannot reproduce'
+
+        Add-Comment -ID $IssueID -Message @(
+            'Cannot reproduce',
+            '',
+            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        )
+        Remove-Label -ID $IssueID -Label 'hash-fix-needed'
+        Close-Issue -ID $IssueID
+    } else {
         Write-Log 'Verified hash failed'
 
+        Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         $message = @('You are right. Thanks for reporting.')
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
         $prs = $prs | Where-Object { $_.title -ceq "${Manifest}: Hash fix" }
@@ -439,10 +447,10 @@ function Test-Hash {
         } else {
             Write-Log 'PR - Create new branch and post PR'
 
-            $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
+            $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             hub checkout -B $branch
 
-            hub add $changes
+            hub add $man.FullName
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
 
@@ -454,19 +462,7 @@ function Test-Hash {
                 'body'  = "- Closes #$IssueID"
             }
         }
-
-        Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         Add-Comment -ID $IssueID -Message $message
-    } else {
-        Write-Log 'Cannot reproduce'
-
-        Add-Comment -ID $IssueID -Message @(
-            'Cannot reproduce',
-            '',
-            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
-        )
-        Remove-Label -ID $IssueID -Label 'hash-fix-needed'
-        Close-Issue -ID $IssueID
     }
 }
 
