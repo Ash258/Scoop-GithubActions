@@ -352,6 +352,30 @@ function Initialize-Scheduled {
     Write-Log 'Auto pr - DONE'
 }
 #endregion Actions
+
+function Test-NestedBucket {
+    if (Test-Path $MANIFESTS_LOCATION) {
+        Write-Log 'Bucket contains nested bucket folder'
+    } else {
+        Write-Log 'Buckets without nested bucket folder are not supported.'
+
+        $adopt = 'Adopt nested bucket structure'
+        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
+
+        if ($issues -and ($issues.Count -gt 0)) {
+            Write-Log 'Issue already exists'
+        } else {
+            New-Issue -Title $adopt -Body @(
+                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
+                '',
+                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+            )
+        }
+
+        exit $NON_ZERO
+    }
+}
 #endregion DO NOT TOUCH
 
 function Resolve-IssueTitle {
@@ -853,27 +877,7 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
-if (Test-Path $MANIFESTS_LOCATION) {
-    Write-Log 'Bucket contains nested bucket folder'
-} else {
-    Write-Log 'Buckets without nested bucket folder are not supported.'
-
-    $adopt = 'Adopt nested bucket structure'
-    $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
-    $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
-
-    if ($issues -and ($issues.Count -gt 0)) {
-        Write-Log 'Issue already exists'
-    } else {
-        New-Issue -Title $adopt -Body @(
-            'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.',
-            '',
-            'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
-        )
-        exit $NON_ZERO
-    }
-}
-
+Test-NestedBucket
 Initialize-NeededSettings
 
 # Load all scoop's modules.
