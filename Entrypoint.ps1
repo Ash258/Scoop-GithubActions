@@ -865,7 +865,7 @@ if (Test-Path $MANIFESTS_LOCATION) {
     $issues.Count
     $issues | Format-List
 
-    if ($issues -and ($issues.Count -eq 0)) {
+    if ($issues -and ($issues.Count -gt 0)) {
         Write-Log 'Issue already exists'
     } else {
         New-Issue -Title $adopt -Body @(
