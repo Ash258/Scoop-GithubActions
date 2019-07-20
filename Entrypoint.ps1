@@ -441,7 +441,7 @@ function Test-Downloading {
             'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))',
             'Downloading problems could be caused by:'
             '',
-            '- Proxy',
+            '- Proxy configuration',
             '- Network error',
             '- Site is blocked (Great Firewall of China for example)'
         )
