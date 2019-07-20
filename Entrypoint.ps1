@@ -862,8 +862,6 @@ if (Test-Path $MANIFESTS_LOCATION) {
     $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
     $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
 
-    Write-Log 'Count' $issues.Count
-
     if ($issues -and ($issues.Count -gt 0)) {
         Write-Log 'Issue already exists'
     } else {
