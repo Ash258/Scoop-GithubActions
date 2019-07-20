@@ -14,6 +14,7 @@ $BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
 $MANIFESTS_LOCATION = Join-Path $BUCKET_ROOT 'bucket'
 
 $NON_ZERO = 258
+$FUNCTIONS_TO_BE_REMOVED = 'Get-AppFilePath', 'Get-HelperPath'
 
 #region Comments
 # TODO: Add all possible comments, which could be repeated.
@@ -413,6 +414,9 @@ function Test-Downloading {
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $broken_urls = @()
+    # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookies $true
+
+    # exit 0
     foreach ($arch in @('64bit', '32bit')) {
         $urls = @(url $manifest_o $arch)
 
@@ -729,11 +733,24 @@ function Test-ExtractDir {
     Add-Comment -ID $IssueID -Message $message
 }
 
-# Need to mock function from core
-function global:Get-AppFilePath {
-    param ([String] $App = 'Aria2', [String] $File = 'aria2c')
+function Initialize-MockedFunctionsFromCore {
+    # Remove functions
+    $FUNCTIONS_TO_BE_REMOVED | ForEach-Object { Remove-Item function:$_ }
+	function global:Get-AppFilePath {
+		param ([String] $App = 'Aria2', [String] $File = 'aria2c')
 
-    return which $File
+		return which $File
+    }
+
+    function global:Get-HelperPath {
+        param([String] $Helper)
+
+        switch ($Helper) {
+            'Aria2' {
+                return Get-AppFilePath 'Aria2' 'aria2c'
+            }
+        }
+    }
 }
 
 function Initialize-Issue {
@@ -797,6 +814,7 @@ Initialize-NeededSettings
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
+Initialize-MockedFunctionsFromCore
 
 Write-Log 'FULL EVENT' $EVENT_RAW
 
@@ -806,7 +824,7 @@ switch ($EVENT_TYPE) {
     'issue_comment' { Initialize-PR }
     'schedule' { Initialize-Scheduled }
     'push' { Initialize-Push }
-    default { Write-Log 'Not supported action type' }
+    default { Write-Log 'Not supported event type' }
 }
 
 if ($env:NON_ZERO_EXIT) { exit $NON_ZERO }
