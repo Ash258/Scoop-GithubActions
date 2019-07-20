@@ -450,6 +450,8 @@ function Test-Hash {
             $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             hub checkout -B $branch
 
+            Write-Log 'Git Status' @(hub status --porcelain)
+
             hub add $man.FullName
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
