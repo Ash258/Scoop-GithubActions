@@ -862,16 +862,17 @@ if (Test-Path $MANIFESTS_LOCATION) {
     $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
     $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
 
+    $issues.Count
     $issues | Format-List
 
-    if ($issues.Count -gt 0) {
+    if ($issues -and ($issues.Count -eq 0)) {
+        Write-Log 'Issue already exists'
+    } else {
         New-Issue -Title $adopt -Body @(
             'Buckets without nested bucket folder are not supported. You will not be able to use actions without it.',
             '',
             'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
         )
-    } else {
-        Write-Log 'Issue already exists'
     }
 
     exit $NON_ZERO
