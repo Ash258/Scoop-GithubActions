@@ -174,9 +174,9 @@ function New-CheckListItem {
 
     $ind = ' ' * $IndentLevel * 4
     $char = if ($OK) { 'x' } else { ' ' }
-    $item = if ($Simple) { '' } else { "[$char] " }
+    $check = if ($Simple) { '' } else { "[$char] " }
 
-    return "$ind- $item$Item"
+    return "$ind- $check$Item"
 }
 #endregion General Helpers
 
