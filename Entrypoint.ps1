@@ -415,7 +415,7 @@ function Test-Hash {
         Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
     } elseif ($outputH[-1] -notlike 'Writing*') { # There is some error
-        Write-Log 'Automatic check of hashes encoutner some problems.'
+        Write-Log 'Automatic check of hashes encounter some problems.'
         return
     } else {
         Write-Log 'Verified hash failed'
