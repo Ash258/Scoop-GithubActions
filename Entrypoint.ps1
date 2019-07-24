@@ -424,8 +424,7 @@ function Test-Hash {
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         $message = @('You are right. Thanks for reporting.')
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        # TODO: Version
-        $prs = $prs | Where-Object { $_.title -ceq "${Manifest}: Hash fix" }
+        $prs = $prs | Where-Object { $_.title -ceq "$Manifest@$($man.version): Hash fix" }
 
         # There is alreay PR for
         if ($prs.Count -gt 0) {
@@ -457,8 +456,7 @@ function Test-Hash {
 
             # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
-                # TODO: Version
-                'title' = "${Manifest}: Hash fix"
+                'title' = "$Manifest@$($man.version): Hash fix"
                 'base'  = 'master'
                 'head'  = $branch
                 'body'  = "- Closes #$IssueID"
