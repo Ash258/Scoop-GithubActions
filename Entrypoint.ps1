@@ -141,7 +141,7 @@ function Get-Manifest {
     #>
     param([String] $Name)
 
-    $path = Get-Childitem $MANIFESTS_LOCATION "$Name\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $path = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest = Get-Content $path -Raw | ConvertFrom-Json
 
     return $path, $manifest
@@ -488,7 +488,7 @@ function Resolve-IssueTitle {
 function Test-Downloading {
     param([String] $Manifest, [Int] $IssueID)
 
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $broken_urls = @()
@@ -764,7 +764,7 @@ function Test-ExtractDir {
     param([String] $Manifest, [Int] $IssueID)
 
     # Load manifest
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $message = @()
