@@ -141,10 +141,10 @@ function Get-Manifest {
     #>
     param([String] $Name)
 
-    $path = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
     $manifest = Get-Content $path -Raw | ConvertFrom-Json
 
-    return $path, $manifest
+    return $gciItem, $manifest
 }
 
 function New-DetailsCommentString {
@@ -399,9 +399,9 @@ function Test-Hash {
         [Int] $IssueID
     )
 
-    $man = Get-ChildItem $MANIFESTS_LOCATION "$Manifest.*"
+    $gci, $man = Get-Manifest $Manifest
 
-    $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $man.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+    $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $gci.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
     Write-Log 'Output' $outputH
 
     if (($outputH[-2] -like 'OK') -and ($outputH[-1] -like 'Writing*')) {
@@ -418,7 +418,6 @@ function Test-Hash {
         Write-Log 'Automatic check of hashes encounter some problems.'
 
         Add-Label -Id $IssueID -Label 'package-fix-needed'
-        return
     } else {
         Write-Log 'Verified hash failed'
 
@@ -452,7 +451,7 @@ function Test-Hash {
 
             Write-Log 'Git Status' @(hub status --porcelain)
 
-            hub add $man.FullName
+            hub add $gci.FullName
             hub commit -m "${Manifest}: hash fix"
             hub push origin $branch
 
