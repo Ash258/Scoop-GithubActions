@@ -45,6 +45,8 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
             1. Comment on issue about hashes being right
             1. Remove label `hash-fix-needed`
             1. Close issue
+        1. Binary error
+            1. Label `package-fix-needed` will be added
 - **Download failed**
     1. Get all urls in manifest
         1. Download them
