@@ -132,6 +132,21 @@ function Test-NestedBucket {
     }
 }
 
+function Get-Manifest {
+    <#
+    .SYNOPSIS
+        Parse manifest and return it's path and object representation.
+    .PARAMETER Name
+        Name of manifest to parse.
+    #>
+    param([String] $Name)
+
+    $path = Get-Childitem $MANIFESTS_LOCATION "$Name\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest = Get-Content $path -Raw | ConvertFrom-Json
+
+    return $path, $manifest
+}
+
 function New-DetailsCommentString {
     <#
     .SYNOPSIS
@@ -477,6 +492,7 @@ function Test-Downloading {
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $broken_urls = @()
+    # TODO: Aria2 support
     # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookies $true
 
     # exit 0
@@ -728,21 +744,6 @@ function Initialize-PR {
     Add-Comment -ID $prID -Message $message
 
     Write-Log 'PR finished'
-}
-
-function Get-Manifest {
-	<#
-    .SYNOPSIS
-        Parse manifest and return it's path and object representation.
-    .PARAMETER Name
-        Name of manifest to parse.
-    #>
-	param([String] $Name)
-
-	$path = Get-Childitem $MANIFESTS_LOCATION "$Name\.*" | Select-Object -First 1 -ExpandProperty Fullname
-	$manifest = Get-Content $path -Raw | ConvertFrom-Json
-
-	return $path, $manifest
 }
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
 
