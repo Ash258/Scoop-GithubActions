@@ -142,7 +142,7 @@ function Get-Manifest {
     param([String] $Name)
 
     $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
-    $manifest = Get-Content $path -Raw | ConvertFrom-Json
+    $manifest = Get-Content $gciItem.Fullname -Raw | ConvertFrom-Json
 
     return $gciItem, $manifest
 }
