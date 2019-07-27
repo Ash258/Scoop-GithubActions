@@ -526,7 +526,7 @@ function Test-Downloading {
             '',
             '- Proxy configuration',
             '- Network error',
-            '- Site is blocked (Great Firewall of China for example)'
+            '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
         )
 
         Add-Comment -ID $IssueID -Comment $message
