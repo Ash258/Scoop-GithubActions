@@ -156,7 +156,7 @@ function New-DetailsCommentString {
     .PARAMETER Content
         Content of details block.
     .PARAMETER Type
-        Type of code fenced block (example `json`, `yml`, ...).
+        Type of code fenced block (json, yml, ...).
         Needs to be valid markdown code fenced block type.
     #>
     param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
