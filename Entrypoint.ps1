@@ -675,6 +675,16 @@ function Initialize-PR {
         }
         $statuses.Add('Autoupdate', $autoupdate)
 
+        $hashExtract = $true
+        # There is some hash property defined in autoupdate
+        if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
+            if ($outputV -like 'Could not find hash*') {
+                $hashExtract = $false
+            }
+        }
+
+        $status.Add('Autoupdate Hash Extraction', $hashExtract)
+
         Write-Log 'Checkver done'
         #endregion
 
