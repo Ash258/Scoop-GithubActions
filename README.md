@@ -25,6 +25,7 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
     - Hashes for all download urls
     - Checkver functionality
     - Autoupdate functionality
+    - Autoupdate hash extraction functionality
 - All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
 
 ### Issues (`Issues | IssueHandler`)
@@ -32,7 +33,7 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 - **Hash check fails**
     1. Run checkhashes and analyze result
         1. Hash mismatch
-            1. List newest pull requests with name `<manifest>: Hash fix`
+            1. List newest pull requests with name `<manifest>@<version>: Hash fix`
                 1. If there are some
                     1. Select the latest one
                     1. Update PR description with closing directive of new issue
@@ -41,6 +42,7 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
                     1. Create new branch `<manifest>-hash-fix-<random>`
                     1. Commit changes
                     1. Create new PR
+            1. Add labels `hash-fix-needed`, `verified`
         1. No problem
             1. Comment on issue about hashes being right
             1. Remove label `hash-fix-needed`
