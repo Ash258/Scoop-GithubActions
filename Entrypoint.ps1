@@ -683,7 +683,7 @@ function Initialize-PR {
             }
         }
 
-        $status.Add('Autoupdate Hash Extraction', $hashExtract)
+        $statuses.Add('Autoupdate Hash Extraction', $hashExtract)
 
         Write-Log 'Checkver done'
         #endregion
