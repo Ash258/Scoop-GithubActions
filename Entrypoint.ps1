@@ -611,6 +611,7 @@ function Initialize-PR {
     $checks = @()
     $invalid = @()
     $prID = $EVENT.number
+    Write-Log 'LOOOK HEEEERREEE' $prID
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     Write-Log 'PR Files' $files
