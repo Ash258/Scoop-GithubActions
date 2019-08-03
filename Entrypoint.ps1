@@ -11,10 +11,10 @@ $REPOSITORY = $env:GITHUB_REPOSITORY
 $BUCKET_ROOT = $env:GITHUB_WORKSPACE
 # Binaries from scoop. No need to rely on bucket specific binaries
 $BINARIES_FOLDER = Join-Path $env:SCOOP_HOME 'bin'
+$MANIFESTS_LOCATION = Join-Path $BUCKET_ROOT 'bucket'
 
-# Backward compatability for manifests inside root of repository
-$nestedBucket = Join-Path $BUCKET_ROOT 'bucket'
-$MANIFESTS_LOCATION = if (Test-Path $nestedBucket) { $nestedBucket } else { $BUCKET_ROOT }
+$NON_ZERO = 258
+$FUNCTIONS_TO_BE_REMOVED = 'Get-AppFilePath', 'Get-HelperPath'
 
 #region Comments
 # TODO: Add all possible comments, which could be repeated.
@@ -60,7 +60,7 @@ function Get-EnvironmentVariables {
     .SYNOPSIS
         List all environment variables. Mainly debug purpose.
     #>
-    return Get-ChildItem Env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+    return Get-ChildItem env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
 
 function New-Array {
@@ -91,6 +91,62 @@ function Add-IntoArray {
     $List.Add($Item) | Out-Null
 }
 
+function Initialize-NeededSettings {
+    <#
+    .SYNOPSIS
+        Initialize all settings, environment so everything work as expected.
+    #>
+    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if ($env:GITH_EMAIL) {
+        git config --global user.email $env:GITH_EMAIL
+    } else {
+        Write-Log 'Pushing is not possible without email environment'
+    }
+
+    # Log all environment variables
+    Write-Log 'Environment' (Get-EnvironmentVariables)
+}
+
+function Test-NestedBucket {
+    if (Test-Path $MANIFESTS_LOCATION) {
+        Write-Log 'Bucket contains nested bucket folder'
+    } else {
+        Write-Log 'Buckets without nested bucket folder are not supported.'
+
+        $adopt = 'Adopt nested bucket structure'
+        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
+
+        if ($issues -and ($issues.Count -gt 0)) {
+            Write-Log 'Issue already exists'
+        } else {
+            New-Issue -Title $adopt -Body @(
+                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
+                '',
+                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+            )
+        }
+
+        exit $NON_ZERO
+    }
+}
+
+function Get-Manifest {
+    <#
+    .SYNOPSIS
+        Parse manifest and return it's path and object representation.
+    .PARAMETER Name
+        Name of manifest to parse.
+    #>
+    param([String] $Name)
+
+    $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
+    $manifest = Get-Content $gciItem.Fullname -Raw | ConvertFrom-Json
+
+    return $gciItem, $manifest
+}
+
 function New-DetailsCommentString {
     <#
     .SYNOPSIS
@@ -100,14 +156,14 @@ function New-DetailsCommentString {
     .PARAMETER Content
         Content of details block.
     .PARAMETER Type
-        Type of code fenced block (example `json`, `yml`, ...).
+        Type of code fenced block (json, yml, ...).
         Needs to be valid markdown code fenced block type.
     #>
     param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
 
     return @"
 <details>
-    <summary>$Summary</summary>
+<summary>$Summary</summary>
 
 ``````$Type
 $($Content -join "`r`n")
@@ -116,29 +172,12 @@ $($Content -join "`r`n")
 "@
 }
 
-function Initialize-NeededSettings {
-    <#
-    .SYNOPSIS
-        Initialize all settings, environment so everything work as expected.
-    #>
-    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if (-not ($env:GITH_EMAIL)) {
-        Write-Log 'Pushing is not possible without email environment'
-    } else {
-        git config --global user.email $env:GITH_EMAIL
-    }
-
-    # Log all environment variables
-    Write-Log 'Environment' (Get-EnvironmentVariables)
-}
-
 function New-CheckListItem {
     <#
     .SYNOPSIS
         Helper functino for creating markdown check lists.
-    .PARAMETER Check
-        Name of check.
+    .PARAMETER Item
+        Name of list item.
     .PARAMETER OK
         Check was met.
     .PARAMETER IndentLevel
@@ -146,13 +185,13 @@ function New-CheckListItem {
     .PARAMETER Simple
         Simple list item will be used instead of check list.
     #>
-    param ([String] $Check, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
+    param ([String] $Item, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
 
     $ind = ' ' * $IndentLevel * 4
     $char = if ($OK) { 'x' } else { ' ' }
-    $item = if ($Simple) { '' } else { "[$char] " }
+    $check = if ($Simple) { '' } else { "[$char] " }
 
-    return "$ind- $item$Check"
+    return "$ind- $check$Item"
 }
 #endregion General Helpers
 
@@ -228,6 +267,45 @@ function Get-AllChangedFilesInPR {
     if ($Filter) { $files = $files | Where-Object { $_.status -ne 'removed' } }
 
     return $files | Select-Object -Property filename, status
+}
+
+function New-Issue {
+    <#
+    .SYNOPSIS
+        Create new issue in current repository.
+        https://developer.github.com/v3/issues/#create-an-issue
+    .PARAMETER Title
+        The title of issue.
+    .PARAMETER Body
+        Issue description.
+    .PARAMETER Milestone
+        Number of milestone to associate with issue.
+        Authenticated user needs push access.
+    .PARAMETER Label
+        List of labels to be automatically added.
+        Authenticated user needs push access.
+    .PARAMETER Assignee
+        List of user logins to be automatically assigned.
+        Authenticated user needs push access.
+    #>
+    param(
+        [Parameter(Mandatory)]
+        [String] $Title,
+        [String[]] $Body = '',
+        [Int] $Milestone,
+        [String[]] $Label = @(),
+        [String[]] $Assignee = @()
+    )
+
+    $params = @{
+        'title'     = $Title
+        'body'      = ($Body -join "`r`n")
+        'labels'    = $Label
+        'assignees' = $Assignee
+    }
+    if ($Milestone) { $params.Add('milestone', $Milestone) }
+
+    return Invoke-GithubRequest "repos/$REPOSITORY/issues" -Method 'Post' -Body $params
 }
 
 function Close-Issue {
@@ -312,6 +390,82 @@ function Initialize-Scheduled {
 
     Write-Log 'Auto pr - DONE'
 }
+#region Issue
+
+function Test-Hash {
+    param (
+        [Parameter(Mandatory = $true)]
+        [String] $Manifest,
+        [Int] $IssueID
+    )
+
+    $gci, $man = Get-Manifest $Manifest
+
+    $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $gci.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+    Write-Log 'Output' $outputH
+
+    if (($outputH[-2] -like 'OK') -and ($outputH[-1] -like 'Writing*')) {
+        Write-Log 'Cannot reproduce'
+
+        Add-Comment -ID $IssueID -Message @(
+            'Cannot reproduce',
+            '',
+            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+        )
+        Remove-Label -ID $IssueID -Label 'hash-fix-needed'
+        Close-Issue -ID $IssueID
+    } elseif ($outputH[-1] -notlike 'Writing*') { # There is some error
+        Write-Log 'Automatic check of hashes encounter some problems.'
+
+        Add-Label -Id $IssueID -Label 'package-fix-needed'
+    } else {
+        Write-Log 'Verified hash failed'
+
+        Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
+        $message = @('You are right. Thanks for reporting.')
+        $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
+        $prs = $prs | Where-Object { $_.title -ceq "$Manifest@$($man.version): Hash fix" }
+
+        # There is alreay PR for
+        if ($prs.Count -gt 0) {
+            Write-Log 'PR - Update description'
+
+            # Only take latest updated
+            $pr = $prs | Select-Object  -First 1
+            $prID = $pr.number
+            $prBody = $pr.Body
+            # TODO: Additional checks if this PR is really fixing same issue
+
+            $message += ''
+            $message += "There is already pull request to fix this issue. (#$prID)"
+
+            Write-Log 'PR ID' $prID
+            # Update PR description
+            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
+        } else {
+            Write-Log 'PR - Create new branch and post PR'
+
+            $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
+            hub checkout -B $branch
+
+            Write-Log 'Git Status' @(hub status --porcelain)
+
+            hub add $gci.FullName
+            hub commit -m "${Manifest}: hash fix"
+            hub push origin $branch
+
+            # Create new PR
+            Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
+                'title' = "$Manifest@$($man.version): Hash fix"
+                'base'  = 'master'
+                'head'  = $branch
+                'body'  = "- Closes #$IssueID"
+            }
+        }
+        Add-Comment -ID $IssueID -Message $message
+    }
+}
+#endregion Issue
 #endregion Actions
 #endregion DO NOT TOUCH
 
@@ -335,85 +489,17 @@ function Resolve-IssueTitle {
     }
 }
 
-function Test-Hash {
-    param (
-        [Parameter(Mandatory = $true)]
-        [String] $Manifest,
-        [Int] $IssueID
-    )
-
-    & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $Manifest -Dir $MANIFESTS_LOCATION -Update
-    # TODO: Resolve eror state handling from withing binary
-    # https://github.com/Ash258/GithubActionsBucketForTesting/runs/153999789
-
-    $status = hub status --porcelain -uno
-    Write-Log 'Status' $status
-
-    $changes = hub diff --name-only
-    if (($changes).Count -eq 1) {
-        Write-Log 'Verified hash failed'
-
-        $message = @('You are right. Thanks for reporting.')
-        $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        $prs = $prs | Where-Object { $_.title -ceq "${Manifest}: Hash fix" }
-
-        # There is alreay PR for
-        if ($prs.Count -gt 0) {
-            Write-Log 'PR - Update description'
-
-            # Only take latest updated
-            $pr = $prs | Select-Object  -First 1
-            $prID = $pr.number
-            $prBody = $pr.Body
-            # TODO: Additional checks if this PR is really fixing same issue
-
-            $message += ''
-            $message += "There is already pull request to fix this issue. (#$prID)"
-
-            Write-Log 'PR ID' $prID
-            # Update PR description
-            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
-        } else {
-            Write-Log 'PR - Create new branch and post PR'
-
-            $branch = "$manifest-hash-fix-$(Get-Random -Maximum 258258258)"
-            hub checkout -B $branch
-
-            hub add $changes
-            hub commit -m "${Manifest}: hash fix"
-            hub push origin $branch
-
-            # Create new PR
-            Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
-                'title' = "${Manifest}: Hash fix"
-                'base'  = 'master'
-                'head'  = $branch
-                'body'  = "- Closes #$IssueID"
-            }
-        }
-
-        Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
-        Add-Comment -ID $IssueID -Message $message
-    } else {
-        Write-Log 'Cannot reproduce'
-
-        Add-Comment -ID $IssueID -Message @(
-            'Cannot reproduce',
-            '',
-            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
-        )
-        Remove-Label -ID $IssueID -Label 'hash-fix-needed'
-        Close-Issue -ID $IssueID
-    }
-}
-
 function Test-Downloading {
     param([String] $Manifest, [Int] $IssueID)
 
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $broken_urls = @()
+    # TODO: Aria2 support
+    # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookies $true
+
+    # exit 0
     foreach ($arch in @('64bit', '32bit')) {
         $urls = @(url $manifest_o $arch)
 
@@ -421,7 +507,7 @@ function Test-Downloading {
             Write-Log 'url' $url
 
             try {
-                dl_with_cache $Manifest 'DL' $url "/$fname" $manifest_o.cookies $true
+                dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
             } catch {
                 $broken_urls += $url
                 continue
@@ -432,7 +518,18 @@ function Test-Downloading {
     if ($broken_urls.Count -eq 0) {
         Write-Log 'All OK'
 
-        Add-Comment -ID $IssueID -Comment 'Cannot reproduce.', '', 'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
+        $message = @(
+            'Cannot reproduce.',
+            '',
+            'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))',
+            'Downloading problems could be caused by:'
+            '',
+            '- Proxy configuration',
+            '- Network error',
+            '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
+        )
+
+        Add-Comment -ID $IssueID -Comment $message
         # TODO: Close??
     } else {
         Write-Log 'Broken URLS' $broken_urls
@@ -481,7 +578,11 @@ function Initialize-PR {
         }
     }
 
-    #region Forked repo
+    Write-Log 'Pure PR Event' $EVENT
+
+    #region Forked repo / branch selection
+    Write-Log 'COIS' $EVENT.head
+
     $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
@@ -497,6 +598,7 @@ function Initialize-PR {
 
         Push-Location $cloneLocation
     }
+
     #endregion Forked repo
 
     Write-log 'Files in PR:'
@@ -573,6 +675,17 @@ function Initialize-PR {
         }
         $statuses.Add('Autoupdate', $autoupdate)
 
+        # There is some hash property defined in autoupdate
+        if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
+            $hashExtract = $true
+            if ($outputV -like 'Could not find hash*') {
+                $hashExtract = $false
+            }
+
+            $statuses.Add('Autoupdate Hash Extraction', $hashExtract)
+        }
+
+
         Write-Log 'Checkver done'
         #endregion
 
@@ -647,7 +760,6 @@ function Initialize-PR {
 
     Write-Log 'PR finished'
 }
-
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
 
 
@@ -667,7 +779,7 @@ function Test-ExtractDir {
     param([String] $Manifest, [Int] $IssueID)
 
     # Load manifest
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest\.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $message = @()
@@ -730,11 +842,24 @@ function Test-ExtractDir {
     Add-Comment -ID $IssueID -Message $message
 }
 
-# Need to mock function from core
-function global:Get-AppFilePath {
-    param ([String] $App = 'Aria2', [String] $File = 'aria2c')
+function Initialize-MockedFunctionsFromCore {
+    # Remove functions
+    $FUNCTIONS_TO_BE_REMOVED | ForEach-Object { Remove-Item function:$_ }
+    function global:Get-AppFilePath {
+        param ([String] $App = 'Aria2', [String] $File = 'aria2c')
 
-    return which $File
+        return which $File
+    }
+
+    function global:Get-HelperPath {
+        param([String] $Helper)
+
+        switch ($Helper) {
+            'Aria2' {
+                return Get-AppFilePath 'Aria2' 'aria2c'
+            }
+        }
+    }
 }
 
 function Initialize-Issue {
@@ -755,6 +880,13 @@ function Initialize-Issue {
         ($null -eq $problem)
     ) {
         Write-Log 'Not compatible issue title'
+        exit 0
+    }
+
+    $null, $manifest_loaded = Get-Manifest $problematicName
+    if ($manifest_loaded.version -ne $problematicVersion) {
+        Add-Comment -ID $id -Message @("You reported version ``$problematicVersion``, but latest available version is ``$($manifest_loaded.version)``.", "", "Run ``scoop update; scoop uninstall $problematicName; scoop install $problematicName``")
+        Close-Issue -ID $id
         exit 0
     }
 
@@ -787,12 +919,14 @@ function Initialize-Push {
 # For dot sourcing whole file inside tests
 if ($env:TESTS) { return }
 
+Test-NestedBucket
 Initialize-NeededSettings
 
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
+Initialize-MockedFunctionsFromCore
 
 Write-Log 'FULL EVENT' $EVENT_RAW
 
@@ -802,8 +936,8 @@ switch ($EVENT_TYPE) {
     'issue_comment' { Initialize-PR }
     'schedule' { Initialize-Scheduled }
     'push' { Initialize-Push }
-    default { Write-Log 'Not supported action type' }
+    default { Write-Log 'Not supported event type' }
 }
 
-if ($env:NON_ZERO_EXIT) { exit 258 }
+if ($env:NON_ZERO_EXIT) { exit $NON_ZERO }
 #endregion Main
