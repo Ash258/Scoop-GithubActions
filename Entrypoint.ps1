@@ -225,7 +225,7 @@ function Invoke-GithubRequest {
         'Uri'     = "$api_base_url/$Query"
     }
 
-    Write-Debug $parameters.Uri
+    Write-Log 'Github Request URL' $parameters.Uri
 
     if ($Body) { $parameters.Add('Body', (ConvertTo-Json $Body -Depth 8 -Compress)) }
 
