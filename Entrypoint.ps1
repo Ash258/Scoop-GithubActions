@@ -611,7 +611,7 @@ function Initialize-PR {
     $checks = @()
     $invalid = @()
     $prID = $EVENT.number
-    Write-Log 'LOOOK HEEEERREEE' $prID
+
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     Write-Log 'PR Files' $files
@@ -742,7 +742,7 @@ function Initialize-PR {
         Add-IntoArray $message '### Invalid manifests'
         Add-IntoArray $message ''
 
-        Add-IntoArray $message ($invalid | ForEach-Object { "- $_" })
+        Add-IntoArray $message ($invalid | ForEach-Object { "- $_`n" })
     }
 
     # Add some more human friendly message
