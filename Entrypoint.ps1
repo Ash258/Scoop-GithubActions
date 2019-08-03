@@ -616,7 +616,7 @@ function Initialize-PR {
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
-        # Reset variables
+        # Reset variables from previous iteration
         $manifest = $null
         $object = $null
         $statuses = [Ordered] @{ }
@@ -704,8 +704,7 @@ function Initialize-PR {
         Write-Log "Finished $($file.filename) checks"
     }
 
-    Write-Log 'Name of check' $checks.name
-    Write-Log 'Statuses' $checks.Statuses
+    Write-Log 'Checked manifests' $checks.name
     Write-Log 'Invalids' $invalid
 
     # No checks at all
