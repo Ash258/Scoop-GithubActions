@@ -608,7 +608,7 @@ function Initialize-PR {
     }
 
     # Repository context of commented PR is not set to $head.ref
-    if ((git branch --show-current) -ne $head.ref) {
+    if ((Invoke-Expression 'git branch --show-current') -ne $head.ref) {
         Write-Log "Switching branch to $head.ref"
         git checkout $head.ref
     }
