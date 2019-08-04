@@ -694,12 +694,8 @@ function Initialize-PR {
 
         # There is some hash property defined in autoupdate
         if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
-            $hashExtract = $true
-            if ($outputV -like 'Could not find hash*') {
-                $hashExtract = $false
-            }
-
-            $statuses.Add('Autoupdate Hash Extraction', $hashExtract)
+            # If any item contains 'Could not find hash*' there is hash extraction error.
+            $statuses.Add('Autoupdate Hash Extraction', ($outputV -notlike 'Could not find hash*'))
         }
 
 
