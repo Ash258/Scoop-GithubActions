@@ -606,7 +606,9 @@ function Initialize-PR {
 
         Push-Location $cloneLocation
     } else {
+        # When commented, then event contains ref as actual master, not head from PR
         Write-Log 'REF' $head.ref
+        git checkout $head.ref
     }
 
     # When forked repository it needs to be '/github/forked_workspace'
