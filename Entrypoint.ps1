@@ -28,7 +28,7 @@ $FUNCTIONS_TO_BE_REMOVED = 'Get-AppFilePath', 'Get-HelperPath'
 function Write-Log {
     <#
     .SYNOPSIS
-        Persist message in docker log. For debug mainly.
+        Persist message in docker log. For debug mainly. Write-Host is more suitable because then write-log is not interfering with pipes.
     .PARAMETER Summary
         Header of log.
     .PARAMETER Message
@@ -41,18 +41,18 @@ function Write-Log {
 
     # If it is only summary it is informative log
     if ($Summary -and ($null -eq $Message)) {
-        Write-Output "INFO: $Summary"
+        Write-Host "INFO: $Summary"
     } elseif (($Message.Count -eq 1) -and ($Message[0] -isnot [Hashtable])) {
         # Simple non hashtable object and summary should be one liner
-        Write-Output "${Summary}: $Message"
+        Write-Host "${Summary}: $Message"
     } else {
         # Detailed output using format table
-        Write-Output "Log of ${Summary}:"
+        Write-Host "Log of ${Summary}:"
         $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`n"
-        Write-Output ($mess | ForEach-Object { "    $_" })
+        Write-Host ($mess | ForEach-Object { "    $_" })
     }
 
-    Write-Output ''
+    Write-Host ''
 }
 
 function Get-EnvironmentVariables {
