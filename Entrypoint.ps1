@@ -605,9 +605,11 @@ function Initialize-PR {
         $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
 
         Push-Location $cloneLocation
-    } else {
-        # When commented, then event contains ref as actual master, not head from PR
-        Write-Log 'REF' $head.ref
+    }
+
+    # Repository context of commented PR is not set to $head.ref
+    if ((git branch --show-current) -ne $head.ref) {
+        Write-Log "Switching branch to $head.ref"
         git checkout $head.ref
     }
 
