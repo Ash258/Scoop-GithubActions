@@ -565,7 +565,6 @@ function Initialize-PR {
 
                     $commented = $true
                     # There is need to get actual pull request event
-                    Write-Log 'COSI' $EVENT.issue.number
                     $content = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | Select-Object -ExpandProperty Content
                     $EVENT_new = ConvertFrom-Json $content
                 } else {
@@ -582,12 +581,14 @@ function Initialize-PR {
             exit 0
         }
     }
+	Write-Log 'Pure PR Event' $EVENT
 
     if ($EVENT_new) {
         Write-Log 'There is new event available'
         $EVENT = $EVENT_new
     }
-    Write-Log 'Pure PR Event' $EVENT
+
+    Write-Log 'New event' $EVENT
     Write-Log 'Commented' $commented
 
     #region Forked repo / branch selection
@@ -606,13 +607,12 @@ function Initialize-PR {
 
         Push-Location $cloneLocation
     }
-    Write-Log 'Context' (Get-Location)
-    Get-ChildItem (Get-Location)
-    Get-ChildItem (Join-Path (Get-Location) 'bucket' -Resolve)
+
+    # When forked repository it needs to be '/github/forked_workspace'
+    Write-Log 'Context of action' (Get-Location)
 
     #endregion Forked repo
-
-    Write-log 'Files in PR:'
+    Write-log 'Files in PR'
 
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
     (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
