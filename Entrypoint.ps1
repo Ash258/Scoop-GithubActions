@@ -564,7 +564,8 @@ function Initialize-PR {
                     Write-Log 'Pull request comment'
 
                     $commented = $true
-                    $EVENT = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+                    # There is need to get actual pull request event
+                    $EVENT_new = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
                 } else {
                     Write-Log 'Issue comment'
                     exit 0
@@ -580,11 +581,14 @@ function Initialize-PR {
         }
     }
 
+    if ($EVENT_new) {
+        Write-Log 'There is new event available'
+        $EVENT = $EVENT_new
+    }
     Write-Log 'Pure PR Event' $EVENT
+    Write-Log 'Commented' $commented
 
     #region Forked repo / branch selection
-    Write-Log 'COIS' $EVENT.head
-
     $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
@@ -600,6 +604,9 @@ function Initialize-PR {
 
         Push-Location $cloneLocation
     }
+    Write-Log 'Context' (Get-Location)
+    Get-ChildItem (Get-Location)
+    Get-ChildItem (Join-Path (Get-Location) 'bucket' -Resolve)
 
     #endregion Forked repo
 
