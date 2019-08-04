@@ -680,8 +680,14 @@ function Initialize-PR {
         $statuses.Add('Checkver', $checkver)
 
         switch -Wildcard ($outputV[-1]) {
-            'ERROR*' { $autoupdate = $false }
-            "couldn't match*" { $autoupdate = $false }
+            'ERROR*' {
+                Write-Log 'Error in checkver'
+                $autoupdate = $false
+            }
+            "couldn't match*" {
+                Write-Log 'Version match fail'
+                $autoupdate = $false
+            }
             default { $autoupdate = $checkver }
         }
         $statuses.Add('Autoupdate', $autoupdate)
