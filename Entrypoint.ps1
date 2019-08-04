@@ -605,6 +605,8 @@ function Initialize-PR {
         $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
 
         Push-Location $cloneLocation
+    } else {
+        Write-Log 'REF' $head.ref
     }
 
     # When forked repository it needs to be '/github/forked_workspace'
