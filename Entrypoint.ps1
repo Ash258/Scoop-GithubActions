@@ -566,8 +566,8 @@ function Initialize-PR {
                     $commented = $true
                     # There is need to get actual pull request event
                     Write-Log 'COSI' $EVENT.issue.number
-                    Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)"
-                    $EVENT_new = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | ConvertFrom-Json
+                    $content = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | Select-Object -ExpandProperty Content
+                    $EVENT_new = ConvertFrom-Json $content
                 } else {
                     Write-Log 'Issue comment'
                     exit 0
