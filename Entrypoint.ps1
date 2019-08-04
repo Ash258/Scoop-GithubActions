@@ -608,9 +608,10 @@ function Initialize-PR {
     }
 
     # Repository context of commented PR is not set to $head.ref
-    if ((Invoke-Expression 'git branch --show-current') -ne $head.ref) {
+    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $head.ref) {
         Write-Log "Switching branch to $head.ref"
         git checkout $head.ref
+        git pull
     }
 
     # When forked repository it needs to be '/github/forked_workspace'
