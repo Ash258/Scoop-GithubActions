@@ -608,9 +608,10 @@ function Initialize-PR {
     }
 
     # Repository context of commented PR is not set to $head.ref
-    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $head.ref) {
-        Write-Log "Switching branch to $head.ref"
-        git checkout $head.ref
+    $ref = $head.ref
+    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $ref) {
+        Write-Log "Switching branch to $ref"
+        git checkout $ref
         git pull
     }
 
