@@ -41,18 +41,18 @@ function Write-Log {
 
     # If it is only summary it is informative log
     if ($Summary -and ($null -eq $Message)) {
-        Write-Information "INFO: $Summary"
+        Write-Host "INFO: $Summary"
     } elseif (($Message.Count -eq 1) -and ($Message[0] -isnot [Hashtable])) {
         # Simple non hashtable object and summary should be one liner
-        Write-Information "${Summary}: $Message"
+        Write-Host "${Summary}: $Message"
     } else {
         # Detailed output using format table
-        Write-Information "Log of ${Summary}:"
+        Write-Host "Log of ${Summary}:"
         $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`n"
-        Write-Information ($mess | ForEach-Object { "    $_" })
+        Write-Host ($mess | ForEach-Object { "`n    $_" })
     }
 
-    Write-Information ''
+    Write-Host ''
 }
 
 function Get-EnvironmentVariables {
@@ -942,7 +942,6 @@ if ($env:TESTS) { return }
 Test-NestedBucket
 Initialize-NeededSettings
 
-$InformationPreference = 'Continue'
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
