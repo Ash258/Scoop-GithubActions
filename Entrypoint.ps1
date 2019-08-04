@@ -584,10 +584,12 @@ function Initialize-PR {
 
     if ($EVENT_new) {
         Write-Log 'There is new event available'
+
         $EVENT = $EVENT_new
+
+        Write-Log 'New event' $EVENT
     }
 
-    Write-Log 'New event' $EVENT
     Write-Log 'Commented' $commented
 
     #region Forked repo / branch selection
