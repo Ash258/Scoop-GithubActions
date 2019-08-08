@@ -1,4 +1,4 @@
-Import-Module (Join-Path $PSScriptRoot 'Helpers.psm1')
+Join-Path $PSScriptRoot 'Helpers.psm1' | Import-Module
 Get-ChildItem $PSScriptRoot 'Action\*.psm1' -File | Select-Object -ExpandProperty Fullname | Import-Module
 
 function Invoke-Action {

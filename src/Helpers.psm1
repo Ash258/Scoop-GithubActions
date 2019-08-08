@@ -1,4 +1,4 @@
-Import-Module (Join-Path $PSScriptRoot 'Variables.psm1')
+Join-Path $PSScriptRoot 'Variables.psm1' | Import-Module
 
 function Write-Log {
     <#
