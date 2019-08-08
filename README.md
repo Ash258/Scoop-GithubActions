@@ -1,9 +1,3 @@
-<p align="center">
-❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗ DO NOT USE YET. Wait for 1.0.0 tag release ❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗❗
-</p>
-
-You could participate in testing using `@stable` version or any of already released tags from release page.
-
 # Github actions for scoop buckets
 
 Set of automated actions you will ever need as bucket maintainer. Using `stable` tag instead of specific version is highly recommended.
