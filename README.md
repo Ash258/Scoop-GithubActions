@@ -55,54 +55,71 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
             1. If there is error, add current url to list of broken urls
     1. Comment will be posted to issue
 
-## Example workflow for everything you will ever need as bucket maintainer
+## Example workflows for everything you will ever need as bucket maintainer
 
-```hcl
-workflow "Issues" {
-    on = "issues"
-    resolves = ["IssueHandler"]
-}
+```yml
+#.github\workflows\schedule.yml
+on:
+  schedules:
+  - cron: '*/30 * * * *'
+name: Excavator
+jobs:
+  excavate:
+    name: Excavate
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: Excavate
+      uses: Ash258/Scoop-GithubActions@stable
+      env:
+        GITH_EMAIL: youremail@mail.com
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        SKIP_UPDATED: "1"
 
-workflow "Pull requests" {
-    on = "pull_request"
-    resolves = ["PullRequestHandler"]
-}
+#.github\workflows\issues.yml
+on: issues
+name: Issues
+jobs:
+  issueHandler:
+    name: IssueHandler
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: IssueHandler
+      uses: Ash258/Scoop-GithubActions@stable
+      env:
+        GITH_EMAIL: youremail@mail.com
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-workflow "Pull requests comment" {
-    on = "issue_comment"
-    resolves = ["PullRequestHandler"]
-}
+#.github\workflows\issue_commented.yml
+on: issue_comment
+name: Pull requests comment
+jobs:
+  pullRequestHandler:
+    name: PullRequestHandler
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: PullRequestHandler
+      uses: Ash258/Scoop-GithubActions@stable
+      env:
+        GITH_EMAIL: youremail@mail.com
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
-workflow "Excavator" {
-    on = "schedule(0 * * * *)" # Run auto-pr every hour, See: https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/#scheduling-a-workflow
-    resolves = ["Excavate"]
-}
-
-action "IssueHandler" {
-    uses = "Ash258/Scoop-GithubActions@stable"
-    secrets = ["GITHUB_TOKEN"]
-    env = {
-        "GITH_EMAIL" = "youremail@email.com" # Email is needed for pushing to repository within action container
-    }
-}
-
-action "PullRequestHandler" {
-    uses = "Ash258/Scoop-GithubActions@stable"
-    secrets = ["GITHUB_TOKEN"]
-    env = {
-        "GITH_EMAIL" = "youremail@email.com"
-    }
-}
-
-action "Excavate" {
-    uses = "Ash258/Scoop-GithubActions@stable"
-    secrets = ["GITHUB_TOKEN"]
-    env = {
-        "SPECIAL_SNOWFLAKES" = "curl,brotli,jx" # Optional parameter
-        "SKIP_UPDATED" = "1" # Optional parameter, Could be anything as value
-        "GITH_EMAIL" = "youremail@email.com"
-    }
-}
+#.github\workflows\pull_request.yml
+on: pull_request
+name: Pull requests
+jobs:
+  pullRequestHandler:
+    name: PullRequestHandler
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@master
+    - name: PullRequestHandler
+      uses: Ash258/Scoop-GithubActions@stable
+      env:
+        GITH_EMAIL: youremail@mail.com
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
 ## How to debug locally
