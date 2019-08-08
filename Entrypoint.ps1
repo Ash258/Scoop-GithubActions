@@ -1,6 +1,7 @@
 # Import all modules
-Get-ChildItem (Join-Path $PSScriptRoot 'src') -File | Select-Object -ExpandProperty Fullname | Import-Module -Force
+Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
+exit
 #region Function pool
 #region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
 #region DO NOT TOUCH
