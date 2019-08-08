@@ -13,47 +13,61 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 ### Excavator (`Excavator | Excavate`)
 
 - Periodically execute automatic updates for all manifests.
+- Refer to <https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/#scheduling-a-workflow> for configuration formats
 - <https://github.com/ScoopInstaller/Excavator> alternative.
     - If you do not have custom server / device which could run docker or scheduled task for auto-pr 24/7.
 
-### Pull requests (`Pull requests | PullRequestHandler`)
-
-- When pull request is created following tests will be executed for all changed manifests.
-    - Required properties
-        - License
-        - Description
-    - Hashes for all download urls
-    - Checkver functionality
-    - Autoupdate functionality
-    - Autoupdate hash extraction functionality
-- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
-
 ### Issues (`Issues | IssueHandler`)
 
+As soon as new issue is created action is executed. Based on issue title specific sub-action is executed. It could be one of these:
+
 - **Hash check fails**
-    1. Run checkhashes and analyze result
+    1. Checkhashes binary is executed
+    1. Result is parsed
         1. Hash mismatch
-            1. List newest pull requests with name `<manifest>@<version>: Hash fix`
-                1. If there are some
-                    1. Select the latest one
-                    1. Update PR description with closing directive of new issue
-                    1. Comment on issue about this PR
+            1. Pull requests with name `<manifest>@<version>: Hash fix` are listed
+                1. There is PR already
+                    1. The newest one is selected
+                    1. Description of this PR is updated with closing directive for created issue
+                    1. Comment to issue is posted with reference to PR
                 1. If none
-                    1. Create new branch `<manifest>-hash-fix-<random>`
-                    1. Commit changes
-                    1. Create new PR
-            1. Add labels `hash-fix-needed`, `verified`
+                    1. New branch `<manifest>-hash-fix-<random>` is created
+                    1. Changes are commited
+                    1. New PR is created from this branch
+            1. Labels `hash-fix-needed`, `verified` are added
         1. No problem
-            1. Comment on issue about hashes being right
-            1. Remove label `hash-fix-needed`
-            1. Close issue
+            1. Comment on issue is posted about hashes being right
+            1. Label `hash-fix-needed` is removed
+            1. Issue is closed
         1. Binary error
-            1. Label `package-fix-needed` will be added
+            1. Label `package-fix-needed` is added
 - **Download failed**
-    1. Get all urls in manifest
-        1. Download them
-            1. If there is error, add current url to list of broken urls
+    1. All urls defined in manifest are retrieved
+    1. Downloading of all urls is executed
     1. Comment will be posted to issue
+        1. If there is problematic URL
+            1. List of problematic URLs is attached in comment
+            1. Labels `package-fix-needed`, `verified`, `help-wanted` is added
+        1. All URLs could be downloaded without problem
+            1. Possible causes of download problems are attached in comment
+
+### Pull requests (`Pull requests | PullRequestHandler`)
+
+As soon as PR is created (or someone post comment `/verify`) set of these tests are executed:
+
+1. Required properties are in place
+    - Manifest has to contain `License` and `Description` properties
+1. Hashes of URLs
+    - Hashes specified in manifest have to match
+1. Checkver functionality
+    - Checkver has to finished successfully
+    - Version in manifest has to match version from checkver binary
+1. Autoupdate
+    - Autoupdate has to finish successfully
+    - Hashes extraction has to finish successfully
+        - If there is `hash` property inside `autoupdate` output of checkver binary cannot contains `Could not find hash`
+
+- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
 
 ## Example workflows for everything you will ever need as bucket maintainer
 
@@ -140,15 +154,3 @@ git clone 'https://github.com/Ash258/GithubActionsBucketForTesting.git' '/github
 ```
 
 Execute `docker run -ti (((docker build -q .) -split ':')[1])` or `docker build . -t 'actions:master'; docker run -ti actions`.
-
-## Issues
-
-1. On issues.created
-    1. Parse issue title
-        1. `manifest@version: PROBLEM`
-            1. `extract_dir error`
-                1. Extract
-                    1. If there is problem
-                        1. Add label package-fix-needed and verified
-                    1. If no, comment on issue and close it
-        1. $env:GITHUB_EVENT_PATH, <https://developer.github.com/actions/creating-github-actions/accessing-the-runtime-environment/#environment-variables>
