@@ -66,23 +66,6 @@ function Add-IntoArray {
     $List.Add($Item) | Out-Null
 }
 
-function Initialize-NeededSettings {
-    <#
-    .SYNOPSIS
-        Initialize all settings, environment so everything work as expected.
-    #>
-    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
-    if ($env:GITH_EMAIL) {
-        git config --global user.email $env:GITH_EMAIL
-    } else {
-        Write-Log 'Pushing is not possible without email environment'
-    }
-
-    # Log all environment variables
-    Write-Log 'Environment' (Get-EnvironmentVariables)
-}
-
 function Expand-Property {
     <#
     .SYNOPSIS
@@ -102,5 +85,62 @@ function Expand-Property {
     return $Object | Select-Object -ExpandProperty $Property
 }
 
-Export-ModuleMember -Function Write-Log, Get-EnvironmentVariables, New-Array, Initialize-NeededSettings, Add-IntoArray, `
-    Expand-Property
+function Initialize-NeededSettings {
+    <#
+    .SYNOPSIS
+        Initialize all settings, environment so everything work as expected.
+    #>
+    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    if ($env:GITH_EMAIL) {
+        git config --global user.email $env:GITH_EMAIL
+    } else {
+        Write-Log 'Pushing is not possible without email environment'
+    }
+
+    # Log all environment variables
+    Write-Log 'Environment' (Get-EnvironmentVariables)
+}
+
+function Get-Manifest {
+    <#
+    .SYNOPSIS
+        Parse manifest and return it's path and object representation.
+    .PARAMETER Name
+        Name of manifest to parse.
+    #>
+    param([Parameter(Mandatory)][String] $Name)
+
+    $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
+    $manifest = Get-Content $gciItem.Fullname -Raw | ConvertFrom-Json
+
+    return $gciItem, $manifest
+}
+
+function New-DetailsCommentString {
+    <#
+    .SYNOPSIS
+        Create string surrounded with <details>.
+    .PARAMETER Summary
+        What should be displayed on expand button.
+    .PARAMETER Content
+        Content of details block.
+    .PARAMETER Type
+        Type of code fenced block (json, yml, ...).
+        Needs to be valid markdown code fenced block type.
+    #>
+    param([Parameter(Mandatory)][String] $Summary, [String[]] $Content, [String] $Type = 'text')
+
+    return @"
+<details>
+<summary>$Summary</summary>
+
+``````$Type
+$($Content -join "`r`n")
+</details>
+``````
+"@
+}
+
+Export-ModuleMember -Function Write-Log, Get-EnvironmentVariables, New-Array, Add-IntoArray, Initialize-NeededSettings, `
+    Expand-Property, Get-Manifest, New-DetailsCommentString

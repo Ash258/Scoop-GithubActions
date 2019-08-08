@@ -30,46 +30,6 @@ function Test-NestedBucket {
     }
 }
 
-function Get-Manifest {
-    <#
-    .SYNOPSIS
-        Parse manifest and return it's path and object representation.
-    .PARAMETER Name
-        Name of manifest to parse.
-    #>
-    param([String] $Name)
-
-    $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
-    $manifest = Get-Content $gciItem.Fullname -Raw | ConvertFrom-Json
-
-    return $gciItem, $manifest
-}
-
-function New-DetailsCommentString {
-    <#
-    .SYNOPSIS
-        Create string surrounded with <details>.
-    .PARAMETER Summary
-        What should be displayed on expand button.
-    .PARAMETER Content
-        Content of details block.
-    .PARAMETER Type
-        Type of code fenced block (json, yml, ...).
-        Needs to be valid markdown code fenced block type.
-    #>
-    param([String] $Summary, [String[]] $Content, [String] $Type = 'text')
-
-    return @"
-<details>
-<summary>$Summary</summary>
-
-``````$Type
-$($Content -join "`r`n")
-</details>
-``````
-"@
-}
-
 function New-CheckListItem {
     <#
     .SYNOPSIS
@@ -653,11 +613,6 @@ function Initialize-Issue {
 
     Write-Log 'Issue finished'
 }
-
-function Initialize-Push {
-    Write-Log 'Push initialized'
-    Write-Log 'Push finished'
-}
 #endregion Function pool
 
 #region Main
@@ -681,7 +636,6 @@ switch ($EVENT_TYPE) {
     'pull_request' { Initialize-PR }
     'issue_comment' { Initialize-PR }
     'schedule' { Initialize-Scheduled }
-    'push' { Initialize-Push }
     default { Write-Log 'Not supported event type' }
 }
 
