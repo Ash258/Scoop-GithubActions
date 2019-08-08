@@ -398,39 +398,6 @@ function Initialize-PR {
 }
 #endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-function Initialize-MockedFunctionsFromCore {
-    # Remove functions
-    $FUNCTIONS_TO_BE_REMOVED | ForEach-Object { Remove-Item function:$_ }
-    function global:Get-AppFilePath {
-        param ([String] $App = 'Aria2', [String] $File = 'aria2c')
-
-        return which $File
-    }
-
-    function global:Get-HelperPath {
-        param([String] $Helper)
-
-        switch ($Helper) {
-            'Aria2' {
-                return Get-AppFilePath 'Aria2' 'aria2c'
-            }
-        }
-    }
-}
-
 function Initialize-Issue {
     Write-Log 'Issue initialized'
     Write-log 'ACTION' $EVENT.action
