@@ -1,3 +1,5 @@
+Import-Module (Join-Path $PSScriptRoot '..\Helpers.psm1')
+
 function Initialize-Scheduled {
     <#
     .SYNOPSIS
