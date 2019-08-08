@@ -1,12 +1,6 @@
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
-#region Function pool
-#region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
-#region DO NOT TOUCH
-#region Actions
-#region Issue
-
 function Test-Hash {
     param (
         [Parameter(Mandatory = $true)]
@@ -80,9 +74,6 @@ function Test-Hash {
         Add-Comment -ID $IssueID -Message $message
     }
 }
-#endregion Issue
-#endregion Actions
-#endregion DO NOT TOUCH
 
 function Resolve-IssueTitle {
     <#
@@ -396,11 +387,9 @@ function Initialize-PR {
 
     Write-Log 'PR finished'
 }
-#endregion ⬆⬆⬆⬆⬆⬆⬆⬆ OK ⬆⬆⬆⬆⬆⬆⬆⬆
 
 function Initialize-Issue {
     Write-Log 'Issue initialized'
-    Write-log 'ACTION' $EVENT.action
 
     if ($EVENT.action -ne 'opened') {
         Write-Log "Only action 'opened' is supported"
@@ -444,7 +433,6 @@ function Initialize-Issue {
 
     Write-Log 'Issue finished'
 }
-#endregion Function pool
 
 #region Main
 $VerbosePreference = 'Continue'
