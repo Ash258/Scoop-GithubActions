@@ -4,55 +4,6 @@ Get-ChildItem (Join-Path $PSScriptRoot 'src') -File | Select-Object -ExpandPrope
 #region Function pool
 #region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
 #region DO NOT TOUCH
-#region General Helpers
-
-function Test-NestedBucket {
-    if (Test-Path $MANIFESTS_LOCATION) {
-        Write-Log 'Bucket contains nested bucket folder'
-    } else {
-        Write-Log 'Buckets without nested bucket folder are not supported.'
-
-        $adopt = 'Adopt nested bucket structure'
-        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
-        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
-
-        if ($issues -and ($issues.Count -gt 0)) {
-            Write-Log 'Issue already exists'
-        } else {
-            New-Issue -Title $adopt -Body @(
-                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
-                '',
-                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
-            )
-        }
-
-        exit $NON_ZERO
-    }
-}
-
-function New-CheckListItem {
-    <#
-    .SYNOPSIS
-        Helper functino for creating markdown check lists.
-    .PARAMETER Item
-        Name of list item.
-    .PARAMETER OK
-        Check was met.
-    .PARAMETER IndentLevel
-        Define nested list level.
-    .PARAMETER Simple
-        Simple list item will be used instead of check list.
-    #>
-    param ([String] $Item, [Switch] $OK, [Int] $IndentLevel = 0, [Switch] $Simple)
-
-    $ind = ' ' * $IndentLevel * 4
-    $char = if ($OK) { 'x' } else { ' ' }
-    $check = if ($Simple) { '' } else { "[$char] " }
-
-    return "$ind- $check$Item"
-}
-#endregion General Helpers
-
 #region Actions
 function Initialize-Scheduled {
     <#

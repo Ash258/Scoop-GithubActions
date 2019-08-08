@@ -142,5 +142,57 @@ $($Content -join "`r`n")
 "@
 }
 
+function New-CheckListItem {
+    <#
+    .SYNOPSIS
+        Create markdown check list.
+    .PARAMETER Item
+        Name of list item.
+    .PARAMETER OK
+        Check was met.
+    .PARAMETER IndentLevel
+        Define nested list level.
+    .PARAMETER Simple
+        Simple list item will be used instead of check list.
+    #>
+    param ([Parameter(Mandatory)][String] $Item, [Int] $IndentLevel = 0, [Switch] $OK, [Switch] $Simple)
+
+    $ind = ' ' * $IndentLevel * 4
+    $char = if ($OK) { 'x' } else { ' ' }
+    $check = if ($Simple) { '' } else { "[$char] " }
+
+    return "$ind- $check$Item"
+}
+
+function Test-NestedBucket {
+    <#
+    .SYNOPSIS
+        Test if bucket contains nested `bucket` folder.
+        If no open new issue and exit with non zero exit code.
+    #>
+
+    if (Test-Path $MANIFESTS_LOCATION) {
+        Write-Log 'Bucket contains nested bucket folder'
+    } else {
+        Write-Log 'Buckets without nested bucket folder are not supported.'
+
+        $adopt = 'Adopt nested bucket structure'
+        $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+        $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
+
+        if ($issues -and ($issues.Count -gt 0)) {
+            Write-Log 'Issue already exists'
+        } else {
+            New-Issue -Title $adopt -Body @(
+                'Buckets without nested `bucket` folder are not supported. You will not be able to use actions without it.',
+                '',
+                'See <https://github.com/Ash258/GenericBucket> for the most optimal bucket structure.'
+            )
+        }
+
+        exit $NON_ZERO
+    }
+}
+
 Export-ModuleMember -Function Write-Log, Get-EnvironmentVariables, New-Array, Add-IntoArray, Initialize-NeededSettings, `
-    Expand-Property, Get-Manifest, New-DetailsCommentString
+    Expand-Property, Get-Manifest, New-DetailsCommentString, New-CheckListItem, Test-NestedBucket
