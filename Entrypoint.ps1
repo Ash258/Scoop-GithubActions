@@ -557,7 +557,7 @@ Initialize-NeededSettings
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Write-Log 'Importing all modules'
-Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | Select-Object -ExpandProperty Fullname | ForEach-Object { . $_ }
+Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | ForEach-Object { . $_.FullName }
 Initialize-MockedFunctionsFromCore
 
 Write-Log 'FULL EVENT' $EVENT_RAW
