@@ -1,4 +1,4 @@
-Import-Module (Join-Path $PSScriptRoot '..\Variables.psm1')
+Import-Module (Join-Path $PSScriptRoot 'Variables.psm1')
 Get-ChildItem $PSScriptRoot 'Action\*.psm1' -File | Select-Object -ExpandProperty Fullname | Import-Module
 
 function Invoke-Action {
