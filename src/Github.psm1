@@ -1,4 +1,4 @@
-Import-Module (Join-Path $PSScriptRoot 'Helpers.psm1')
+@('Helpers.psm1', 'Variables.psm1') | ForEach-Object { Import-Module (Join-Path $PSScriptRoot $_) }
 
 function Invoke-GithubRequest {
     <#
