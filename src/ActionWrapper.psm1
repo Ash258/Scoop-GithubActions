@@ -1,5 +1,5 @@
 Join-Path $PSScriptRoot 'Helpers.psm1' | Import-Module
-Get-ChildItem $PSScriptRoot 'Action\*.psm1' -File | Select-Object -ExpandProperty Fullname | Import-Module
+Join-Path $PSScriptRoot 'Action' | Get-ChildItem -Filter '*.psm1' | Import-Module
 
 function Invoke-Action {
     switch ($EVENT_TYPE) {
