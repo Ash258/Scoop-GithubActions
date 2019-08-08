@@ -78,26 +78,6 @@ function Test-Hash {
     }
 }
 
-function Resolve-IssueTitle {
-    <#
-    .SYNOPSIS
-        Parse issue title and return manifest name, version and problem.
-    .PARAMETER Title
-        Title to be parsed.
-    .EXAMPLE
-        Resolve-IssueTitle 'recuva@2.4: hash check failed'
-    #>
-    param([String] $Title)
-
-    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
-
-    if ($result) {
-        return $Matches.name, $Matches.version, $Matches.problem
-    } else {
-        return $null, $null, $null
-    }
-}
-
 function Test-Downloading {
     param([String] $Manifest, [Int] $IssueID)
 

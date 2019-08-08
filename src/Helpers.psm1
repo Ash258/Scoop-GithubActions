@@ -194,5 +194,25 @@ function Test-NestedBucket {
     }
 }
 
+function Resolve-IssueTitle {
+    <#
+    .SYNOPSIS
+        Parse issue title and return manifest name, version and problem.
+    .PARAMETER Title
+        Title to be parsed.
+    .EXAMPLE
+        Resolve-IssueTitle 'recuva@2.4: hash check failed'
+    #>
+    param([Parameter(Mandatory)][String] $Title)
+
+    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
+
+    if ($result) {
+        return $Matches.name, $Matches.version, $Matches.problem
+    } else {
+        return $null, $null, $null
+    }
+}
+
 Export-ModuleMember -Function Write-Log, Get-EnvironmentVariables, New-Array, Add-IntoArray, Initialize-NeededSettings, `
-    Expand-Property, Get-Manifest, New-DetailsCommentString, New-CheckListItem, Test-NestedBucket
+    Expand-Property, Get-Manifest, New-DetailsCommentString, New-CheckListItem, Test-NestedBucket, Resolve-IssueTitle
