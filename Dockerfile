@@ -20,6 +20,7 @@ RUN apk add --no-cache --virtual .scoop-deps git p7zip aria2 \
     && git clone 'https://github.com/lukesampson/scoop.git' ${SCOOP_HOME}
 
 COPY Entrypoint.ps1 /
+COPY src /src
 
 # Debug:
 # COPY LocalTestEnvironment.ps1 /
