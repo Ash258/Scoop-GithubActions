@@ -1,10 +1,6 @@
 # Import all modules
 Get-ChildItem (Join-Path $PSScriptRoot 'src') -File | Select-Object -ExpandProperty Fullname | Import-Module -Force
 
-# Manually import actions
-# TODO: Rework
-Import-Module (Join-Path $PSScriptRoot 'src\Action\Scheduled.psm1')
-
 #region Function pool
 #region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
 #region DO NOT TOUCH
@@ -566,13 +562,7 @@ Initialize-MockedFunctionsFromCore
 
 Write-Log 'FULL EVENT' $EVENT_RAW
 
-switch ($EVENT_TYPE) {
-    'issues' { Initialize-Issue }
-    'pull_request' { Initialize-PR }
-    'issue_comment' { Initialize-PR }
-    'schedule' { Initialize-Scheduled }
-    default { Write-Log 'Not supported event type' }
-}
+Invoke-Action
 
 if ($env:NON_ZERO_EXIT) { exit $NON_ZERO }
 #endregion Main
