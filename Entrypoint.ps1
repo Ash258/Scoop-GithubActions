@@ -1,6 +1,10 @@
 # Import all modules
 Get-ChildItem (Join-Path $PSScriptRoot 'src') -File | Select-Object -ExpandProperty Fullname | Import-Module -Force
 
+# Manually import actions
+# TODO: Rework
+Import-Module (Join-Path $PSScriptRoot 'src\Action\Scheduled.psm1')
+
 #region Function pool
 #region ⬇⬇⬇⬇⬇⬇⬇⬇ OK ⬇⬇⬇⬇⬇⬇⬇⬇
 #region DO NOT TOUCH
