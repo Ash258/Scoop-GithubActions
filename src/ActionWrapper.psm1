@@ -3,10 +3,10 @@ Join-Path $PSScriptRoot 'Action' | Get-ChildItem -Filter '*.psm1' | Import-Modul
 
 function Invoke-Action {
     switch ($EVENT_TYPE) {
-        'issues' { Initialize-Issue }
         'pull_request' { Initialize-PR }
         'issue_comment' { Initialize-PR }
         'schedule' { Initialize-Scheduled }
+        'issues' { Initialize-Issue }
         default { Write-Log 'Not supported event type' }
     }
 }

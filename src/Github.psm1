@@ -5,11 +5,13 @@ function Invoke-GithubRequest {
     .SYNOPSIS
         Invoke authenticated github API request.
     .PARAMETER Query
-        Query to be executed.
+        Query to be executed. `https://api/github.com/` is already included.
     .PARAMETER Method
         Method to be used with request.
     .PARAMETER Body
         Additional body to be send.
+    .EXAMPLE
+        Invoke-GithubRequest 'repos/User/Repo/pulls' -Method 'Post' -Body @{ 'body' = 'body' }
     #>
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
@@ -18,19 +20,20 @@ function Invoke-GithubRequest {
         [Hashtable] $Body
     )
 
-    $api_base_url = 'https://api.github.com'
+    $baseUrl = 'https://api.github.com'
     $parameters = @{
         'Headers' = @{
             # Authorization token is neeeded for posting comments and to increase limit of requests
             'Authorization' = "token $env:GITHUB_TOKEN"
         }
         'Method'  = $Method
-        'Uri'     = "$api_base_url/$Query"
+        'Uri'     = "$baseUrl/$Query"
     }
+
+    Write-Log 'Github Request' $parameters
 
     if ($Body) { $parameters.Add('Body', (ConvertTo-Json $Body -Depth 8 -Compress)) }
 
-    Write-Log 'Github Request' $parameters
     Write-Log 'Request Body' $parameters.Body
 
     return Invoke-WebRequest @parameters
@@ -44,7 +47,7 @@ function Add-Comment {
     .PARAMETER ID
         ID of issue / PR.
     .PARAMETER Message
-        String or array of string to be send as comment.
+        String or array of strings to be send as comment. Array will be joined with CRLF.
     #>
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
@@ -59,7 +62,7 @@ function Add-Comment {
 function Get-AllChangedFilesInPR {
     <#
     .SYNOPSIS
-        Get list of all changed files inside pull request.
+        Get all changed files inside pull request.
         https://developer.github.com/v3/pulls/#list-pull-requests-files
     .PARAMETER ID
         ID of pull request.
@@ -81,21 +84,21 @@ function Get-AllChangedFilesInPR {
 function New-Issue {
     <#
     .SYNOPSIS
-        Create new issue in current repository.
+        Create new issue in repository.
         https://developer.github.com/v3/issues/#create-an-issue
     .PARAMETER Title
         The title of issue.
     .PARAMETER Body
-        Issue description.
+        Description of Issue. Array will be joined with CRLF.
     .PARAMETER Milestone
-        Number of milestone to associate with issue.
-        Authenticated user needs push access.
+        Number of milestone to be associated with issue.
+        Authenticated user needs push access to repository to be able to set milestone.
     .PARAMETER Label
         List of labels to be automatically added.
-        Authenticated user needs push access.
+        Authenticated user needs push access to repository to be able to set label.
     .PARAMETER Assignee
         List of user logins to be automatically assigned.
-        Authenticated user needs push access.
+        Authenticated user needs push access to repository to be able to set assignees.
     #>
     param(
         [Parameter(Mandatory)]
@@ -123,7 +126,7 @@ function Close-Issue {
         Close issue / PR.
         https://developer.github.com/v3/issues/#edit-an-issue
     .PARAMETER ID
-        ID of issue / PR.
+        ID of issue / PR to be closed.
     #>
     param([Parameter(Mandatory, ValueFromPipeline)][Int] $ID)
 
@@ -143,6 +146,7 @@ function Add-Label {
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
         [Int] $ID,
+        [Parameter(Mandatory)]
         [ValidateNotNullOrEmpty()] # > Must contains at least one label
         [String[]] $Label
     )
@@ -168,7 +172,9 @@ function Remove-Label {
     )
 
     $responses = New-Array
+    # Get all labels on specific issue
     $issueLabels = (Invoke-GithubRequest -Query "repos/$REPOSITORY/issues/$ID/labels" | Select-Object -ExpandProperty Content | ConvertFrom-Json).name
+
     foreach ($lab in $Label) {
         if ($issueLabels -contains $lab) {
             # https://developer.github.com/v3/issues/labels/#list-labels-on-an-issue
