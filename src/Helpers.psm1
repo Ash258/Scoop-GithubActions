@@ -98,6 +98,8 @@ function Initialize-NeededSettings {
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+    
+    git config --global user.name $env:GITHUB_ACTOR
 
     # Log all environment variables
     Write-Log 'Environment' (Get-EnvironmentVariables)
