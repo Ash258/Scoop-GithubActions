@@ -98,6 +98,7 @@ function Initialize-NeededSettings {
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+    git remote set-url origin "git@github.com:$($env:GITHUB_REPOSITORY).git"
     git config --global user.name (($env:GITHUB_REPOSITORY -split '/')[0])
 
     # Log all environment variables
