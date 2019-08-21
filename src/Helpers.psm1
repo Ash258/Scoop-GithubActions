@@ -34,6 +34,7 @@ function Get-EnvironmentVariables {
     <#
     .SYNOPSIS
         List all environment variables. Mainly debug purpose.
+        Do not leak GITHUB_TOKEN.
     #>
     return Get-ChildItem env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
 }
@@ -77,7 +78,7 @@ function Expand-Property {
     #>
     param(
         [Parameter(Mandatory, ValueFromPipeline)]
-        [Hashtable] $Object,
+        [Object] $Object,
         [Parameter(Mandatory)]
         [String] $Property
     )
@@ -88,14 +89,24 @@ function Expand-Property {
 function Initialize-NeededSettings {
     <#
     .SYNOPSIS
-        Initialize all settings, environment so everything work as expected.
+        Initialize all settings, environment, configurations to work as expected.
     #>
-    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
-    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
+    @('buckets', 'cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
+
     if ($env:GITH_EMAIL) {
         git config --global user.email $env:GITH_EMAIL
     } else {
         Write-Log 'Pushing is not possible without email environment'
+    }
+    $user = ($env:GITHUB_REPOSITORY -split '/')[0]
+    # TODO: Test push to protected branch
+    git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    # Not sure how this will be influenced by organization
+    git config --global user.name $user
+
+    if (-not $env:HUB_VERBOSE) {
+        $env:HUB_VERBOSE = '1'
+        [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
     }
 
     # Log all environment variables
@@ -111,6 +122,7 @@ function Get-Manifest {
     #>
     param([Parameter(Mandatory)][String] $Name)
 
+    # It should alwyas be one item. Just in case use -First
     $gciItem = Get-Childitem $MANIFESTS_LOCATION "$Name.*" | Select-Object -First 1
     $manifest = Get-Content $gciItem.Fullname -Raw | ConvertFrom-Json
 
@@ -120,11 +132,11 @@ function Get-Manifest {
 function New-DetailsCommentString {
     <#
     .SYNOPSIS
-        Create string surrounded with <details>.
+        Create code fenced block surrounded with <details>.
     .PARAMETER Summary
-        What should be displayed on expand button.
+        Text of expand button.
     .PARAMETER Content
-        Content of details block.
+        Content of code fenced block.
     .PARAMETER Type
         Type of code fenced block (json, yml, ...).
         Needs to be valid markdown code fenced block type.
@@ -137,27 +149,27 @@ function New-DetailsCommentString {
 
 ``````$Type
 $($Content -join "`r`n")
-</details>
 ``````
+</details>
 "@
 }
 
 function New-CheckListItem {
     <#
     .SYNOPSIS
-        Create markdown check list.
+        Create markdown check list item.
     .PARAMETER Item
         Name of list item.
     .PARAMETER OK
-        Check was met.
+        Item will be marked as done.
     .PARAMETER IndentLevel
-        Define nested list level.
+        Indentation level of item. Used for nested lists.
     .PARAMETER Simple
         Simple list item will be used instead of check list.
     #>
     param ([Parameter(Mandatory)][String] $Item, [Int] $IndentLevel = 0, [Switch] $OK, [Switch] $Simple)
 
-    $ind = ' ' * $IndentLevel * 4
+    $ind = ' ' * 4 * $IndentLevel
     $char = if ($OK) { 'x' } else { ' ' }
     $check = if ($Simple) { '' } else { "[$char] " }
 
@@ -168,7 +180,8 @@ function Test-NestedBucket {
     <#
     .SYNOPSIS
         Test if bucket contains nested `bucket` folder.
-        If no open new issue and exit with non zero exit code.
+        Buckets should contain nested folder for many reasons and in Actions main reason is to keep location checks low.
+        Open new issue and exit with non zero exit code otherwise.
     #>
 
     if (Test-Path $MANIFESTS_LOCATION) {
@@ -177,7 +190,9 @@ function Test-NestedBucket {
         Write-Log 'Buckets without nested bucket folder are not supported.'
 
         $adopt = 'Adopt nested bucket structure'
+        # Get opened issues
         $req = Invoke-GithubRequest "repos/$REPOSITORY/issues?state=open"
+        # Filter issues with $adopt name
         $issues = ConvertFrom-Json $req.Content | Where-Object { $_.title -eq $adopt }
 
         if ($issues -and ($issues.Count -gt 0)) {

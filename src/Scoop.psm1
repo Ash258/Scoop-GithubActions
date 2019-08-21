@@ -1,7 +1,7 @@
 Join-Path $PSScriptRoot 'Helpers.psm1' | Import-Module
 
 function Initialize-MockedFunctionsFromCore {
-    # Remove functions
+    # Remove functions imported from core
     $FUNCTIONS_TO_BE_REMOVED | ForEach-Object { Remove-Item function:$_ -Force }
 
     # Declare new one with same parameter list and same output type in global scope
