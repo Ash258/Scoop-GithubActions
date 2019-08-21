@@ -92,6 +92,7 @@ function Test-Downloading {
         foreach ($url in $urls) {
             Write-Log 'url' $url
 
+            dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
             try {
                 dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
             } catch {
