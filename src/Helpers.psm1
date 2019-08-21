@@ -98,7 +98,7 @@ function Initialize-NeededSettings {
         Write-Log 'Pushing is not possible without email environment'
     }
 
-    git config --global user.name $env:GITHUB_ACTOR
+    git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global credential.helper store
 
     Add-Content "$HOME\.git-credentials" "https://${env:GITHUB_TOKEN}:x-oauth-basic@github.com`n"
