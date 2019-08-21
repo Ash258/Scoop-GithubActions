@@ -83,7 +83,7 @@ function Test-Downloading {
 
     $broken_urls = @()
     # TODO: Aria2 support
-    # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookies $true
+    # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookie $true
 
     # exit 0
     foreach ($arch in @('64bit', '32bit')) {
@@ -92,9 +92,8 @@ function Test-Downloading {
         foreach ($url in $urls) {
             Write-Log 'url' $url
 
-            dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
             try {
-                dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
+                dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookie $true
             } catch {
                 $broken_urls += $url
                 continue
