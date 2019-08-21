@@ -100,6 +100,7 @@ function Initialize-NeededSettings {
     }
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global user.name (($env:GITHUB_REPOSITORY -split '/')[0])
+    git config --global user.username (($env:GITHUB_REPOSITORY -split '/')[0])
     $env:HUB_VERBOSE = '1'
     $env:GITHUB_USER = $user
     [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
