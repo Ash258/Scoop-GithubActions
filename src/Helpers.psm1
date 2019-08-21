@@ -100,7 +100,8 @@ function Initialize-NeededSettings {
     }
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     # TODO: Test push to protected branch
-    git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    # git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    git remote 'set-url' origin "https://Github-Actions:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
     # Not sure how this will be influenced by organization
     git config --global user.name $user
 
