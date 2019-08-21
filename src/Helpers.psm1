@@ -98,9 +98,12 @@ function Initialize-NeededSettings {
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+    $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global user.name (($env:GITHUB_REPOSITORY -split '/')[0])
     $env:HUB_VERBOSE = '1'
-    [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE)
+    $env:GITHUB_USER = $user
+    [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
+    [System.Environment]::SetEnvironmentVariable('GITHUB_USER', $env:GITHUB_USER, 'Machine')
 
     # Log all environment variables
     Write-Log 'Environment' (Get-EnvironmentVariables)
