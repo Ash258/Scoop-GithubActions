@@ -91,15 +91,18 @@ function Initialize-NeededSettings {
     .SYNOPSIS
         Initialize all settings, environment, configurations to work as expected.
     #>
-    @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
+    @('buckets', 'cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
 
     if ($env:GITH_EMAIL) {
         git config --global user.email $env:GITH_EMAIL
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+    $user = ($env:GITHUB_REPOSITORY -split '/')[0]
+    # TODO: Test push to protected branch
+    git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
     # Not sure how this will be influenced by organization
-    git config --global user.name (($env:GITHUB_REPOSITORY -split '/')[0])
+    git config --global user.name $user
 
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
