@@ -99,9 +99,6 @@ function Initialize-NeededSettings {
         Write-Log 'Pushing is not possible without email environment'
     }
     git config --global user.name (($env:GITHUB_REPOSITORY -split '/')[0])
-    git config --global hub.protocol 'https'
-    $env:HUB_VERBOSE = '1'
-    [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
 
     # Log all environment variables
     Write-Log 'Environment' (Get-EnvironmentVariables)
