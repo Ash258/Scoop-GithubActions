@@ -92,16 +92,14 @@ function Initialize-NeededSettings {
         Initialize all settings, environment, configurations to work as expected.
     #>
     @('buckets', 'cache') | ForEach-Object { New-Item "$env:SCOOP/$_" -Force -ItemType Directory | Out-Null }
+
     if ($env:GITH_EMAIL) {
         git config --global user.email $env:GITH_EMAIL
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
-
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global credential.helper store
-
-    Add-Content "$HOME\.git-credentials" "https://${env:GITHUB_TOKEN}:x-oauth-basic@github.com`n"
 
     # Log all environment variables
     Write-Log 'Environment' (Get-EnvironmentVariables)
