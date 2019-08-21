@@ -98,6 +98,7 @@ function Initialize-NeededSettings {
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+    Write-Log 'AAAAAAAAAAAAAAAAAAAAAAA' (($env:GITHUB_REPOSITORY -split '/')[0])
     git config --global user.name ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global credential.helper store
 
