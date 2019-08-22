@@ -114,6 +114,8 @@ function Initialize-NeededSettings {
 
         New-Item $ssh -Force -ItemType Directory | Out-Null
         Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
+        Set-Content (Join-Path $ssh 'id_rsa.pub') $env:SSH_PUB -Encoding ASCII -Force
+
         chmod '700' $ssh
         chmod '600' $pkey
 
