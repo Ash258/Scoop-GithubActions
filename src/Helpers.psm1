@@ -114,10 +114,12 @@ function Initialize-NeededSettings {
         New-Item $ssh -Force -ItemType Directory | Out-Null
         Set-Content (Join-Path $ssh 'id_rsa') $env:SSH_KEY -Encoding ASCII -Force
         if (-not (Test-Path $hosts)) {
-            ssh-keyscan 'github.com' | Set-Content $hosts -Encoding ASCII -Force
+            ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
         }
     }
     git remote 'set-url' --push origin $rem
+
+    Write-Log (Get-Content $hosts)
 
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
