@@ -126,6 +126,7 @@ function Initialize-NeededSettings {
     }
     git remote 'set-url' --push origin $rem
 
+    gci '/root/.ssh'
     Write-Log (Get-Content $hosts)
 
     if (-not $env:HUB_VERBOSE) {
