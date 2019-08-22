@@ -116,8 +116,10 @@ function Initialize-NeededSettings {
         Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
         chmod '700' $ssh
         chmod '600' $pkey
+
         if (-not (Test-Path $hosts)) {
-            ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
+            ssh -T -o "StrictHostKeyChecking no" git@github.com
+            # ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
         }
     }
     git remote 'set-url' --push origin $rem
