@@ -105,6 +105,7 @@ function Initialize-NeededSettings {
         $ssh = Join-Path $HOME '.ssh'
         New-Item $ssh -Force -ItemType Directory | Out-Null
         Set-Content (Join-Path $ssh 'id_rsa') $env:SSH_KEY -Encoding ASCII -Force
+        git remote 'set-url' origin "git@github.com:$REPOSITORY.git"
     } else {
         # Not sure how this will be influenced by organization
         git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
