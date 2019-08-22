@@ -109,7 +109,7 @@ function Initialize-NeededSettings {
 
         $rem = "git@github.com:$REPOSITORY.git"
         $ssh = Join-Path $HOME '.ssh'
-        $pkey = (Join-Path $ssh 'id_rsa')
+        $pkey = Join-Path $ssh 'id_rsa'
         $hosts = Join-Path $ssh 'known_hosts'
 
         New-Item $ssh -Force -ItemType Directory | Out-Null
@@ -119,18 +119,14 @@ function Initialize-NeededSettings {
         chmod '700' $ssh
         chmod '600' $pkey
 
-        ssh git@github.com -vvvv
-
         if (-not (Test-Path $hosts)) {
             ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
-            # ssh -T -o "StrictHostKeyChecking no" git@github.com
         }
-
     }
     git remote 'set-url' --push origin $rem
 
 
-        ssh git@github.com -vvvv
+    ssh git@github.com -vvvv
 
     gci '/root/.ssh'
     Write-Log (Get-Content $hosts)
