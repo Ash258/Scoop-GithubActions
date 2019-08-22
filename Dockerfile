@@ -15,7 +15,7 @@ ENV SCOOP /SCOOP
 ENV SCOOP_HOME ${SCOOP}/apps/scoop/current
 ENV SCOOP_DEBUG 1
 
-RUN apk add --no-cache --virtual .scoop-deps git p7zip aria2 \
+RUN apk add --no-cache --virtual .scoop-deps openssh git p7zip aria2 \
     && apk add hub --repository=http://dl-cdn.alpinelinux.org/alpine/edge/testing \
     && git clone 'https://github.com/lukesampson/scoop.git' ${SCOOP_HOME}
 
