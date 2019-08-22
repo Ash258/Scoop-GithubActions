@@ -105,8 +105,6 @@ function Initialize-NeededSettings {
     $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
     git remote 'set-url' --push origin $rem
 
-    Write-Log (Get-Content $hosts)
-
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
         [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
