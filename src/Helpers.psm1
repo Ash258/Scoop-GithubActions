@@ -109,10 +109,13 @@ function Initialize-NeededSettings {
 
         $rem = "git@github.com:$REPOSITORY.git"
         $ssh = Join-Path $HOME '.ssh'
+        $pkey = (Join-Path $ssh 'id_rsa')
         $hosts = Join-Path $ssh 'known_hosts'
 
         New-Item $ssh -Force -ItemType Directory | Out-Null
-        Set-Content (Join-Path $ssh 'id_rsa') $env:SSH_KEY -Encoding ASCII -Force
+        Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
+        chmod '700' $ssh
+        chmod '600' $pkey
         if (-not (Test-Path $hosts)) {
             ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
         }
