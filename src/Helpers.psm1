@@ -107,15 +107,13 @@ function Initialize-NeededSettings {
     if ($env:SSH_KEY) {
         Write-Log 'SSH Key detected'
 
-        $rem = "git@github.com:$REPOSITORY.git"
+        $rem = "https://github.com/$REPOSITORY.git"
         $ssh = Join-Path $HOME '.ssh'
         $pkey = Join-Path $ssh 'id_rsa'
         $hosts = Join-Path $ssh 'known_hosts'
 
         New-Item $ssh -Force -ItemType Directory | Out-Null
         Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
-        Write-Log 'SSH' (Test-Path $pkey)
-        Set-Content (Join-Path $ssh 'id_rsa.pub') $env:SSH_PUB -Encoding ASCII -Force
 
         chmod '700' $ssh
         chmod '600' $pkey
@@ -125,9 +123,6 @@ function Initialize-NeededSettings {
         }
     }
     git remote 'set-url' --push origin $rem
-
-
-    ssh git@github.com -vvvv
 
     Get-ChildItem '/root/.ssh'
     Write-Log (Get-Content $hosts)
