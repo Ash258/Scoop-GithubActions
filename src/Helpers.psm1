@@ -103,25 +103,6 @@ function Initialize-NeededSettings {
     git config --global user.name $user
     # TODO: Organization will work?
     $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
-
-    if ($env:SSH_KEY) {
-        Write-Log 'SSH Key detected'
-
-        $rem = "https://github.com/$REPOSITORY.git"
-        $ssh = Join-Path $HOME '.ssh'
-        $pkey = Join-Path $ssh 'id_rsa'
-        $hosts = Join-Path $ssh 'known_hosts'
-
-        New-Item $ssh -Force -ItemType Directory | Out-Null
-        Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
-
-        chmod '700' $ssh
-        chmod '600' $pkey
-
-        if (-not (Test-Path $hosts)) {
-            ssh-keyscan 'github.com' | Set-Content -Path $hosts -Encoding ASCII -Force
-        }
-    }
     git remote 'set-url' --push origin $rem
 
     Write-Log (Get-Content $hosts)
