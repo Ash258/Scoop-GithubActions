@@ -114,6 +114,7 @@ function Initialize-NeededSettings {
 
         New-Item $ssh -Force -ItemType Directory | Out-Null
         Set-Content $pkey $env:SSH_KEY -Encoding ASCII -Force
+        Write-Log 'SSH' (Test-Path $pkey)
         Set-Content (Join-Path $ssh 'id_rsa.pub') $env:SSH_PUB -Encoding ASCII -Force
 
         chmod '700' $ssh
@@ -128,7 +129,7 @@ function Initialize-NeededSettings {
 
     ssh git@github.com -vvvv
 
-    gci '/root/.ssh'
+    Get-ChildItem '/root/.ssh'
     Write-Log (Get-Content $hosts)
 
     if (-not $env:HUB_VERBOSE) {
