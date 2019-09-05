@@ -6,8 +6,10 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 
 ### Excavator (`Excavator | Excavate`)
 
+- ❗❗❗ Protected master branches are not supported ❗❗❗
+    - <https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526>
 - Periodically execute automatic updates for all manifests.
-- Refer to <https://developer.github.com/actions/managing-workflows/creating-and-cancelling-a-workflow/#scheduling-a-workflow> for configuration formats
+- Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats
 - <https://github.com/ScoopInstaller/Excavator> alternative.
     - If you do not have custom server / device which could run docker or scheduled task for auto-pr 24/7.
 
