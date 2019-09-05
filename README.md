@@ -70,7 +70,7 @@ As soon as PR is created (or someone post comment `/verify`) set of these tests 
 ```yml
 #.github\workflows\schedule.yml
 on:
-  schedules:
+  schedule:
   - cron: '*/30 * * * *'
 name: Excavator
 jobs:
