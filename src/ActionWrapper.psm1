@@ -5,11 +5,7 @@ function Invoke-Action {
     switch ($EVENT_TYPE) {
         'pull_request' { Initialize-PR }
         'issue_comment' { Initialize-PR }
-        'schedule' {
-            Write-Log 'TEST'
-            git tag
-            Initialize-Scheduled
-        }
+        'schedule' { Initialize-Scheduled }
         'issues' { Initialize-Issue }
         default { Write-Log 'Not supported event type' }
     }
