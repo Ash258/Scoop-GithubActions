@@ -36,7 +36,7 @@ function Get-EnvironmentVariables {
         List all environment variables. Mainly debug purpose.
         Do not leak GITHUB_TOKEN.
     #>
-    return Get-ChildItem env: | Where-Object { $_.Name -ne 'GITHUB_TOKEN' }
+    return Get-ChildItem env: | Where-Object { ($_.Name -ne 'GITHUB_TOKEN') -and ($_.Name -ne 'SSH_KEY') }
 }
 
 function New-Array {
@@ -98,11 +98,12 @@ function Initialize-NeededSettings {
     } else {
         Write-Log 'Pushing is not possible without email environment'
     }
+
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
-    # TODO: Test push to protected branch
-    git remote 'set-url' origin "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
-    # Not sure how this will be influenced by organization
     git config --global user.name $user
+    # TODO: Organization will work?
+    $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    git remote 'set-url' --push origin $rem
 
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
