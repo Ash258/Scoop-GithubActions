@@ -101,9 +101,9 @@ function Initialize-NeededSettings {
 
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global user.name $user
-    # TODO: Organization will work?
-    $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
-    git remote 'set-url' --push origin $rem
+    # # TODO: Organization will work?
+    # $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    # git remote 'set-url' --push origin $rem
 
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
