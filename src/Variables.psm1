@@ -1,6 +1,7 @@
-$EVENT_RAW = Get-Content $env:GITHUB_EVENT_PATH -Raw
 # Convert actual API response to object
-$EVENT = ConvertFrom-Json $EVENT_RAW
+$EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
+# Compress Event
+$EVENT_RAW = ConvertTo-Json $EVENT -Depth 100 -Compress
 # Event type for automatic handler detection
 $EVENT_TYPE = $env:GITHUB_EVENT_NAME
 
