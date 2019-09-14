@@ -90,6 +90,8 @@ function Test-Downloading {
         $urls = @(url $manifest_o $arch)
 
         foreach ($url in $urls) {
+            # Trim rename (#48)
+            $url = $url -replace '#/.*$', ''
             Write-Log 'url' $url
 
             try {
@@ -105,14 +107,15 @@ function Test-Downloading {
         Write-Log 'All OK'
 
         $message = @(
-            'Cannot reproduce.',
-            '',
-            'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))',
+            'Cannot reproduce.'
+            ''
+            'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
             'Downloading problems could be caused by:'
-            '',
-            '- Proxy configuration',
-            '- Network error',
+            ''
+            '- Proxy configuration'
+            '- Network error'
             '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
+            '- Antivirus settings could block URL or block downloaded file'
         )
 
         Add-Comment -ID $IssueID -Comment $message
