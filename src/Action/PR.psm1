@@ -7,6 +7,8 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
+    # TODO: Export to funciton Initialize-Environment, return $commented
+    #region Initialize-Environment
     $commented = $false
     switch ($EVENT.action) {
         'opened' {
@@ -27,25 +29,24 @@ function Initialize-PR {
                     $EVENT_new = ConvertFrom-Json $content
                 } else {
                     Write-Log 'Issue comment'
-                    exit 0
+                    return
                 }
             } else {
                 Write-Log 'Not supported comment body'
-                exit 0
+                return
             }
         }
         default {
             Write-Log 'Only action ''opened'' is supported'
-            exit 0
+            return
         }
     }
-    Write-Log 'Pure PR Event' $EVENT
+    #endregion Initialize-Environment
 
+    Write-Log 'Pure PR Event' $EVENT
     if ($EVENT_new) {
         Write-Log 'There is new event available'
-
         $EVENT = $EVENT_new
-
         Write-Log 'New event' $EVENT
     }
 
@@ -65,6 +66,7 @@ function Initialize-PR {
         $buck = Join-Path $BUCKET_ROOT 'bucket'
         $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
 
+        Write-Log "Switching to $REPOSITORY_forked"
         Push-Location $cloneLocation
     }
 
@@ -85,13 +87,15 @@ function Initialize-PR {
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
     (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
 
+    # TODO: Export to function Process-PRFiles, which will return $checks, $invalids
+    #region Process-PRFile
     $checks = @()
     $invalid = @()
     $prID = $EVENT.number
 
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
-    Write-Log 'PR Files' $files
+    Write-Log 'PR Changed Files' $files
 
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
@@ -185,7 +189,10 @@ function Initialize-PR {
 
         Write-Log "Finished $($file.filename) checks"
     }
+    #endregion Process-PRFile
 
+    # TODO: Export to function EndGame
+    #region Complete-PR
     Write-Log 'Checked manifests' $checks.name
     Write-Log 'Invalids' $invalid
 
@@ -238,6 +245,7 @@ function Initialize-PR {
     # Add-IntoArray $message "_You can find log of all checks in '$url'_"
 
     Add-Comment -ID $prID -Message $message
+    #endregion Complete-PR
 
     Write-Log 'PR finished'
 }
