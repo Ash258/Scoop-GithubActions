@@ -1,15 +1,15 @@
 Join-Path $PSScriptRoot '..\Helpers.psm1' | Import-Module
 
-function Initialize-PR {
+function Start-PR {
     <#
     .SYNOPSIS
-        Handle pull requests actions.
+        PR state handler.
+    .OUTPUTS
+        $null - Not supported state, which should be exited on.
+        $true | $false
     #>
-    Write-Log 'PR initialized'
-
-    # TODO: Export to funciton Initialize-Environment, return $commented
-    #region Initialize-Environment
     $commented = $false
+
     switch ($EVENT.action) {
         'opened' {
             Write-Log 'Opened PR'
@@ -26,22 +26,34 @@ function Initialize-PR {
                     $commented = $true
                     # There is need to get actual pull request event
                     $content = Invoke-GithubRequest "repos/$REPOSITORY/pulls/$($EVENT.issue.number)" | Select-Object -ExpandProperty Content
-                    $EVENT_new = ConvertFrom-Json $content
+                    $script:EVENT_new = ConvertFrom-Json $content
                 } else {
                     Write-Log 'Issue comment'
-                    return
+                    $commented = $null # No need to do anything on issue comment
                 }
             } else {
                 Write-Log 'Not supported comment body'
-                return
+                $commented = $null
             }
         }
         default {
             Write-Log 'Only action ''opened'' is supported'
-            return
+            $commented = $null
         }
     }
-    #endregion Initialize-Environment
+
+    return $commented
+}
+
+function Initialize-PR {
+    <#
+    .SYNOPSIS
+        Handle pull requests actions.
+    #>
+    Write-Log 'PR initialized'
+
+    $commented = Start-PR
+    if ($null -eq $commented) { return } # Exit on not supported state
 
     Write-Log 'Pure PR Event' $EVENT
     if ($EVENT_new) {
