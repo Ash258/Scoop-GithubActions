@@ -101,7 +101,8 @@ function Initialize-NeededSettings {
 
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     git config --global user.name $user
-    # TODO: Organization will work?
+    # TODO: Organization will work? If no, then try to use x-access-token
+    # $rem = "https://x-access-token:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
     $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
     git remote 'set-url' --push origin $rem
 
