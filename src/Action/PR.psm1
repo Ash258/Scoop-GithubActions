@@ -45,29 +45,43 @@ function Start-PR {
     return $commented
 }
 
+function Resume-PR {
+    <#
+    .SYNOPSIS
+        Handle forked repository initialization.
+    #>
+    Write-Log 'HEAAAAAD!!!!!!' $head
+}
+
 function Initialize-PR {
     <#
     .SYNOPSIS
-        Handle pull requests actions.
+        Handle pull requests action.
     #>
     Write-Log 'PR initialized'
 
     $commented = Start-PR
     if ($null -eq $commented) { return } # Exit on not supported state
 
-    Write-Log 'Pure PR Event' $EVENT
+    $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'Pure PR Event'
     if ($EVENT_new) {
         Write-Log 'There is new event available'
         $EVENT = $EVENT_new
-        Write-Log 'New event' $EVENT
+        $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
     }
 
-    Write-Log 'Commented' $commented
+    Write-Log 'Commented?' $commented
 
     #region Forked repo / branch selection
-    $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
+    # TODO: Ternary
+    $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
+    Resume-PR
+    Write-Log 'Before forked handling'
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
+
+        # There is no need to run whole action under forked repository due to permissions
+        if ($commented -eq $false) { return }
 
         $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
         Write-Log 'Repo' $REPOSITORY_forked
@@ -76,6 +90,7 @@ function Initialize-PR {
         git clone --branch $head.ref $head.repo.clone_url $cloneLocation
         $BUCKET_ROOT = $cloneLocation
         $buck = Join-Path $BUCKET_ROOT 'bucket'
+        # TODO: Ternary
         $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
 
         Write-Log "Switching to $REPOSITORY_forked"

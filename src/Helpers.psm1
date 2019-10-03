@@ -11,6 +11,7 @@ function Write-Log {
     #>
     param(
         [String] $Summary = '',
+        [Parameter(ValueFromPipeline)]
         [Object[]] $Message
     )
 
