@@ -50,7 +50,7 @@ function Resume-PR {
     .SYNOPSIS
         Handle forked repository initialization.
     #>
-    Write-Log 'HEAAAAAD!!!!!!' $head
+    $head | ConvertTo-Json -Compress | Write-Log 'HEAAAAAD!!!!!!'
 }
 
 function Initialize-PR {
