@@ -188,6 +188,10 @@ function Initialize-PR {
                 Write-Log 'Version match fail'
                 $autoupdate = $false
             }
+            'Writing updated*' {
+                Write-Log 'Autoupdate finished successfully'
+                $autoupdate = $true
+            }
             default { $autoupdate = $checkver }
         }
         $statuses.Add('Autoupdate', $autoupdate)
