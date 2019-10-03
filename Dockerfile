@@ -1,4 +1,4 @@
-FROM mcr.microsoft.com/powershell:6.2.1-alpine-3.8
+FROM mcr.microsoft.com/powershell:6.2.3-alpine-3.8
 
 LABEL name="Scoop Bucket Minion" \
     maintainer="Jakub <Ash258> Čábera <cabera.jakub@gmail.com>" \
