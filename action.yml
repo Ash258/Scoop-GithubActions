@@ -1,0 +1,9 @@
+name: Bucket Minion
+description: Set of actions to automate maintaining of bucket.
+author: Jakub <Ash258> Čábera
+runs:
+    using: docker
+    image: Dockerfile
+branding:
+    icon: package
+    color: purple
