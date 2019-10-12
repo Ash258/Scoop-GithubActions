@@ -8,10 +8,10 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 
 - ❗❗❗ Protected master branches are not supported ❗❗❗
     - <https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526>
-- Periodically execute automatic updates for all manifests.
+- Periodically execute automatic updates for all manifests
 - Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats
-- <https://github.com/ScoopInstaller/Excavator> alternative.
-    - If you do not have custom server / device which could run docker or scheduled task for auto-pr 24/7.
+- <https://github.com/ScoopInstaller/Excavator> alternative
+    - If you do not have custom server / device which could run docker or scheduled task for auto-pr 24/7
 
 ### Issues (`Issues | IssueHandler`)
 
@@ -51,8 +51,8 @@ As soon as new issue is created action is executed. Based on issue title specifi
 
 As soon as PR is created (or someone post comment `/verify`) set of these tests are executed:
 
-- ❗❗ When pull request is created from forked repository initial action cannot be finished due to token persmission scope. ❗❗
-    - Manual `/verify` comment is needed.
+- ❗❗ [Pull request created from forked repository cannot be finished due to different permission scope of token](https://github.com/Ash258/Scoop-GithubActions/issues/42) ❗❗
+    - Manual `/verify` comment is needed
 
 1. Required properties are in place
     - Manifest has to contain `License` and `Description` properties
@@ -66,7 +66,7 @@ As soon as PR is created (or someone post comment `/verify`) set of these tests 
     - Hashes extraction has to finish successfully
         - If there is `hash` property inside `autoupdate` output of checkver binary cannot contains `Could not find hash`
 
-- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/66>)
+- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/176>)
 
 ## Example workflows for everything you will ever need as bucket maintainer
 
