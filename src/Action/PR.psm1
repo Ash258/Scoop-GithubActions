@@ -152,7 +152,7 @@ function Initialize-PR {
         $old_e = $ErrorActionPreference
         $ErrorActionPreference = 'SilentlyContinue'
         $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json
-        $ErrorActionPreference $old_e
+        $ErrorActionPreference = $old_e
 
         if ($null -eq $object) {
             Write-Log 'Conversion failed'
