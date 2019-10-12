@@ -109,7 +109,8 @@ function Initialize-PR {
 
     # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
     # TODO: Ternary
-    Set-RepositoryContext (if ($commented) { $EVENT.head } else { $EVENT.pull_request.head })
+    $h = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
+    Set-RepositoryContext $h
     # When forked repository it needs to be '/github/forked_workspace'
     Get-Location | Write-Log 'Context of action'
 
