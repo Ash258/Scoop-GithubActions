@@ -45,14 +45,6 @@ function Start-PR {
     return $commented
 }
 
-function Resume-PR {
-    <#
-    .SYNOPSIS
-        Handle forked repository initialization.
-    #>
-    $head | ConvertTo-Json -Compress | Write-Log 'HEAAAAAD!!!!!!'
-}
-
 function Set-RepositoryContext {
     <#
     .SYNOPSIS
@@ -70,13 +62,75 @@ function Set-RepositoryContext {
     }
 }
 
+function New-FinalMessage {
+    <#
+    .SYNOPSIS
+        Create and post final comment with information for collaborators.
+    .PARAMETER Check
+        Array of manifests checks.
+    .PARAMETER Invalid
+        Array of invalid manifests.
+    #>
+    param(
+        [Object[]] $Check,
+        [String[]] $Invalid
+    )
+
+    $prID = $EVENT.number
+    $message = New-Array
+
+    foreach ($ch in $Check) {
+        Add-IntoArray $message "### $($ch.Name)"
+        Add-IntoArray $message ''
+
+        foreach ($status in $ch.Statuses.Keys) {
+            $state = $ch.Statuses.Item($status)
+            Write-Log $status $state
+            # There is unsuccessful check
+            if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
+            Add-IntoArray $message (New-CheckListItem $status -OK:$state)
+        }
+        Add-IntoArray $message ''
+    }
+
+    if ($Invalid.Count -gt 0) {
+        Write-Log 'PR contains invalid manifests'
+
+        $env:NON_ZERO_EXIT = $true
+        Add-IntoArray $message '### Invalid manifests'
+        Add-IntoArray $message ''
+        $Invalid | ForEach-Object { Add-IntoArray $message "- $_" }
+    }
+
+    # Add some more human friendly message
+    if ($env:NON_ZERO_EXIT) {
+        $message.Insert(0, '[Your changes do not pass checks.](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks)')
+        Add-Label -ID $prID -Label 'package-fix-neeed'
+    } else {
+        $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
+        Remove-Label -ID $prID -Label 'package-fix-neeed'
+        Add-Label -ID $prID -Label 'review-needed'
+    }
+
+    # TODO: Comment URL to action log
+    # $url = "https://github.com/$REPOSITORY/runs/$RUN_ID"
+    # Add-IntoArray $message "_See log of all checks in <$url>_"
+
+    Add-Comment -ID $prID -Message $message
+}
+
 function Initialize-PR {
     <#
     .SYNOPSIS
         Handle pull requests action.
+    .DESCRIPTION
+        1. Clone repository / Switch to correct branch
+        2. Validate all changed manifests
+        3. Post comment with check results
     #>
     Write-Log 'PR initialized'
 
+    #region Stage 1 - Repository initialization
     $commented = Start-PR
     if ($null -eq $commented) { return } # Exit on not supported state
     Write-Log 'Commented?' $commented
@@ -88,11 +142,8 @@ function Initialize-PR {
         $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
     }
 
-    # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
-    #region Forked repo / branch selection
     # TODO: Ternary
     $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
-    Resume-PR
 
     Write-Log 'Before forked handling'
     if ($head.repo.fork) {
@@ -117,23 +168,20 @@ function Initialize-PR {
 
     # Repository context of commented PR is not set to $head.ref
     Set-RepositoryContext $head.ref
+    #endregion Stage 1 - Repository initialization
 
     # When forked repository it needs to be '/github/forked_workspace'
-    Write-Log 'Context of action' (Get-Location)
+    Get-Location | Write-Log 'Context of action'
+    (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Root Files'
+    (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Manifests'
 
-    #endregion Forked repo / branch selection
-    Write-log 'Files in PR'
-
-    (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
-    (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
-
-    # TODO: Export to function Process-PRFile, which will return $checks, $invalids
-    #region Process-PRFile
-    $prID = $EVENT.number
-    # Do not run on removed files
-    $files = Get-AllChangedFilesInPR $prID -Filter
+    # Do not run checks on removed files
+    $files = Get-AllChangedFilesInPR $EVENT.number -Filter
     Write-Log 'PR Changed Files' $files
 
+    #region Stage 2 - Manifests validation
+    # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
+    # TODO: Export to function Process-PRFile, which will return $checks, $invalids
     $checks = @()
     $invalid = @()
     # $check, $invalid = Process-PRFile
@@ -238,63 +286,19 @@ function Initialize-PR {
 
         Write-Log "Finished $($file.filename) checks"
     }
-    #endregion Process-PRFile
+    #endregion Stage 2 - Manifests validation
 
-    # TODO: Export to function EndGame
-    #region Complete-PR
+    #region Stage 3 - Final Message
     Write-Log 'Checked manifests' $checks.name
     Write-Log 'Invalids' $invalid
 
-    # No checks at all
-    # There were no manifests compatible
     if (($checks.Count -eq 0) -and ($invalid.Count -eq 0)) {
         Write-Log 'No compatible files in PR'
-        exit 0
+        return
     }
 
-    # Create nice comment to post
-    $message = New-Array
-    foreach ($check in $checks) {
-        Add-IntoArray $message "### $($check.Name)"
-        Add-IntoArray $message ''
-
-        foreach ($status in $check.Statuses.Keys) {
-            $b = $check.Statuses.Item($status)
-            Write-Log $status $b
-
-            if (-not $b) { $env:NON_ZERO_EXIT = $true }
-
-            Add-IntoArray $message (New-CheckListItem $status -OK:$b)
-        }
-        Add-IntoArray $message ''
-    }
-
-    if ($invalid.Count -gt 0) {
-        Write-Log 'PR contains invalid manifests'
-
-        $env:NON_ZERO_EXIT = $true
-
-        Add-IntoArray $message '### Invalid manifests'
-        Add-IntoArray $message ''
-
-        Add-IntoArray $message ($invalid | ForEach-Object { "- $_`n" })
-    }
-
-    # Add some more human friendly message
-    if ($env:NON_ZERO_EXIT) {
-        $message.Insert(0, "[Your changes does not pass some checks](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks)")
-        Add-Label -ID $prID -Label 'package-fix-neeed'
-    } else {
-        $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
-        Remove-Label -ID $prID -Label 'package-fix-neeed'
-        Add-Label -ID $prID -Label 'review-needed'
-    }
-    # TODO: Comment URL to action log
-    # $url = "https://github.com/$REPOSITORY/runs/$RUN_ID"
-    # Add-IntoArray $message "_You can find log of all checks in '$url'_"
-
-    Add-Comment -ID $prID -Message $message
-    #endregion Complete-PR
+    New-FinalMessage $checks $invalid
+    #endregion Stage 3 - Final Message
 
     Write-Log 'PR finished'
 }
