@@ -87,7 +87,9 @@ jobs:
         SKIP_UPDATED: "1"
 
 #.github\workflows\issues.yml
-on: issues
+on:
+  issues:
+    types: [opened]
 name: Issues
 jobs:
   issueHandler:
@@ -97,12 +99,15 @@ jobs:
     - uses: actions/checkout@master
     - name: IssueHandler
       uses: Ash258/Scoop-GithubActions@stable
+      if: github.event.action == 'opened'
       env:
         GITH_EMAIL: youremail@mail.com
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #.github\workflows\issue_commented.yml
-on: issue_comment
+on:
+  issue_comment:
+    types: [created]
 name: Pull requests comment
 jobs:
   pullRequestHandler:
@@ -112,12 +117,15 @@ jobs:
     - uses: actions/checkout@master
     - name: PullRequestHandler
       uses: Ash258/Scoop-GithubActions@stable
+      if: startsWith(github.event.comment.body, '/verify')
       env:
         GITH_EMAIL: youremail@mail.com
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #.github\workflows\pull_request.yml
-on: pull_request
+on:
+  pull_request:
+    types: [opened]
 name: Pull requests
 jobs:
   pullRequestHandler:
