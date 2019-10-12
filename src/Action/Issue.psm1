@@ -18,7 +18,8 @@ function Test-Hash {
         Add-Comment -ID $IssueID -Message @(
             'Cannot reproduce',
             '',
-            "Are you sure your scoop is up to date? Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+            'Are you sure your scoop is up to date?',
+            "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
         )
         Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
