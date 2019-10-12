@@ -49,6 +49,7 @@ As soon as new issue is created action is executed. Based on issue title specifi
 
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
+❗❗ When pull request is created from forked repository initial action cannot be finished due to token persmission scope. Manual `/verify` comment is needed. ❗❗
 As soon as PR is created (or someone post comment `/verify`) set of these tests are executed:
 
 1. Required properties are in place
