@@ -16,10 +16,16 @@ function Test-Hash {
         Write-Log 'Cannot reproduce'
 
         Add-Comment -ID $IssueID -Message @(
-            'Cannot reproduce',
-            '',
-            'Are you sure your scoop is up to date?',
+            'Cannot reproduce'
+            ''
+            'Are you sure your scoop is up to date?'
             "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+            ""
+            "Hash mismatch could be caused by these factors:"
+            ""
+            '- Network error'
+            '- Antivirus configuration'
+            '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
         )
         Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
@@ -31,8 +37,8 @@ function Test-Hash {
     } else {
         Write-Log 'Verified hash failed'
 
+        $message = @('You are right. Thank you for reporting.')
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
-        $message = @('You are right. Thanks for reporting.')
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
         $prs = $prs | Where-Object { $_.title -ceq "$Manifest@$($man.version): Hash fix" }
 
@@ -47,7 +53,7 @@ function Test-Hash {
             # TODO: Additional checks if this PR is really fixing same issue
 
             $message += ''
-            $message += "There is already pull request to fix this issue. (#$prID)"
+            $message += "There is already pull request which take care of this issue. (#$prID)"
 
             Write-Log 'PR ID' $prID
             # Update PR description
@@ -126,7 +132,7 @@ function Test-Downloading {
 
         $string = ($broken_urls | ForEach-Object { "- $_" }) -join "`r`n"
         Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
-        Add-Comment -ID $IssueID -Comment 'Thanks for reporting. You are right. Following URLs are not accessible:', '', $string
+        Add-Comment -ID $IssueID -Comment 'Thank you for reporting. You are right. Following URLs are not accessible:', '', $string
     }
 }
 
@@ -135,7 +141,7 @@ function Initialize-Issue {
 
     if ($EVENT.action -ne 'opened') {
         Write-Log "Only action 'opened' is supported"
-        exit 0
+        return
     }
 
     $title = $EVENT.issue.title
@@ -147,14 +153,18 @@ function Initialize-Issue {
         ($null -eq $problem)
     ) {
         Write-Log 'Not compatible issue title'
-        exit 0
+        return
     }
 
     $null, $manifest_loaded = Get-Manifest $problematicName
     if ($manifest_loaded.version -ne $problematicVersion) {
-        Add-Comment -ID $id -Message @("You reported version ``$problematicVersion``, but latest available version is ``$($manifest_loaded.version)``.", "", "Run ``scoop update; scoop uninstall $problematicName; scoop install $problematicName``")
+        Add-Comment -ID $id -Message @(
+            "You reported version ``$problematicVersion``, but latest available version is ``$($manifest_loaded.version)``."
+            ''
+            "Run ``scoop update; scoop uninstall $problematicName; scoop install $problematicName``"
+        )
         Close-Issue -ID $id
-        exit 0
+        return
     }
 
     switch -Wildcard ($problem) {

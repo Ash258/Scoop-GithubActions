@@ -59,9 +59,12 @@ function Test-ExtractDir {
         Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
     } else {
         Write-Log 'Everything all right' $failed
-        $message = "Cannot reproduce. Are you sure your scoop is updated? Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
-        $message += ''
-        $message += 'See action log for more info'
+        $message = @(
+            'Cannot reproduce. Are you sure your scoop is updated?'
+            "Try to run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
+            ''
+            'See action log for additional info'
+        )
     }
 
     Add-Comment -ID $IssueID -Message $message
