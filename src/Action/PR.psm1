@@ -45,14 +45,6 @@ function Start-PR {
     return $commented
 }
 
-function Resume-PR {
-    <#
-    .SYNOPSIS
-        Handle forked repository initialization.
-    #>
-    $head | ConvertTo-Json -Compress | Write-Log 'HEAAAAAD!!!!!!'
-}
-
 function Set-RepositoryContext {
     <#
     .SYNOPSIS
@@ -65,9 +57,27 @@ function Set-RepositoryContext {
     #>
     param ([Parameter(Mandatory)] $Head)
 
-    $ref = $head.ref
+    $ref = $Head.ref
 
-    if ($Head.repo.fork) { Write-Log 'FOOOOOOOOOOOOOOOOOOOOOOOOOOOORK' }
+    if ($Head.repo.fork) {
+        Write-Log 'Forked repository'
+
+        # There is no need to run whole action under forked repository due to permission problem
+        if ($commented -eq $false) { return }
+
+        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
+        Write-Log 'Repo' $REPOSITORY_forked
+
+        $cloneLocation = '/github/forked_workspace'
+        git clone --branch $ref $head.repo.clone_url $cloneLocation
+        $BUCKET_ROOT = $cloneLocation
+        $buck = Join-Path $BUCKET_ROOT 'bucket'
+        # TODO: Ternary
+        $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
+
+        Write-Log "Switching to $REPOSITORY_forked"
+        Push-Location $cloneLocation
+    }
 
     # Alpine git do not have `git branch --show-current`
     # Replace current branch marked with asterisk to name only ('* master' -> 'master')
@@ -86,7 +96,7 @@ function Initialize-PR {
     #>
     Write-Log 'PR initialized'
 
-    $commented = Start-PR
+    $script:commented = Start-PR
     if ($null -eq $commented) { return } # Exit on not supported state
     Write-Log 'Commented?' $commented
 
@@ -98,36 +108,10 @@ function Initialize-PR {
     }
 
     # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
-    #region Forked repo / branch selection
     # TODO: Ternary
-    $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
-    Resume-PR
-
-    Write-Log 'Before forked handling'
-    if ($head.repo.fork) {
-        Write-Log 'Forked repository'
-
-        # There is no need to run whole action under forked repository due to permission problem
-        if ($commented -eq $false) { return }
-
-        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
-        Write-Log 'Repo' $REPOSITORY_forked
-
-        $cloneLocation = '/github/forked_workspace'
-        git clone --branch $head.ref $head.repo.clone_url $cloneLocation
-        $BUCKET_ROOT = $cloneLocation
-        $buck = Join-Path $BUCKET_ROOT 'bucket'
-        # TODO: Ternary
-        $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
-
-        Write-Log "Switching to $REPOSITORY_forked"
-        Push-Location $cloneLocation
-    }
-
-    Set-RepositoryContext $head
+    Set-RepositoryContext (if ($commented) { $EVENT.head } else { $EVENT.pull_request.head })
     # When forked repository it needs to be '/github/forked_workspace'
     Get-Location | Write-Log 'Context of action'
-    #endregion Forked repo / branch selection
 
     Write-log 'Files in PR'
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
