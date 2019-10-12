@@ -84,7 +84,7 @@ jobs:
       env:
         GITH_EMAIL: youremail@mail.com
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        SKIP_UPDATED: "1"
+        SKIP_UPDATED: '1'
 
 #.github\workflows\issues.yml
 on:

@@ -53,6 +53,23 @@ function Resume-PR {
     $head | ConvertTo-Json -Compress | Write-Log 'HEAAAAAD!!!!!!'
 }
 
+function Set-RepositoryContext {
+    <#
+    .SYNOPSIS
+        Repository context of commented PR is not set to correct $head.ref.
+    #>
+    param ([Parameter(Mandatory)] $Ref)
+
+    # Alpine git do not have `git branch --show-current`
+    # Replace current branch marked with asterisk to name only ('* master' -> 'master')
+    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $Ref) {
+        Write-Log "Switching branch to $Ref"
+
+        git checkout $Ref
+        git pull
+    }
+}
+
 function Initialize-PR {
     <#
     .SYNOPSIS
@@ -62,6 +79,7 @@ function Initialize-PR {
 
     $commented = Start-PR
     if ($null -eq $commented) { return } # Exit on not supported state
+    Write-Log 'Commented?' $commented
 
     $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'Pure PR Event'
     if ($EVENT_new) {
@@ -70,17 +88,16 @@ function Initialize-PR {
         $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
     }
 
-    Write-Log 'Commented?' $commented
-
     #region Forked repo / branch selection
     # TODO: Ternary
     $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
     Resume-PR
+
     Write-Log 'Before forked handling'
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
 
-        # There is no need to run whole action under forked repository due to permissions
+        # There is no need to run whole action under forked repository due to permission problem
         if ($commented -eq $false) { return }
 
         $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
@@ -98,17 +115,12 @@ function Initialize-PR {
     }
 
     # Repository context of commented PR is not set to $head.ref
-    $ref = $head.ref
-    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $ref) {
-        Write-Log "Switching branch to $ref"
-        git checkout $ref
-        git pull
-    }
+    Set-RepositoryContext $head.ref
 
     # When forked repository it needs to be '/github/forked_workspace'
     Write-Log 'Context of action' (Get-Location)
 
-    #endregion Forked repo
+    #endregion Forked repo / branch selection
     Write-log 'Files in PR'
 
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
