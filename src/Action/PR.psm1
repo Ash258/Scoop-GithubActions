@@ -88,6 +88,7 @@ function Initialize-PR {
         $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
     }
 
+    # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
     #region Forked repo / branch selection
     # TODO: Ternary
     $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
@@ -126,16 +127,16 @@ function Initialize-PR {
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
     (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
 
-    # TODO: Export to function Process-PRFiles, which will return $checks, $invalids
+    # TODO: Export to function Process-PRFile, which will return $checks, $invalids
     #region Process-PRFile
-    $checks = @()
-    $invalid = @()
     $prID = $EVENT.number
-
     # Do not run on removed files
     $files = Get-AllChangedFilesInPR $prID -Filter
     Write-Log 'PR Changed Files' $files
 
+    $checks = @()
+    $invalid = @()
+    # $check, $invalid = Process-PRFile
     foreach ($file in $files) {
         Write-Log "Starting $($file.filename) checks"
 
@@ -281,12 +282,10 @@ function Initialize-PR {
 
     # Add some more human friendly message
     if ($env:NON_ZERO_EXIT) {
-        # TODO: Create wiki page with explanation of these checks
-        # $message.Insert(0, "[Your changes does not pass some checks](https://github.com/Ash258/Scoop-GithubActions/wiki/PR_Checks)")
-        $message.Insert(0, 'Your changes does not pass some checks')
+        $message.Insert(0, "[Your changes does not pass some checks](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks)")
         Add-Label -ID $prID -Label 'package-fix-neeed'
     } else {
-        $message.InsertRange(0, @('All changes looks good.', '', 'Wait for review from human collaborators.'))
+        $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
         Remove-Label -ID $prID -Label 'package-fix-neeed'
         Add-Label -ID $prID -Label 'review-needed'
     }
