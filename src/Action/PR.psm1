@@ -56,25 +56,16 @@ function Resume-PR {
 function Set-RepositoryContext {
     <#
     .SYNOPSIS
-        Set local repository context.
-    .DESCRIPTION
-        Forked repository will be cloned into /github/forked_workspace with correct branch.
-        Repository context of commented PR based on base repo is not set to correct $head.ref.
-    .PARAMETER Head
-        $EVENT.Head object
+        Repository context of commented PR is not set to correct $head.ref.
     #>
-    param ([Parameter(Mandatory)] $Head)
-
-    $ref = $head.ref
-
-    if ($Head.repo.fork) { Write-Log 'FOOOOOOOOOOOOOOOOOOOOOOOOOOOORK' }
+    param ([Parameter(Mandatory)] $Ref)
 
     # Alpine git do not have `git branch --show-current`
     # Replace current branch marked with asterisk to name only ('* master' -> 'master')
-    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $ref) {
-        Write-Log "Switching branch to $ref"
+    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $Ref) {
+        Write-Log "Switching branch to $Ref"
 
-        git checkout $ref
+        git checkout $Ref
         git pull
     }
 }
@@ -124,12 +115,15 @@ function Initialize-PR {
         Push-Location $cloneLocation
     }
 
-    Set-RepositoryContext $head
-    # When forked repository it needs to be '/github/forked_workspace'
-    Get-Location | Write-Log 'Context of action'
-    #endregion Forked repo / branch selection
+    # Repository context of commented PR is not set to $head.ref
+    Set-RepositoryContext $head.ref
 
+    # When forked repository it needs to be '/github/forked_workspace'
+    Write-Log 'Context of action' (Get-Location)
+
+    #endregion Forked repo / branch selection
     Write-log 'Files in PR'
+
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', '
     (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', '
 
