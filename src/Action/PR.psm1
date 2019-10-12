@@ -145,12 +145,14 @@ function Initialize-PR {
     # TODO: Ternary
     $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
 
-    Write-Log 'Before forked handling'
     if ($head.repo.fork) {
         Write-Log 'Forked repository'
 
         # There is no need to run whole action under forked repository due to permission problem
-        if ($commented -eq $false) { return }
+        if ($commented -eq $false) {
+            Write-Log 'Cannot comment with read only token'
+            return
+        }
 
         $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
         Write-Log 'Repo' $REPOSITORY_forked
