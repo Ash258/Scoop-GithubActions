@@ -119,76 +119,21 @@ function New-FinalMessage {
     Add-Comment -ID $prID -Message $message
 }
 
-function Initialize-PR {
+function Test-PRFile {
     <#
     .SYNOPSIS
-        Handle pull requests action.
-    .DESCRIPTION
-        1. Clone repository / Switch to correct branch
-        2. Validate all changed manifests
-        3. Post comment with check results
+        Validate all changed files.
+    .PARAMETER File
+        Changed files in pull request.
+    .OUTPUTS
+        Tupple of check object and array of invalid manifests.
     #>
-    Write-Log 'PR initialized'
+    param([Object[]] $File)
 
-    #region Stage 1 - Repository initialization
-    $commented = Start-PR
-    if ($null -eq $commented) { return } # Exit on not supported state
-    Write-Log 'Commented?' $commented
-
-    $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'Pure PR Event'
-    if ($EVENT_new) {
-        Write-Log 'There is new event available'
-        $EVENT = $EVENT_new
-        $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
-    }
-
-    # TODO: Ternary
-    $script:head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
-
-    if ($head.repo.fork) {
-        Write-Log 'Forked repository'
-
-        # There is no need to run whole action under forked repository due to permission problem
-        if ($commented -eq $false) {
-            Write-Log 'Cannot comment with read only token'
-            return
-        }
-
-        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
-        Write-Log 'Repo' $REPOSITORY_forked
-
-        $cloneLocation = '/github/forked_workspace'
-        git clone --branch $head.ref $head.repo.clone_url $cloneLocation
-        $BUCKET_ROOT = $cloneLocation
-        $buck = Join-Path $BUCKET_ROOT 'bucket'
-        # TODO: Ternary
-        $MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
-
-        Write-Log "Switching to $REPOSITORY_forked"
-        Push-Location $cloneLocation
-    }
-
-    # Repository context of commented PR is not set to $head.ref
-    Set-RepositoryContext $head.ref
-    #endregion Stage 1 - Repository initialization
-
-    # When forked repository it needs to be '/github/forked_workspace'
-    Get-Location | Write-Log 'Context of action'
-    (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Root Files'
-    (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Manifests'
-
-    # Do not run checks on removed files
-    $files = Get-AllChangedFilesInPR $EVENT.number -Filter
-    Write-Log 'PR Changed Files' $files
-
-    #region Stage 2 - Manifests validation
-    # =================================== ⬆⬆⬆⬆ DONE ⬆⬆⬆⬆ ===================================
-    # TODO: Export to function Process-PRFile, which will return $checks, $invalids
-    $checks = @()
+    $check = @()
     $invalid = @()
-    # $check, $invalid = Process-PRFile
-    foreach ($file in $files) {
-        Write-Log "Starting $($file.filename) checks"
+    foreach ($f in $File) {
+        Write-Log "Starting $($f.filename) checks"
 
         # Reset variables from previous iteration
         $manifest = $null
@@ -196,7 +141,7 @@ function Initialize-PR {
         $statuses = [Ordered] @{ }
 
         # Convert path into gci item to hold all needed information
-        $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
+        $manifest = Get-ChildItem $BUCKET_ROOT $f.filename
         Write-Log 'Manifest' $manifest
 
         # For Some reason -ErrorAction is not honored for convertfrom-json
@@ -210,13 +155,14 @@ function Initialize-PR {
 
             # Handling of configuration files (vscode, ...) will not be problem as soon as nested bucket folder is restricted
             Write-Log 'Extension' $manifest.Extension
+
             if ($manifest.Extension -eq '.json') {
                 Write-Log 'Invalid JSON'
                 $invalid += $manifest.Basename
             } else {
                 Write-Log 'Not manifest at all'
             }
-            Write-Log "Skipped $($file.filename)"
+            Write-Log "Skipped $($f.filename)"
             continue
         }
 
@@ -228,7 +174,6 @@ function Initialize-PR {
 
         #region Hashes
         Write-Log 'Hashes'
-
         $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         Write-Log 'Output' $outputH
 
@@ -270,7 +215,6 @@ function Initialize-PR {
             $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -eq 0))
         }
 
-
         Write-Log 'Checkver done'
         #endregion
 
@@ -284,22 +228,89 @@ function Initialize-PR {
         Write-Log 'Format done'
         #endregion formatjson
 
-        $checks += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
+        $check += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
 
-        Write-Log "Finished $($file.filename) checks"
+        Write-Log "Finished $($f.filename) checks"
     }
-    #endregion Stage 2 - Manifests validation
+
+    return $check, $invalid
+}
+
+function Initialize-PR {
+    <#
+    .SYNOPSIS
+        Handle pull requests action.
+    .DESCRIPTION
+        1. Clone repository / Switch to correct branch
+        2. Validate all changed manifests
+        3. Post comment with check results
+    #>
+    Write-Log 'PR initialized'
+
+    #region Stage 1 - Repository initialization
+    $commented = Start-PR
+    if ($null -eq $commented) { return } # Exit on not supported state
+    Write-Log 'Commented?' $commented
+
+    $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'Pure PR Event'
+    if ($EVENT_new) {
+        Write-Log 'There is new event available'
+        $EVENT = $EVENT_new
+        $EVENT | ConvertTo-Json -Depth 8 -Compress | Write-Log 'New Event'
+    }
+
+    # TODO: Ternary
+    $head = if ($commented) { $EVENT.head } else { $EVENT.pull_request.head }
+
+    if ($head.repo.fork) {
+        Write-Log 'Forked repository'
+
+        # There is no need to run whole action under forked repository due to permission problem
+        if ($commented -eq $false) {
+            Write-Log 'Cannot comment with read only token'
+            return
+        }
+
+        $REPOSITORY_forked = "$($head.repo.full_name):$($head.ref)"
+        Write-Log 'Repo' $REPOSITORY_forked
+
+        $cloneLocation = '/github/forked_workspace'
+        git clone --branch $head.ref $head.repo.clone_url $cloneLocation
+        $script:BUCKET_ROOT = $cloneLocation
+        $buck = Join-Path $BUCKET_ROOT 'bucket'
+        # TODO: Ternary
+        $script:MANIFESTS_LOCATION = if (Test-Path $buck) { $buck } else { $BUCKET_ROOT }
+
+        Write-Log "Switching to $REPOSITORY_forked"
+        Push-Location $cloneLocation
+    }
+
+    # Repository context of commented PR is not set to $head.ref
+    Set-RepositoryContext $head.ref
+    #endregion Stage 1 - Repository initialization
+
+    # When forked repository it needs to be '/github/forked_workspace'
+    Get-Location | Write-Log 'Context of action'
+    (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Root Files'
+    (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Manifests'
+
+    # Do not run checks on removed files
+    $files = Get-AllChangedFilesInPR $EVENT.number -Filter
+    Write-Log 'PR Changed Files' $files
+
+    # Stage 2 - Manifests validation
+    $check, $invalid = Test-PRFile
 
     #region Stage 3 - Final Message
-    Write-Log 'Checked manifests' $checks.name
+    Write-Log 'Checked manifests' $check.name
     Write-Log 'Invalids' $invalid
 
-    if (($checks.Count -eq 0) -and ($invalid.Count -eq 0)) {
+    if (($check.Count -eq 0) -and ($invalid.Count -eq 0)) {
         Write-Log 'No compatible files in PR'
         return
     }
 
-    New-FinalMessage $checks $invalid
+    New-FinalMessage $check $invalid
     #endregion Stage 3 - Final Message
 
     Write-Log 'PR finished'
