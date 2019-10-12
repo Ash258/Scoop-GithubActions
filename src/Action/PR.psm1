@@ -299,7 +299,7 @@ function Initialize-PR {
     Write-Log 'PR Changed Files' $files
 
     # Stage 2 - Manifests validation
-    $check, $invalid = Test-PRFile
+    $check, $invalid = Test-PRFile $files
 
     #region Stage 3 - Final Message
     Write-Log 'Checked manifests' $check.name
