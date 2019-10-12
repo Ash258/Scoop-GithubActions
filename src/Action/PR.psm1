@@ -148,7 +148,12 @@ function Initialize-PR {
         $manifest = Get-ChildItem $BUCKET_ROOT $file.filename
         Write-Log 'Manifest' $manifest
 
-        $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json -ErrorAction SilentlyContinue
+        # For Some reason -ErrorAction is not honored for convertfrom-json
+        $old_e = $ErrorActionPreference
+        $ErrorActionPreference = 'SilentlyContinue'
+        $object = Get-Content $manifest.Fullname -Raw | ConvertFrom-Json
+        $ErrorActionPreference $old_e
+
         if ($null -eq $object) {
             Write-Log 'Conversion failed'
 
@@ -276,6 +281,8 @@ function Initialize-PR {
 
     # Add some more human friendly message
     if ($env:NON_ZERO_EXIT) {
+        # TODO: Create wiki page with explanation of these checks
+        # $message.Insert(0, "[Your changes does not pass some checks](https://github.com/Ash258/Scoop-GithubActions/wiki/PR_Checks)")
         $message.Insert(0, 'Your changes does not pass some checks')
         Add-Label -ID $prID -Label 'package-fix-neeed'
     } else {
