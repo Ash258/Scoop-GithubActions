@@ -85,6 +85,7 @@ function New-FinalMessage {
 
         foreach ($status in $ch.Statuses.Keys) {
             $state = $ch.Statuses.Item($status)
+            $state.GetType()
             Write-Log $status $state
             # There is unsuccessful check
             if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
