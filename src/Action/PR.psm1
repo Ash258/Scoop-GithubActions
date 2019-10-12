@@ -85,7 +85,6 @@ function New-FinalMessage {
 
         foreach ($status in $ch.Statuses.Keys) {
             $state = $ch.Statuses.Item($status)
-            $state.GetType()
             Write-Log $status $state
             # There is unsuccessful check
             if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
@@ -266,7 +265,7 @@ function Initialize-PR {
         # There is some hash property defined in autoupdate
         if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
             # If any item contains 'Could not find hash*' there is hash extraction error.
-            $statuses.Add('Autoupdate Hash Extraction', ($outputV -notlike 'Could not find hash*'))
+            $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -gt 0))
         }
 
 
