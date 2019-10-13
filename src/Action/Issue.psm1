@@ -20,9 +20,9 @@ function Test-Hash {
             ''
             'Are you sure your scoop is up to date?'
             "Please run ``scoop update; scoop uninstall $Manifest; scoop install $Manifest``"
-            ""
+            ''
             "Hash mismatch could be caused by these factors:"
-            ""
+            ''
             '- Network error'
             '- Antivirus configuration'
             '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
@@ -47,7 +47,7 @@ function Test-Hash {
             Write-Log 'PR - Update description'
 
             # Only take latest updated
-            $pr = $prs | Select-Object  -First 1
+            $pr = $prs | Select-Object -First 1
             $prID = $pr.number
             $prBody = $pr.Body
             # TODO: Additional checks if this PR is really fixing same issue

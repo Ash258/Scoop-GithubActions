@@ -14,11 +14,12 @@ function Initialize-MockedFunctionsFromCore {
     function global:Get-HelperPath {
         param([String] $Helper)
 
+        $path = $null
         switch ($Helper) {
-            'Aria2' {
-                return Get-AppFilePath 'Aria2' 'aria2c'
-            }
+            'Aria2' { $path = Get-AppFilePath 'Aria2' 'aria2c' }
         }
+
+        return $path
     }
 }
 
