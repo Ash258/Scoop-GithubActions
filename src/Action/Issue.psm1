@@ -139,13 +139,20 @@ function Test-Downloading {
 function Initialize-Issue {
     Write-Log 'Issue initialized'
 
-    if ($EVENT.action -ne 'opened') {
-        Write-Log "Only action 'opened' is supported"
+    if (-not (($EVENT.action -eq 'opened') -or ($EVENT.action -eq 'labeled'))) {
+        Write-Log "Only actions 'opened' and 'labeled' are supported"
         return
     }
 
     $title = $EVENT.issue.title
     $id = $EVENT.issue.number
+    $label = $EVENT.issue.labels.name
+
+    # Only labeled action with verify label should continue
+    if (-not (($EVENT.action -eq 'labeled') -and ($null -eq $label) -and ($lable -contains 'verify'))) {
+        Write-Log 'Labeled action contains wrong label.'
+        return
+    }
 
     $problematicName, $problematicVersion, $problem = Resolve-IssueTitle $title
     if (($null -eq $problematicName) -or
