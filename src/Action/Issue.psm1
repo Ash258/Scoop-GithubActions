@@ -149,9 +149,11 @@ function Initialize-Issue {
     $label = $EVENT.issue.labels.name
 
     # Only labeled action with verify label should continue
-    if (-not (($EVENT.action -eq 'labeled') -and ($null -eq $label) -and ($label -contains 'verify'))) {
-        Write-Log 'Labeled action contains wrong label.'
-        return
+    if ($EVENT.action -eq 'labeled') {
+        if (($null -eq $label) -or ($label -contains 'verify')) {
+            Write-Log 'Labeled action contains wrong label.'
+            return
+        }
     }
 
     $problematicName, $problematicVersion, $problem = Resolve-IssueTitle $title
