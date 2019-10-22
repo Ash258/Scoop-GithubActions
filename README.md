@@ -14,7 +14,7 @@ Set of automated actions you will ever need as bucket maintainer. Using `stable`
 
 ### Issues (`Issues | IssueHandler`)
 
-As soon as new issue is created or label `verify` is added action is executed. Based on issue title specific sub-action is executed. It could be one of these:
+As soon as new issue is created or label `verify` is added, action is executed. Based on issue title specific sub-action is executed. It could be one of these:
 
 - **Hash check fails**
     1. Checkhashes binary is executed
