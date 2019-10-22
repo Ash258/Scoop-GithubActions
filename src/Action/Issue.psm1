@@ -149,7 +149,7 @@ function Initialize-Issue {
     $label = $EVENT.issue.labels.name
 
     # Only labeled action with verify label should continue
-    if (-not (($EVENT.action -eq 'labeled') -and ($null -eq $label) -and ($lable -contains 'verify'))) {
+    if (-not (($EVENT.action -eq 'labeled') -and ($null -eq $label) -and ($label -contains 'verify'))) {
         Write-Log 'Labeled action contains wrong label.'
         return
     }

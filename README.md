@@ -101,7 +101,7 @@ jobs:
     - uses: actions/checkout@master
     - name: IssueHandler
       uses: Ash258/Scoop-GithubActions@stable
-      if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.name, 'verify'))
+      if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
       env:
         GITH_EMAIL: youremail@mail.com
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
