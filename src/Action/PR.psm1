@@ -105,10 +105,10 @@ function New-FinalMessage {
     # Add some more human friendly message
     if ($env:NON_ZERO_EXIT) {
         $message.Insert(0, '[Your changes do not pass checks.](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks)')
-        Add-Label -ID $prID -Label 'package-fix-neeed'
+        Add-Label -ID $prID -Label 'package-fix-needed'
     } else {
         $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
-        Remove-Label -ID $prID -Label 'package-fix-neeed'
+        Remove-Label -ID $prID -Label 'package-fix-needed'
         Add-Label -ID $prID -Label 'review-needed'
     }
 
@@ -192,6 +192,7 @@ function Test-PRFile {
         $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
         $statuses.Add('Checkver', $checkver)
 
+        #region Autoupdate
         switch -Wildcard ($outputV[-1]) {
             'ERROR*' {
                 Write-Log 'Error in checkver'
@@ -208,6 +209,7 @@ function Test-PRFile {
             default { $autoupdate = $checkver }
         }
         $statuses.Add('Autoupdate', $autoupdate)
+        #endregion Autoupdate
 
         # There is some hash property defined in autoupdate
         if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
@@ -216,16 +218,16 @@ function Test-PRFile {
         }
 
         Write-Log 'Checkver done'
-        #endregion
+        #endregion Checkver
 
         #region formatjson
-        Write-Log 'Format'
+        # Write-Log 'Format'
         # TODO: implement format check using array compare if possible (or just strings with raws)
         # TODO: I am not sure if this will handle tabs and everything what could go wrong.
         #$raw = Get-Content $manifest.Fullname -Raw
         #$new_raw = $object | ConvertToPrettyJson
         #$statuses.Add('Format', ($raw -eq $new_raw))
-        Write-Log 'Format done'
+        # Write-Log 'Format done'
         #endregion formatjson
 
         $check += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
@@ -289,7 +291,7 @@ function Initialize-PR {
     Set-RepositoryContext $head.ref
     #endregion Stage 1 - Repository initialization
 
-    # When forked repository it needs to be '/github/forked_workspace'
+    # In case of forked repository it needs to be '/github/forked_workspace'
     Get-Location | Write-Log 'Context of action'
     (Get-ChildItem $BUCKET_ROOT | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Root Files'
     (Get-ChildItem $MANIFESTS_LOCATION | Select-Object -ExpandProperty Basename) -join ', ' | Write-log 'Manifests'

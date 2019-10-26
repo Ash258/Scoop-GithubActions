@@ -76,6 +76,7 @@ function Expand-Property {
         Base object.
     .PARAMETER Property
         Property to be expanded.
+        TODO: Rework and support nested properties
     #>
     param(
         [Parameter(Mandatory, ValueFromPipeline)]

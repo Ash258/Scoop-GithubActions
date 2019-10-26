@@ -49,7 +49,6 @@ function Test-Hash {
             # Only take latest updated
             $pr = $prs | Select-Object -First 1
             $prID = $pr.number
-            $prBody = $pr.Body
             # TODO: Additional checks if this PR is really fixing same issue
 
             $message += ''
@@ -57,7 +56,7 @@ function Test-Hash {
 
             Write-Log 'PR ID' $prID
             # Update PR description
-            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $prBody) -join "`r`n") }
+            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $pr.body) -join "`r`n") }
         } else {
             Write-Log 'PR - Create new branch and post PR'
 
@@ -85,16 +84,15 @@ function Test-Hash {
 function Test-Downloading {
     param([String] $Manifest, [Int] $IssueID)
 
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
-    $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
+    $null, $object = Get-Manifest $Manifest
 
     $broken_urls = @()
     # TODO: Aria2 support
-    # dl_with_cache_aria2 $Manifest 'DL' $manifest_o (default_architecture) "/" $manifest_o.cookies $true
+    # dl_with_cache_aria2 $Manifest 'DL' $object (default_architecture) "/" $object.cookies $true
 
     # exit 0
     foreach ($arch in @('64bit', '32bit')) {
-        $urls = @(url $manifest_o $arch)
+        $urls = @(url $object $arch)
 
         foreach ($url in $urls) {
             # Trim rename (#48)
@@ -102,7 +100,7 @@ function Test-Downloading {
             Write-Log 'url' $url
 
             try {
-                dl_with_cache $Manifest 'DL' $url $null $manifest_o.cookies $true
+                dl_with_cache $Manifest 'DL' $url $null $object.cookies $true
             } catch {
                 $broken_urls += $url
                 continue
@@ -116,13 +114,13 @@ function Test-Downloading {
         $message = @(
             'Cannot reproduce.'
             ''
-            'All files can be downloaded properly (Please keep in mind I can only download files without aria2 support (yet))'
-            'Downloading problems could be caused by:'
+            'All files could be downloaded without any issue.'
+            'Problems with download could be caused by:'
             ''
-            '- Proxy configuration'
             '- Network error'
             '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
             '- Antivirus settings could block URL or block downloaded file'
+            '- Proxy configuration'
         )
 
         Add-Comment -ID $IssueID -Comment $message
@@ -130,9 +128,9 @@ function Test-Downloading {
     } else {
         Write-Log 'Broken URLS' $broken_urls
 
-        $string = ($broken_urls | ForEach-Object { "- $_" }) -join "`r`n"
+        $string = ($broken_urls | Select-Object -Unique | ForEach-Object { "- $_" }) -join "`r`n"
         Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
-        Add-Comment -ID $IssueID -Comment 'Thank you for reporting. You are right. Following URLs are not accessible:', '', $string
+        Add-Comment -ID $IssueID -Comment 'Thank you for reporting. You are right.', '', 'Following URLs are not accessible:', '', $string
     }
 }
 
@@ -150,7 +148,7 @@ function Initialize-Issue {
 
     # Only labeled action with verify label should continue
     if (($EVENT.action -eq 'labeled') -and ($label -notcontains 'verify')) {
-        Write-Log 'Labeled action contains wrong label.'
+        Write-Log 'Labeled action contains wrong label'
         return
     }
 
@@ -166,7 +164,7 @@ function Initialize-Issue {
     $null, $manifest_loaded = Get-Manifest $problematicName
     if ($manifest_loaded.version -ne $problematicVersion) {
         Add-Comment -ID $id -Message @(
-            "You reported version ``$problematicVersion``, but latest available version is ``$($manifest_loaded.version)``."
+            "You reported version ``$problematicVersion``, but the latest available version is ``$($manifest_loaded.version)``."
             ''
             "Run ``scoop update; scoop uninstall $problematicName; scoop install $problematicName``"
         )
