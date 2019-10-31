@@ -23,7 +23,8 @@ function Initialize-Scheduled {
     & (Join-Path $BINARIES_FOLDER 'checkver.ps1') @params
 
     git commit -a -m 'Test Protected Branch'
-    git push
+    $remote = "https://Ash258:${env:GITHUB_TOKEN}@github.com/${env:GITHUB_REPOSITORY}.git"
+    git push $remote
 
     # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
 
