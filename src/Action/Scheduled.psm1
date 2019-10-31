@@ -8,14 +8,21 @@ function Initialize-Scheduled {
     Write-Log 'Scheduled initialized'
 
     $params = @{
+        'App'         = '*'
         'Dir'         = $MANIFESTS_LOCATION
-        'Upstream'    = "${REPOSITORY}:master"
-        'Push'        = $true
-        'SkipUpdated' = [bool] $env:SKIP_UPDATED
+        'Update'      = $true
+    #     'Upstream'    = "${REPOSITORY}:master"
+    #     'Push'        = $true
+    #     'SkipUpdated' = [bool] $env:SKIP_UPDATED
     }
-    if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
+    # if ($env:SPECIAL_SNOWFLAKES) { $params.Add('SpecialSnowflakes', ($env:SPECIAL_SNOWFLAKES -split ',')) }
 
-    & (Join-Path $BINARIES_FOLDER 'auto-pr.ps1') @params
+    # & (Join-Path $BINARIES_FOLDER 'auto-pr.ps1') @params
+    & (Join-Path $BINARIES_FOLDER 'checkver.ps1') @params
+
+    git commit -a -m 'Test Protected Branch'
+    git push origin master
+
     # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
 
     Write-Log 'Scheduled finished'
