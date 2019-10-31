@@ -7,6 +7,8 @@ function Initialize-Scheduled {
     #>
     Write-Log 'Scheduled initialized'
 
+    git checkout master
+
     $params = @{
         'App'         = '*'
         'Dir'         = $MANIFESTS_LOCATION
