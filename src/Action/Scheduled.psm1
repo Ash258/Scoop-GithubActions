@@ -21,7 +21,7 @@ function Initialize-Scheduled {
     & (Join-Path $BINARIES_FOLDER 'checkver.ps1') @params
 
     git commit -a -m 'Test Protected Branch'
-    git push origin master
+    git push
 
     # TODO: Post some comment?? Or other way how to publish logs for non collaborators.
 
