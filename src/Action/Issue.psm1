@@ -40,7 +40,7 @@ function Test-Hash {
         $message = @('You are right. Thank you for reporting.')
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        $prs = $prs | Where-Object { $_.title -ceq "$Manifest@$($man.version): Hash fix" }
+        $prs = $prs | Where-Object { $_.title -eq "$Manifest@$($man.version): Hash fix" }
 
         # There is alreay PR for
         if ($prs.Count -gt 0) {
