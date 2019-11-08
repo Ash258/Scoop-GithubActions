@@ -95,17 +95,12 @@ function Initialize-NeededSettings {
     #>
     @('buckets', 'cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
 
-    if ($env:GITH_EMAIL) {
-        git config --global user.email $env:GITH_EMAIL
-    } else {
-        Write-Log 'Pushing is not possible without email environment'
-    }
-
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
+    $email = if ($env:GITH_EMAIL) { $env:GITH_EMAIL } else { 'scoop-bucket-minion@users.noreply.github.com' }
+    $rem = "https://${env:GITHUB_ACTOR}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+
     git config --global user.name $user
-    # TODO: Organization will work? If no, then try to use x-access-token
-    # $rem = "https://x-access-token:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
-    $rem = "https://${user}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
+    git config --global user.email $email
     git remote 'set-url' --push origin $rem
 
     if (-not $env:HUB_VERBOSE) {
