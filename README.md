@@ -4,6 +4,9 @@ Set of automated actions, which will bucket maintainer ever need to save time ma
 
 ## Available actions
 
+`GITH_EMAIL` environment is not required since [1.0.1](https://github.com/Ash258/Scoop-GithubActions/releases/tag/1.0.1), but it is recommended.
+If email is not specified commits will not be pushed using your account, which will not add contributions. ([See](https://github.com/phips28/gh-action-bump-version/commit/adda5b22b3c785eb69d328f91dadb49a4c34a82e))
+
 ### Excavator (`Excavator`)
 
 - ❗❗❗ [Protected master branches are not supported](https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526) ❗❗❗
@@ -14,8 +17,8 @@ Set of automated actions, which will bucket maintainer ever need to save time ma
 
 ### Issues (`Issues`)
 
-As soon as **new issue is created** or **label `verify` is added**, action is executed.
-Based on issue title specific sub-action is executed. It could be one of these:
+As soon as new issue **is created** or **label `verify` is added** into issue, action is executed.
+Based on issue title, specific sub-action is executed. It could be one of these:
 
 - **Hash check fails**
     1. Checkhashes binary is executed
@@ -109,7 +112,7 @@ jobs:
       uses: Ash258/Scoop-GithubActions@stable
       if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
       env:
-        GITH_EMAIL: youremail@mail.com
+        GITH_EMAIL: youremail@mail.com # Not needed, but recommended
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #.github\workflows\issue_commented.yml
@@ -127,7 +130,7 @@ jobs:
       uses: Ash258/Scoop-GithubActions@stable
       if: startsWith(github.event.comment.body, '/verify')
       env:
-        GITH_EMAIL: youremail@mail.com
+        GITH_EMAIL: youremail@mail.com # Not needed, but recommended
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
 #.github\workflows\pull_request.yml
@@ -144,7 +147,7 @@ jobs:
     - name: PullRequestHandler
       uses: Ash258/Scoop-GithubActions@stable
       env:
-        GITH_EMAIL: youremail@mail.com
+        GITH_EMAIL: youremail@mail.com # Not needed, but recommended
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
 
