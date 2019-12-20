@@ -1,5 +1,9 @@
 $ErrorActionPreference = 'Stop' # Stop immediately on error, this will not lead into unwated comments.
 
+Write-Host 'Hello from windows actions'
+Write-Host 'SCOOP HAS TO BE INITIALIZED'
+exit 0
+
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
