@@ -33,7 +33,7 @@ function Test-Hash {
         # There is some error
         Write-Log 'Automatic check of hashes encounter some problems.'
 
-        Add-Label -Id $IssueID -Label 'package-fix-needed'
+        Add-Label -Id $IssueID -Label 'manifest-fix-needed'
     } else {
         Write-Log 'Verified hash failed'
 
@@ -129,7 +129,7 @@ function Test-Downloading {
         Write-Log 'Broken URLS' $broken_urls
 
         $string = ($broken_urls | Select-Object -Unique | ForEach-Object { "- $_" }) -join "`r`n"
-        Add-Label -ID $IssueID -Label 'package-fix-needed', 'verified', 'help-wanted'
+        Add-Label -ID $IssueID -Label 'manifest-fix-needed', 'verified', 'help-wanted'
         Add-Comment -ID $IssueID -Comment 'Thank you for reporting. You are right.', '', 'Following URLs are not accessible:', '', $string
     }
 }

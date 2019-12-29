@@ -39,14 +39,14 @@ Based on issue title, specific sub-action is executed. It could be one of these:
             1. Label `hash-fix-needed` is removed
             1. Issue is closed
         1. Binary error
-            1. Label `package-fix-needed` is added
+            1. Label `manifest-fix-needed` is added
 - **Download failed**
     1. All urls defined in manifest are retrieved
     1. Downloading of all urls is executed
     1. Comment to issue is posted
         1. If there is problematic URL
             1. List of these URLs is attached in comment
-            1. Labels `package-fix-needed`, `verified`, `help-wanted` is added
+            1. Labels `manifest-fix-needed`, `verified`, `help-wanted` is added
         1. All URLs could be downloaded without problem
             1. Possible causes are attached in comment
 

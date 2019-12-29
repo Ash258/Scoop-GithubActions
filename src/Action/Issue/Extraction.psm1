@@ -56,7 +56,7 @@ function Test-ExtractDir {
     if ($failed) {
         Write-Log 'Failed' $failed
         $message = 'You are right. Can reproduce', '', $message
-        Add-Label -ID $IssueID -Label 'verified', 'package-fix-needed', 'help-wanted'
+        Add-Label -ID $IssueID -Label 'verified', 'manifest-fix-needed', 'help-wanted'
     } else {
         Write-Log 'Everything all right' $failed
         $message = @(
