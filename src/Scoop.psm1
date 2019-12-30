@@ -27,4 +27,4 @@ function Initialize-MockedFunctionsFromCore {
     }
 }
 
-Export-ModuleMember -Function Initialize-MockedFunctionsFromCore
+Export-ModuleMember -Function Install-Scoop, Initialize-MockedFunctionsFromCore

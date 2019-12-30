@@ -37,7 +37,7 @@ function Get-EnvironmentVariables {
         List all environment variables. Mainly debug purpose.
         Do not leak GITHUB_TOKEN.
     #>
-    return Get-ChildItem env: | Where-Object { ($_.Name -ne 'GITHUB_TOKEN') -and ($_.Name -ne 'SSH_KEY') }
+    return Get-ChildItem env: | Where-Object { ($_.Name -ne 'GITHUB_TOKEN' -and $_.Name -notlike 'ACTIONS_') -and ($_.Name -ne 'SSH_KEY') }
 }
 
 function New-Array {
