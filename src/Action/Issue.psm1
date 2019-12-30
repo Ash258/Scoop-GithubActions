@@ -64,6 +64,7 @@ function Test-Hash {
 
             Write-Log 'Branch' $branch
 
+            Write-Log 'CONTEXT' (Get-Location)
             git checkout -B $branch
 
             Write-Log 'before status'
