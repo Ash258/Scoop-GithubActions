@@ -186,6 +186,7 @@ function Initialize-Issue {
             Write-Log 'Download failed'
             Test-Downloading $problematicName $id
         }
+        default { Write-Log 'Not supported issue action' }
     }
 
     Write-Log 'Issue finished'
