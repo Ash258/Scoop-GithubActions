@@ -72,7 +72,6 @@ module.exports =
             const exec = __webpack_require__(871);
 
         async function run() {
-                console.log(__dirname)
                 try {
                     const pwshFolder = __dirname.replace(/[/\\]_init$/, '');
                     const pwshScript = `${pwshFolder}/action.ps1`
