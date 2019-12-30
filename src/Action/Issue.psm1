@@ -122,8 +122,8 @@ function Test-Downloading {
             'Problems with download could be caused by:'
             ''
             '- Network error'
-            '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
-            '- Antivirus settings could block URL or block downloaded file'
+            '- Blocked site (Great Firewall of China, Corporate restrictions, ...)'
+            '- Antivirus settings blocking URL/downloaded file'
             '- Proxy configuration'
         )
 
