@@ -6,10 +6,7 @@ Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandPrope
 
 Install-Scoop
 
-Get-ChildItem $env:SCOOP -Directory -Hidden
-Get-ChildItem $env:SCOOP_HOME -Directory -Hidden
-Get-ChildItem $env:SCOOP\buckets -Recurse -Directory -Hidden
-
+scoop update
 scoop --version
 
 exit 0
