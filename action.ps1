@@ -3,6 +3,8 @@
 $ErrorActionPreference = 'Stop' # Stop immediately on error, this will not lead into unwated comments.
 
 Write-Host 'Hello from windows actions'
+Write-Host $env:ACTIONS_RUNTIME_URL -F Darkred
+Write-Host $env:ACTIONS_RUNTIME_TOKEN  -F Darkred
 
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
@@ -10,8 +12,6 @@ Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandPrope
 Install-Scoop
 
 scoop --version
-Write-Host $env:ACTIONS_RUNTIME_URL -F Darkred
-Write-Host $env:ACTIONS_RUNTIME_TOKEN  -F Darkred
 
 exit 0
 # TODO: Move to top
