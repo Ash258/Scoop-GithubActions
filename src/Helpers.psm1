@@ -107,6 +107,7 @@ function Initialize-NeededSettings {
     git config --global user.email $email
     git remote 'set-url' --push origin $rem
 
+    scoop install 'hub' -g
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
         [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
