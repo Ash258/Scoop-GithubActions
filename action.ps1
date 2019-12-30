@@ -4,14 +4,10 @@ $ErrorActionPreference = 'Stop' # Stop immediately on error, this will not lead 
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
-Install-Scoop
-
-scoop update
-scoop --version
-
-exit 0
 # TODO: Move to top
 $VerbosePreference = 'Continue' # Preserve verbose in logs
+
+Install-Scoop
 
 Test-NestedBucket
 Initialize-NeededSettings

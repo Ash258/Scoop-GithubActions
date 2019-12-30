@@ -9,6 +9,8 @@ $env:SCOOP_DEBUG = 1
 [Environment]::SetEnvironmentVariable('SCOOP_GLOBAL', $env:SCOOP_GLOBAL, 'Machine')
 [Environment]::SetEnvironmentVariable('SCOOP_DEBUG', $env:SCOOP_DEBUG, 'Machine')
 
+$env:GH_REQUEST_COUNTER = 0
+
 # Convert actual API response to object
 $EVENT = Get-Content $env:GITHUB_EVENT_PATH -Raw | ConvertFrom-Json
 # Compress Event
