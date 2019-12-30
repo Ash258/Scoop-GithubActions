@@ -1,12 +1,14 @@
 #!/usr/bin/env pwsh
-
 $ErrorActionPreference = 'Stop' # Stop immediately on error, this will not lead into unwated comments.
 
-Write-Host 'Hello from windows actions'
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
 Install-Scoop
+
+Get-ChildItem $env:SCOOP
+Get-ChildItem $env:SCOOP_HOME
+Get-ChildItem $env:SCOOP\buckets -Recurse
 
 scoop --version
 
