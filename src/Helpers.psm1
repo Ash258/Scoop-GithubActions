@@ -107,6 +107,7 @@ function Initialize-NeededSettings {
     git config --global user.email $email
     git remote 'set-url' --push origin $rem
 
+    scoop config '7ZIPEXTRACT_USE_EXTERNAL' $true
     scoop install 'hub' -g
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
