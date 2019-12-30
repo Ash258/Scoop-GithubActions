@@ -37,7 +37,7 @@ function Get-EnvironmentVariables {
         List all environment variables. Mainly debug purpose.
         Do not leak GITHUB_TOKEN.
     #>
-    return Get-ChildItem env: | Where-Object { ($_.Name -ne 'GITHUB_TOKEN' -and $_.Name -notlike 'ACTIONS_') -and ($_.Name -ne 'SSH_KEY') }
+    return Get-ChildItem env: | Where-Object { (($_.Name -ne 'GITHUB_TOKEN') -and ($_.Name -notlike 'ACTIONS_*')) -and ($_.Name -ne 'SSH_KEY') }
 }
 
 function New-Array {
@@ -96,6 +96,8 @@ function Initialize-NeededSettings {
 
     scoop update
     scoop --version
+
+    @('cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
 
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     $email = if ($env:GITH_EMAIL) { $env:GITH_EMAIL } else { 'scoop-bucket-minion@users.noreply.github.com' }
