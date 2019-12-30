@@ -61,7 +61,12 @@ function Test-Hash {
             Write-Log 'PR - Create new branch and post PR'
 
             $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
+
+            Write-Log 'Branch' $branch
+
             git checkout -B $branch
+
+            Write-Log 'before status'
 
             Write-Log 'Git Status' @(git status --porcelain)
 
