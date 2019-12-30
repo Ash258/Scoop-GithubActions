@@ -166,7 +166,7 @@ function Initialize-Issue {
         Add-Comment -ID $id -Message @(
             "You reported version ``$problematicVersion``, but the latest available version is ``$($manifest_loaded.version)``."
             ''
-            "Run ``scoop update; scoop uninstall $problematicName; scoop install $problematicName``"
+            "Run ``scoop update; scoop update $problematicName --force``"
         )
         Close-Issue -ID $id
         return
