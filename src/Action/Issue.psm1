@@ -61,13 +61,13 @@ function Test-Hash {
             Write-Log 'PR - Create new branch and post PR'
 
             $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
-            hub checkout -B $branch
+            git checkout -B $branch
 
             Write-Log 'Git Status' @(hub status --porcelain)
 
-            hub add $gci.FullName
-            hub commit -m "${Manifest}: hash fix"
-            hub push origin $branch
+            git add $gci.FullName
+            git commit -m "${Manifest}: hash fix"
+            git push origin $branch
 
             # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
