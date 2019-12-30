@@ -95,6 +95,7 @@ function Initialize-NeededSettings {
     #>
     @('buckets', 'cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
 
+    $env:GH_REQUEST_COUNTER = 0
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
     $email = if ($env:GITH_EMAIL) { $env:GITH_EMAIL } else { 'scoop-bucket-minion@users.noreply.github.com' }
     $rem = "https://${env:GITHUB_ACTOR}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"

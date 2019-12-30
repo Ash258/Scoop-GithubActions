@@ -2,8 +2,8 @@ name: Bucket Minion
 description: Set of actions to automate maintaining of bucket.
 author: Jakub <Ash258> Čábera
 runs:
-    using: pwsh
-    main: Entrypoint.ps1
+    using: node12
+    main: _init/index.js
 branding:
     icon: package
     color: purple

@@ -1,12 +1,19 @@
+#!/usr/bin/env pwsh
+
 $ErrorActionPreference = 'Stop' # Stop immediately on error, this will not lead into unwated comments.
 
 Write-Host 'Hello from windows actions'
-Write-Host 'SCOOP HAS TO BE INITIALIZED'
-exit 0
 
 # Import all modules
 Join-Path $PSScriptRoot 'src' | Get-ChildItem -File | Select-Object -ExpandProperty Fullname | Import-Module
 
+Install-Scoop
+
+scoop --version
+Write-Host $env:ACTIONS_RUNTIME_URL -F Darkred
+Write-Host $env:ACTIONS_RUNTIME_TOKEN  -F Darkred
+
+exit 0
 # TODO: Move to top
 $VerbosePreference = 'Continue' # Preserve verbose in logs
 
@@ -23,5 +30,7 @@ Initialize-MockedFunctionsFromCore
 Write-Log 'FULL EVENT' $EVENT_RAW
 
 Invoke-Action
+
+Write-Log 'Number of Github Requests' $env:GH_REQUEST_COUNTER
 
 if ($env:NON_ZERO_EXIT) { exit $NON_ZERO }
