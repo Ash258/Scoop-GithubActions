@@ -4,7 +4,6 @@ function Install-Scoop {
     $f = Join-Path $env:USERPROFILE 'install.ps1'
     Invoke-WebRequest 'https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1' -UseBasicParsing -OutFile $f
     & $f -RunAsAdmin
-    $LASTEXITCODE
 }
 
 function Initialize-MockedFunctionsFromCore {
