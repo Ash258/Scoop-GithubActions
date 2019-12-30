@@ -64,10 +64,8 @@ function Test-Hash {
 
             Write-Log 'Branch' $branch
 
-            Write-Log 'CONTEXT' (Get-Location)
             git checkout -B $branch
-
-            Write-Log 'before status'
+            # TODO: There is some problem
 
             Write-Log 'Git Status' @(git status --porcelain)
 
@@ -195,6 +193,7 @@ function Initialize-Issue {
         default { Write-Log 'Not supported issue action' }
     }
 
+    Remove-Label -ID $id -Label 'verify'
     Write-Log 'Issue finished'
 }
 
