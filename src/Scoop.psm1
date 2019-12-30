@@ -1,6 +1,7 @@
 Join-Path $PSScriptRoot 'Helpers.psm1' | Import-Module
 
 function Install-Scoop {
+    Write-Log 'Installing scoop'
     $f = Join-Path $env:USERPROFILE 'install.ps1'
     Invoke-WebRequest 'https://raw.githubusercontent.com/ScoopInstaller/Install/master/install.ps1' -UseBasicParsing -OutFile $f
     & $f -RunAsAdmin
