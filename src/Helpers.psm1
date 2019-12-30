@@ -24,7 +24,7 @@ function Write-Log {
     } else {
         # Detailed output using format table
         Write-Host "Log of ${Summary}:"
-        $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`n"
+        $mess = ($Message | Format-Table -HideTableHeaders -AutoSize | Out-String).Trim() -split "`r`n"
         Write-Host ($mess | ForEach-Object { "`n    $_" })
     }
 
