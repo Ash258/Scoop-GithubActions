@@ -63,7 +63,7 @@ function Test-Hash {
             $branch = "$Manifest-hash-fix-$(Get-Random -Maximum 258258258)"
             git checkout -B $branch
 
-            Write-Log 'Git Status' @(hub status --porcelain)
+            Write-Log 'Git Status' @(git status --porcelain)
 
             git add $gci.FullName
             git commit -m "${Manifest}: hash fix"
