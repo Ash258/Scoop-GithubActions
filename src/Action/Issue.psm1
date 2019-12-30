@@ -25,7 +25,7 @@ function Test-Hash {
             ''
             '- Network error'
             '- Antivirus configuration'
-            '- Site is blocked (Great Firewall of China, Corporate restrictions, ...)'
+            '- Blocked site (Great Firewall of China, Corporate restrictions, ...)'
         )
         Remove-Label -ID $IssueID -Label 'hash-fix-needed'
         Close-Issue -ID $IssueID
@@ -91,7 +91,7 @@ function Test-Downloading {
     $null, $object = Get-Manifest $Manifest
 
     $broken_urls = @()
-    # TODO: Aria2 support
+    # TODO:? Aria2 support
     # dl_with_cache_aria2 $Manifest 'DL' $object (default_architecture) "/" $object.cookies $true
 
     # exit 0
