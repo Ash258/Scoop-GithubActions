@@ -1,27 +1,28 @@
 # Github actions for scoop buckets
 
-Set of automated actions, which will bucket maintainer ever need to save time managing issues / pull requets. Using `stable` tag instead of specific version is highly recommended.
+Set of automated actions, which will bucket maintainer ever need to save time managing issues/pull requets. Using `stable` tag instead of specific version is highly recommended.
 
 ## Available actions
 
 `GITH_EMAIL` environment is not required since [1.0.1](https://github.com/Ash258/Scoop-GithubActions/releases/tag/1.0.1), but it is recommended.
-If email is not specified commits will not be pushed using your account, which will not add contributions. ([See](https://github.com/phips28/gh-action-bump-version/commit/adda5b22b3c785eb69d328f91dadb49a4c34a82e))
+If email is not specified, commits will not be pushed using account bounded to the email. This will lead to not adding contributions. ([See as example commit from github action without user's email](https://github.com/phips28/gh-action-bump-version/commit/adda5b22b3c785eb69d328f91dadb49a4c34a82e))
 
 ### Excavator (`Excavator`)
 
-- ❗❗❗ [Protected master branches are not supported](https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526) ❗❗❗
+- ❗❗❗ [Protected master branches are not supported, due to security concern from GitHub side](https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526) ❗❗❗
 - Periodically execute automatic updates for all manifests
-- Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats
+- Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats and to [cron validator](https://crontab.guru/)
 - <https://github.com/ScoopInstaller/Excavator> alternative
     - No need to have custom device, which could run docker or scheduled task for auto-pr 24/7
 
 ### Issues (`Issues`)
 
 As soon as new issue **is created** or **label `verify` is added** into issue, action is executed.
-Based on issue title, specific sub-action is executed. It could be one of these:
+Based on issue title, specific sub-action is executed.
+It could be one of these:
 
 - **Hash check fails**
-    1. Checkhashes binary is executed
+    1. Checkhashes binary is executed for manifest in title
     1. Result is parsed
         1. Hash mismatch
             1. Pull requests with name `<manifest>@<version>: Hash fix` are listed
@@ -52,30 +53,24 @@ Based on issue title, specific sub-action is executed. It could be one of these:
 
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
-As soon as **PR is created** or **someone post comment `/verify`** set of these tests are executed:
+As soon as PR **is created** or **comment `/verify` posted** to it, validation tests are executed (see [wiki](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks) for detailed desciption):
 
-- ❗❗ [Pull request created from forked repository cannot be finished due to different permission scope of token](https://github.com/Ash258/Scoop-GithubActions/issues/42) ❗❗
-    - Manual `/verify` comment is needed
+- ❗❗ [Pull request created from forked repository cannot be verified due to security concern from GitHub side](https://github.com/Ash258/Scoop-GithubActions/issues/42) ❗❗
+    - Manual `/verify` comment is needed (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/176>)
 
-1. Required properties are in place
-    - Manifest has to contain `License` and `Description` properties
-1. Hashes of URLs match
-    - Hashes specified in manifest have to match
+#### Overview of validatiors
+
+1. Required properties (`License`, `Description`) are in place
+1. Hashes of files are correct
 1. Checkver functionality
-    - Checkver has to finished successfully
-    - Version in manifest has to match version from checkver binary (latest possible)
-1. Autoupdate
-    - Autoupdate has to finish successfully
-    - Hashes extraction has to finish successfully
-        - If there is `hash` property inside `autoupdate` output of checkver binary cannot contains `Could not find hash`
-
-- All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/176>)
+1. Autoupdate functionality
+    1. Hash extraction finished
 
 ## Example workflows for all actions
 
-- Names could be changed as needed
+- Names could be changed as desired
 - `if` statements are not required
-    - There are only time savers for going through lots of action logs
+    - There are only time savers when finding appropriate action log
     - Save GitHub resources
 
 ```yml
@@ -86,11 +81,11 @@ on:
 name: Excavator
 jobs:
   excavate:
-    name: Excavate
+    name: Excavator
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@master
-    - name: Excavate
+    - name: Excavator
       uses: Ash258/Scoop-GithubActions@stable
       env:
         GITH_EMAIL: youremail@mail.com
@@ -101,14 +96,14 @@ jobs:
 on:
   issues:
     types: [ opened, labeled ]
-name: Issues
+name: Issue
 jobs:
   issueHandler:
-    name: IssueHandler
-    runs-on: ubuntu-latest
+    name: Issue Handler
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@master
-    - name: IssueHandler
+    - name: Issue Handler
       uses: Ash258/Scoop-GithubActions@stable
       if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
       env:
@@ -119,14 +114,14 @@ jobs:
 on:
   issue_comment:
     types: [ created ]
-name: Pull requests comment
+name: Commented Pull Request
 jobs:
   pullRequestHandler:
-    name: PullRequestHandler
-    runs-on: ubuntu-latest
+    name: Pull Request Validator
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@master
-    - name: PullRequestHandler
+    - name: Pull Request Validator
       uses: Ash258/Scoop-GithubActions@stable
       if: startsWith(github.event.comment.body, '/verify')
       env:
@@ -137,35 +132,16 @@ jobs:
 on:
   pull_request:
     types: [ opened ]
-name: Pull requests
+name: Pull Requests
 jobs:
   pullRequestHandler:
-    name: PullRequestHandler
-    runs-on: ubuntu-latest
+    name: Pull Request Validator
+    runs-on: windows-latest
     steps:
     - uses: actions/checkout@master
-    - name: PullRequestHandler
+    - name: Pull Request Validator
       uses: Ash258/Scoop-GithubActions@stable
       env:
         GITH_EMAIL: youremail@mail.com # Not needed, but recommended
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 ```
-
-## How to debug locally
-
-```powershell
-# LocalTestEnvironment.ps1
-
-# Try to avoid all real requests into real repository
-#    All events inside repository will use GithubActionsBucketForTesting repository for testing purpose
-[System.Environment]::SetEnvironmentVariable('GITHUB_TOKEN', '<yourtoken>', 'Process')
-[System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_NAME', '<EVENT YOU WANT TO DEBUG>', 'Process')
-# Create Cosi.json with any request from events folder
-[System.Environment]::SetEnvironmentVariable('GITHUB_EVENT_PATH', "$PSScriptRoot\cosi.json", 'Process')
-[System.Environment]::SetEnvironmentVariable('GITHUB_REPOSITORY', 'Ash258/GithubActionsBucketForTesting', 'Process')
-$DebugPreference = 'Continue'
-git clone 'https://github.com/Ash258/GithubActionsBucketForTesting.git' '/github/workspace'
-# Uncomment debug entries in Dockerfile
-```
-
-Execute `docker run -ti (((docker build -q .) -split ':')[1])` or `docker build . -t 'actions:master'; docker run -ti actions`.
