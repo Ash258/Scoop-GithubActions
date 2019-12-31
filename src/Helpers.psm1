@@ -108,7 +108,7 @@ function Initialize-NeededSettings {
     git remote 'set-url' --push origin $rem
 
     scoop config '7ZIPEXTRACT_USE_EXTERNAL' $true
-    scoop install 'git' 'hub' -g
+    scoop install 'hub' -g
     if (-not $env:HUB_VERBOSE) {
         $env:HUB_VERBOSE = '1'
         [System.Environment]::SetEnvironmentVariable('HUB_VERBOSE', $env:HUB_VERBOSE, 'Machine')
