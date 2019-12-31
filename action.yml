@@ -1,6 +1,7 @@
 name: Bucket Minion
-description: Set of actions to automate maintaining of bucket.
+description: Set of actions to automate scoop bucket maintaining.
 author: Jakub <Ash258> Čábera
+# TODO: Wait for proper powershell support
 runs:
     using: node12
     main: _init/index.js

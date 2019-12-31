@@ -7,15 +7,15 @@ Set of automated actions, which will bucket maintainer ever need to save time ma
 `GITH_EMAIL` environment is not required since [1.0.1](https://github.com/Ash258/Scoop-GithubActions/releases/tag/1.0.1), but it is recommended.
 If email is not specified, commits will not be pushed using account bounded to the email. This will lead to not adding contributions. ([See as example commit from github action without user's email](https://github.com/phips28/gh-action-bump-version/commit/adda5b22b3c785eb69d328f91dadb49a4c34a82e))
 
-### Excavator (`Excavator`)
+### Excavator
 
 - ❗❗❗ [Protected master branches are not supported, due to security concern from GitHub side](https://github.community/t5/GitHub-Actions/How-to-push-to-protected-branches-in-a-GitHub-Action/m-p/30710/highlight/true#M526) ❗❗❗
 - Periodically execute automatic updates for all manifests
-- Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats and to [cron validator](https://crontab.guru/)
+- Refer to [help page](https://help.github.com/en/articles/events-that-trigger-workflows#scheduled-events) for configuration formats
 - <https://github.com/ScoopInstaller/Excavator> alternative
     - No need to have custom device, which could run docker or scheduled task for auto-pr 24/7
 
-### Issues (`Issues`)
+### Issues
 
 As soon as new issue **is created** or **label `verify` is added** into issue, action is executed.
 Based on issue title, specific sub-action is executed.
@@ -51,7 +51,7 @@ It could be one of these:
         1. All URLs could be downloaded without problem
             1. Possible causes are attached in comment
 
-### Pull requests (`Pull requests | PullRequestHandler`)
+### Pull Requests
 
 As soon as PR **is created** or **comment `/verify` posted** to it, validation tests are executed (see [wiki](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks) for detailed desciption):
 
