@@ -57,6 +57,7 @@ function Set-RepositoryContext {
     if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $Ref) {
         Write-Log "Switching branch to $Ref"
 
+        git fetch --all
         git checkout $Ref
         git pull
     }
@@ -213,8 +214,12 @@ function Test-PRFile {
 
         # There is some hash property defined in autoupdate
         if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
-            # If any item contains 'Could not find hash*' there is hash extraction error.
-            $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -eq 0))
+            $result = $status.Autoupdate
+            if ($result) {
+                # If any item contains 'Could not find hash*' there is hash extraction error.
+                $result = (($outputV -like 'Could not find hash*').Count -eq 0)
+            }
+            $statuses.Add('Autoupdate Hash Extraction', $result)
         }
 
         Write-Log 'Checkver done'
