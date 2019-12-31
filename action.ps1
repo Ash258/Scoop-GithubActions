@@ -11,7 +11,6 @@ $VerbosePreference = 'Continue' # Preserve verbose in logs
 Test-NestedBucket
 Initialize-NeededSettings
 
-git config
 git config --get user.email
 Write-Log 'Importing all modules'
 # Load all scoop's modules.
