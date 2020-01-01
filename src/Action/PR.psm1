@@ -83,17 +83,7 @@ function New-FinalMessage {
     foreach ($ch in $Check) {
         Add-IntoArray $message "### $($ch.Name)"
         Add-IntoArray $message ''
-
-        New-CheckList $ch.Statuses | ForEach-Object {
-            Add-IntoArray $message $_
-        }
-        # foreach ($status in $ch.Statuses.Keys) {
-        #     $state = $ch.Statuses.Item($status)
-        #     Write-Log $status $state
-        #     # There is unsuccessful check
-        #     if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
-        #     Add-IntoArray $message (New-CheckListItem $status -OK:$state)
-        # }
+        New-CheckList $ch.Statuses | ForEach-Object { Add-IntoArray $message $_ }
         Add-IntoArray $message ''
     }
 
@@ -106,20 +96,24 @@ function New-FinalMessage {
         $Invalid | ForEach-Object { Add-IntoArray $message "- $_" }
     }
 
+    $labelsToAdd = @()
+    $labelsToRemove = @()
     # Add some more human friendly message
     if ($env:NON_ZERO_EXIT) {
         $message.Insert(0, '[Your changes do not pass checks.](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks)')
-        Add-Label -ID $prID -Label 'manifest-fix-needed'
+        $labelsToAdd += 'manifest-fix-needed'
+        $labelsToRemove += 'review-needed'
     } else {
         $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
-        Remove-Label -ID $prID -Label 'package-fix-needed', 'manifest-fix-needed'
-        Add-Label -ID $prID -Label 'review-needed'
+        $labelsToAdd += 'review-needed'
+        $labelsToRemove += 'package-fix-needed', 'manifest-fix-needed'
     }
 
     # TODO: Comment URL to action log
-    # $url = "https://github.com/$REPOSITORY/runs/$RUN_ID"
-    # Add-IntoArray $message "_See log of all checks in <$url>_"
+    # Add-IntoArray $message "[_See log of all checks_](https://github.com/$REPOSITORY/runs/$RUN_ID)"
 
+    Remove-Label -ID $prID -Label $labelsToRemove
+    Add-Label -ID $prID -Label $labelsToAdd
     Add-Comment -ID $prID -Message $message
 }
 
