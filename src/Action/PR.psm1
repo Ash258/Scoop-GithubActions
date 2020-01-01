@@ -195,14 +195,13 @@ function Test-PRFile {
             #region Autoupdate
             if ($object.autoupdate) {
                 Write-Log 'Autoupdate'
+                $autoupdate = $false
                 switch -Wildcard ($outputV[-1]) {
                     'ERROR*' {
                         Write-Log 'Error in checkver'
-                        $autoupdate = $false
                     }
                     "couldn't match*" {
                         Write-Log 'Version match fail'
-                        $autoupdate = $false
                     }
                     'Writing updated*' {
                         Write-Log 'Autoupdate finished successfully'
@@ -214,9 +213,9 @@ function Test-PRFile {
 
                 # There is some hash property defined in autoupdate
                 if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
-                    $result = $statuses.Autoupdate
+                    $result = $autoupdate
                     if ($result) {
-                        # If any item contains 'Could not find hash*' there is hash extraction error.
+                        # If any result contains any item with 'Could not find hash*' there is hash extraction error.
                         $result = (($outputV -like 'Could not find hash*').Count -eq 0)
                     }
                     $statuses.Add('Autoupdate Hash Extraction', $result)
@@ -227,7 +226,7 @@ function Test-PRFile {
         }
         #endregion 3. Checkver and 4. Autoupdate
 
-        #region formatjson
+        #region 5. Manifest format
         # Write-Log 'Format'
         # TODO: implement format check using array compare if possible (or just strings with raws)
         # TODO: I am not sure if this will handle tabs and everything what could go wrong.
@@ -235,7 +234,29 @@ function Test-PRFile {
         #$new_raw = $object | ConvertToPrettyJson
         #$statuses.Add('Format', ($raw -eq $new_raw))
         # Write-Log 'Format done'
-        #endregion formatjson
+        #endregion 4. Manifest format
+
+        #region 6. Installation
+        # Write-Log 'Installation'
+        # # Try catch as currently some components are throwing exceptions
+        # try {
+        #     $outputI = @(scoop install $manifest.FullName *>&1)
+        # } catch {
+        #     Write-Log 'Installation failed' # Mainly due to some manifest script problem
+        #     $installation = $false
+        # }
+
+        # if ($outputI) {
+        # }
+
+        # $statuses.Add('Installation', $installation)
+        # Write-Log 'Installation done'
+        #endregion 6. Installation
+
+        #region 7. Uninstallation
+        # Write-Log 'Uninstallation'
+        # Write-Log 'Uninstallation done'
+        #endregion 7. Uninstallation
 
         $check += [Ordered] @{ 'Name' = $manifest.Basename; 'Statuses' = $statuses }
 
