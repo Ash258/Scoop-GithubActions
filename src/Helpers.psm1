@@ -181,6 +181,54 @@ function New-CheckListItem {
     return "$ind- $check$Item"
 }
 
+function New-CheckList {
+    <#
+    .SYNOPSIS
+        Create checklist.
+    .PARAMETER Status
+        Hashtable/PSCustomObject with name of check as key and boolean (or other pscustomobject) as value.
+    #>
+    param($Status)
+
+    [PSCustomObject] $result = @() # Array of objects
+    $final = @() # Final array of evaluated check lists
+
+    function _res ($name, $indentation, $state) {
+        return [PsCustomObject] [Ordered] @{
+            'Item'   = $name
+            'Indent' = $indentation
+            'State'  = $state
+        }
+    }
+
+    $Status.Keys | ForEach-Object {
+        $name = $_
+        $item = $Status.Item($name)
+        $ind = 0
+        $parentState = $true
+
+        if ($item -is [boolean]) {
+            $result += _res $name $ind $item
+        } else {
+            $result += _res $name $ind $null
+            $item.Keys | ForEach-Object {
+                $nestedState = $item.Item($_)
+                if ($nestedState -eq $false) { $parentState = $false }
+                $result += _res $_ ($ind + 1) $nestedState
+            }
+            ($result | Where-object { ($_.Item -eq $name) -and ($null -eq $_.State) }).State = $parentState
+        }
+    }
+
+    $result | ForEach-Object {
+        Write-Log $_.Item $_.State
+        if ($_.State -eq $false) { $env:NON_ZERO_EXIT = $true }
+        $final += New-CheckListItem -Item $_.Item -IndentLevel $_.Indent -OK:$_.State
+    }
+
+    return $final
+}
+
 function Test-NestedBucket {
     <#
     .SYNOPSIS

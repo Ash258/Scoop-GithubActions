@@ -84,14 +84,16 @@ function New-FinalMessage {
         Add-IntoArray $message "### $($ch.Name)"
         Add-IntoArray $message ''
 
-        # TODO!!!!! Adopt New-CheckList
-        foreach ($status in $ch.Statuses.Keys) {
-            $state = $ch.Statuses.Item($status)
-            Write-Log $status $state
-            # There is unsuccessful check
-            if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
-            Add-IntoArray $message (New-CheckListItem $status -OK:$state)
+        New-CheckList $ch.Statuses | ForEach-Object {
+            Add-IntoArray $message $_
         }
+        # foreach ($status in $ch.Statuses.Keys) {
+        #     $state = $ch.Statuses.Item($status)
+        #     Write-Log $status $state
+        #     # There is unsuccessful check
+        #     if ($state -eq $false) { $env:NON_ZERO_EXIT = $true }
+        #     Add-IntoArray $message (New-CheckListItem $status -OK:$state)
+        # }
         Add-IntoArray $message ''
     }
 
