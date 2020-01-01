@@ -178,6 +178,8 @@ function Test-PRFile {
         Write-Log 'Hashes'
         # $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
         & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1 | Tee-Object -Variable outputH
+        $outputH | Get-Member
+        $outputH.GetType()
         Write-Log 'Output' $outputH
 
         # everything should be all right when latest string in array will be OK
