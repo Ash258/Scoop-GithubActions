@@ -84,6 +84,7 @@ function New-FinalMessage {
         Add-IntoArray $message "### $($ch.Name)"
         Add-IntoArray $message ''
 
+        # TODO!!!!! Adopt New-CheckList
         foreach ($status in $ch.Statuses.Keys) {
             $state = $ch.Statuses.Item($status)
             Write-Log $status $state
@@ -175,7 +176,8 @@ function Test-PRFile {
 
         #region Hashes
         Write-Log 'Hashes'
-        $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        # $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+        & (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1 | Tee-Object -Variable outputH
         Write-Log 'Output' $outputH
 
         # everything should be all right when latest string in array will be OK
