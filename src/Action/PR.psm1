@@ -106,7 +106,7 @@ function New-FinalMessage {
     } else {
         $message.InsertRange(0, @('All changes look good.', '', 'Wait for review from human collaborators.'))
         $labelsToAdd += 'review-needed'
-        $labelsToRemove += 'package-fix-needed', 'manifest-fix-needed'
+        $labelsToRemove += 'manifest-fix-needed'
     }
 
     # TODO: Comment URL to action log
