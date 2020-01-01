@@ -36,7 +36,7 @@ function Invoke-GithubRequest {
 
     Write-Log 'Request Body' $parameters.Body
 
-    $env:GH_REQUEST_COUNTER = [int] $env:GH_REQUEST_COUNTER + 1
+    $env:GH_REQUEST_COUNTER = ([int] $env:GH_REQUEST_COUNTER) + 1
 
     return Invoke-WebRequest @parameters
 }
