@@ -171,14 +171,16 @@ function Test-PRFile {
         #endregion 1. Property checks
 
         #region 2. Hashes
-        Write-Log 'Hashes'
-        $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
-        Write-Log 'Output' $outputH
+        if ($object.version -ne 'nightly') {
+            Write-Log 'Hashes'
+            $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+            Write-Log 'Output' $outputH
 
-        # Everything should be all right when latest string in array will be OK
-        $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
+            # Everything should be all right when latest string in array will be OK
+            $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
 
-        Write-Log 'Hashes done'
+            Write-Log 'Hashes done'
+        }
         #endregion 2. Hashes
 
         #region 3. Checkver and 4. Autoupdate
