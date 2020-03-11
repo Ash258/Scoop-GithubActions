@@ -18,8 +18,8 @@ function Test-Hash {
         Add-Comment -ID $IssueID -Message @(
             'Cannot reproduce'
             ''
-            'Are you sure your scoop is up to date?'
-            "Please run ``scoop update; scoop update $Manifest --force``"
+            'Are you sure your scoop is up to date? Clean cache and reinstall'
+            "Please run ``scoop update; scoop cache rm $Manifest; scoop uninstall $Manifest; scoop install $Manifest``"
             ''
             "Hash mismatch could be caused by these factors:"
             ''
