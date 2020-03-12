@@ -57,6 +57,7 @@ function Set-RepositoryContext {
     if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $Ref) {
         Write-Log "Switching branch to $Ref"
 
+        git pull
         git checkout $Ref
         git pull
     }
