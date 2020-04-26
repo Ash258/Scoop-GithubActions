@@ -174,51 +174,57 @@ function Test-PRFile {
         #endregion Property checks
 
         #region Hashes
-        Write-Log 'Hashes'
-        $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
-        Write-Log 'Output' $outputH
+        if ($object.version -ne 'nightly') {
+            Write-Log 'Hashes'
+            $outputH = @(& (Join-Path $BINARIES_FOLDER 'checkhashes.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION *>&1)
+            Write-Log 'Output' $outputH
 
-        # everything should be all right when latest string in array will be OK
-        $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
+            # everything should be all right when latest string in array will be OK
+            $statuses.Add('Hashes', ($outputH[-1] -like 'OK'))
 
-        Write-Log 'Hashes done'
+            Write-Log 'Hashes done'
+        }
         #endregion Hashes
 
         #region Checkver
-        Write-Log 'Checkver'
-        $outputV = @(& (Join-Path $BINARIES_FOLDER 'checkver.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
-        Write-log 'Output' $outputV
+        if ($object.checkver) {
+            Write-Log 'Checkver'
+            $outputV = @(& (Join-Path $BINARIES_FOLDER 'checkver.ps1') -App $manifest.Basename -Dir $MANIFESTS_LOCATION -Force *>&1)
+            Write-log 'Output' $outputV
 
-        # If there are more than 2 lines and second line is not version, there is problem
-        $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
-        $statuses.Add('Checkver', $checkver)
+            # If there are more than 2 lines and second line is not version, there is problem
+            $checkver = ((($outputV.Count -ge 2) -and ($outputV[1] -like "$($object.version)")))
+            $statuses.Add('Checkver', $checkver)
 
-        #region Autoupdate
-        switch -Wildcard ($outputV[-1]) {
-            'ERROR*' {
-                Write-Log 'Error in checkver'
-                $autoupdate = $false
+            #region Autoupdate
+            if ($object.autoupdate) {
+                switch -Wildcard ($outputV[-1]) {
+                    'ERROR*' {
+                        Write-Log 'Error in checkver'
+                        $autoupdate = $false
+                    }
+                    "couldn't match*" {
+                        Write-Log 'Version match fail'
+                        $autoupdate = $false
+                    }
+                    'Writing updated*' {
+                        Write-Log 'Autoupdate finished successfully'
+                        $autoupdate = $true
+                    }
+                    default { $autoupdate = $checkver }
+                }
+                $statuses.Add('Autoupdate', $autoupdate)
+
+                # There is some hash property defined in autoupdate
+                if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
+                    # If any item contains 'Could not find hash*' there is hash extraction error.
+                    $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -eq 0))
+                }
             }
-            "couldn't match*" {
-                Write-Log 'Version match fail'
-                $autoupdate = $false
-            }
-            'Writing updated*' {
-                Write-Log 'Autoupdate finished successfully'
-                $autoupdate = $true
-            }
-            default { $autoupdate = $checkver }
+            #endregion Autoupdate
+
+            Write-Log 'Checkver done'
         }
-        $statuses.Add('Autoupdate', $autoupdate)
-        #endregion Autoupdate
-
-        # There is some hash property defined in autoupdate
-        if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
-            # If any item contains 'Could not find hash*' there is hash extraction error.
-            $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -eq 0))
-        }
-
-        Write-Log 'Checkver done'
         #endregion Checkver
 
         #region formatjson
