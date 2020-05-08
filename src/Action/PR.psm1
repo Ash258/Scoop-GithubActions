@@ -215,7 +215,7 @@ function Test-PRFile {
                 $statuses.Add('Autoupdate', $autoupdate)
 
                 # There is some hash property defined in autoupdate
-                if ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit')) {
+                if ($autoupdate -and ((hash $object.autoupdate '32bit') -or (hash $object.autoupdate '64bit'))) {
                     # If any item contains 'Could not find hash*' there is hash extraction error.
                     $statuses.Add('Autoupdate Hash Extraction', (($outputV -like 'Could not find hash*').Count -eq 0))
                 }
