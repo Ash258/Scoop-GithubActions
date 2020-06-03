@@ -273,7 +273,8 @@ function Resolve-IssueTitle {
     #>
     param([Parameter(Mandatory)][String] $Title)
 
-    $result = $Title -match '(?<name>.+)@(?<version>.+):\s*(?<problem>.*)$'
+    # https://regex101.com/r/a69Ie4/1
+    $result = $Title -match '(?<name>.+)@(?<version>.+?):\s*(?<problem>.*)$'
 
     if ($result) {
         return $Matches.name, $Matches.version, $Matches.problem
