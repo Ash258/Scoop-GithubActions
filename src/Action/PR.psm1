@@ -52,9 +52,7 @@ function Set-RepositoryContext {
     #>
     param ([Parameter(Mandatory)] $Ref)
 
-    # Alpine git do not have `git branch --show-current`
-    # Replace current branch marked with asterisk to name only ('* master' -> 'master')
-    if ((@(git branch) -replace '^\*\s+(.*)$', '$1') -ne $Ref) {
+    if ((git branch --show-current) -ne $Ref) {
         Write-Log "Switching branch to $Ref"
 
         git fetch --all
@@ -300,6 +298,7 @@ function Initialize-PR {
         # There is no need to run whole action under forked repository due to permission problem
         if ($commented -eq $false) {
             Write-Log 'Cannot comment with read only token'
+            # TODO: Execute it and adopt pester like checks
             return
         }
 
@@ -342,6 +341,7 @@ function Initialize-PR {
         return
     }
 
+    # TODO: Pester like check
     New-FinalMessage $check $invalid
     #endregion Stage 3 - Final Message
 

@@ -31,11 +31,11 @@ function Write-Log {
     Write-Host ''
 }
 
-function Get-EnvironmentVariables {
+function Get-EnvironmentVariable {
     <#
     .SYNOPSIS
         List all environment variables. Mainly debug purpose.
-        Do not leak GITHUB_TOKEN.
+        Do not leak GITHUB_TOKEN, ACTION_* and SSH_KEY.
     #>
     return Get-ChildItem env: | Where-Object { (($_.Name -ne 'GITHUB_TOKEN') -and ($_.Name -notlike 'ACTIONS_*')) -and ($_.Name -ne 'SSH_KEY') }
 }
@@ -88,7 +88,7 @@ function Expand-Property {
     return $Object | Select-Object -ExpandProperty $Property
 }
 
-function Initialize-NeededSettings {
+function Initialize-NeededConfiguration {
     <#
     .SYNOPSIS
         Initialize all settings, environment, configurations to work as expected.
@@ -96,11 +96,12 @@ function Initialize-NeededSettings {
 
     scoop update
     scoop --version
+    git --version
 
-    @('cache') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
+    @('cache', 'buckets', 'modules', 'persist', 'shims', 'workspace') | ForEach-Object { New-Item (Join-Path $env:SCOOP $_) -Force -ItemType Directory | Out-Null }
 
     $user = ($env:GITHUB_REPOSITORY -split '/')[0]
-    $email = if ($env:GITH_EMAIL) { $env:GITH_EMAIL } else { 'scoop-bucket-minion@users.noreply.github.com' }
+    $email = if ($env:GITH_EMAIL) { $env:GITH_EMAIL } else { $DEFAULT_EMAIL }
     $rem = "https://${env:GITHUB_ACTOR}:$env:GITHUB_TOKEN@github.com/$env:GITHUB_REPOSITORY.git"
 
     git config --global user.name $user
@@ -115,7 +116,7 @@ function Initialize-NeededSettings {
     }
 
     # Log all environment variables
-    Write-Log 'Environment' (Get-EnvironmentVariables)
+    Write-Log 'Environment' (Get-EnvironmentVariable)
 }
 
 function Get-Manifest {

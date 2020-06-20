@@ -9,15 +9,13 @@ Install-Scoop
 $VerbosePreference = 'Continue' # Preserve verbose in logs
 
 Test-NestedBucket
-Initialize-NeededSettings
+Initialize-NeededConfiguration
 
 git config --get user.email
 Write-Log 'Importing all modules'
 # Load all scoop's modules.
 # Dot sourcing needs to be done on highest scope possible to propagate into lower scopes
 Get-ChildItem (Join-Path $env:SCOOP_HOME 'lib') '*.ps1' | ForEach-Object { . $_.FullName }
-# Same for function recreating. Needs to be done after import and on highest scope
-Initialize-MockedFunctionsFromCore
 
 Write-Log 'FULL EVENT' $EVENT_RAW
 
