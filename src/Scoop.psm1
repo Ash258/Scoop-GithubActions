@@ -12,7 +12,7 @@ function Install-Scoop {
     & $f -RunAsAdmin
     if ($env:SHOVEL) {
         Write-Log 'Switch to Shovel'
-        scoop config SCOOP_REPO 'https://github.com/Ash258/Scoo-Core.git'
+        scoop config SCOOP_REPO 'https://github.com/Ash258/Scoop-Core.git'
         scoop update
     }
 }
