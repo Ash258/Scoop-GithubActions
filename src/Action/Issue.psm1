@@ -21,7 +21,7 @@ function Test-Hash {
             'Are you sure your scoop is up to date? Clean cache and reinstall'
             "Please run ``scoop update; scoop cache rm $Manifest; scoop uninstall $Manifest; scoop install $Manifest``"
             ''
-            "Hash mismatch could be caused by these factors:"
+            'Hash mismatch could be caused by these factors:'
             ''
             '- Network error'
             '- Antivirus configuration'
@@ -40,7 +40,8 @@ function Test-Hash {
         $message = @('You are right. Thank you for reporting.')
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        $prs = $prs | Where-Object { $_.title -eq "$Manifest@$($man.version): Hash fix" }
+        $titleToBePosted = "$Manifest@$($man.version): Hash fix"
+        $prs = $prs | Where-Object { $_.title -eq $titleToBePosted }
 
         # There is alreay PR for
         if ($prs.Count -gt 0) {
@@ -56,7 +57,7 @@ function Test-Hash {
 
             Write-Log 'PR ID' $prID
             # Update PR description
-            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ "body" = (@("- Closes #$IssueID", $pr.body) -join "`r`n") }
+            Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ 'body' = (@("- Closes #$IssueID", $pr.body) -join "`r`n") }
         } else {
             Write-Log 'PR - Create new branch and post PR'
 
@@ -70,12 +71,12 @@ function Test-Hash {
             Write-Log 'Git Status' @(git status --porcelain)
 
             git add $gci.FullName
-            git commit -m "${Manifest}: hash fix"
+            git commit -m $titleToBePosted
             git push origin $branch
 
             # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
-                'title' = "$Manifest@$($man.version): Hash fix"
+                'title' = $titleToBePosted
                 'base'  = 'master'
                 'head'  = $branch
                 'body'  = "- Closes #$IssueID"
