@@ -89,7 +89,7 @@ jobs:
     name: Excavate
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Excavate
       uses: Ash258/Scoop-GithubActions@stable
       env:
@@ -107,7 +107,7 @@ jobs:
     name: IssueHandler
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: IssueHandler
       uses: Ash258/Scoop-GithubActions@stable
       if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
@@ -125,7 +125,7 @@ jobs:
     name: PullRequestHandler
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: PullRequestHandler
       uses: Ash258/Scoop-GithubActions@stable
       if: startsWith(github.event.comment.body, '/verify')
@@ -143,7 +143,7 @@ jobs:
     name: PullRequestHandler
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: PullRequestHandler
       uses: Ash258/Scoop-GithubActions@stable
       env:
