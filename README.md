@@ -84,7 +84,7 @@ jobs:
     name: Excavator
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Excavator
       uses: Ash258/Scoop-GithubActions@stable
       env:
@@ -102,7 +102,7 @@ jobs:
     name: Issue Handler
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Issue Handler
       uses: Ash258/Scoop-GithubActions@stable
       if: github.event.action == 'opened' || (github.event.action == 'labeled' && contains(github.event.issue.labels.*.name, 'verify'))
@@ -120,7 +120,7 @@ jobs:
     name: Pull Request Validator
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Pull Request Validator
       uses: Ash258/Scoop-GithubActions@stable
       if: startsWith(github.event.comment.body, '/verify')
@@ -138,7 +138,7 @@ jobs:
     name: Pull Request Validator
     runs-on: windows-latest
     steps:
-    - uses: actions/checkout@master
+    - uses: actions/checkout@main
     - name: Pull Request Validator
       uses: Ash258/Scoop-GithubActions@stable
       env:
