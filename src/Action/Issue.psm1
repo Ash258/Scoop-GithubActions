@@ -169,6 +169,7 @@ function Initialize-Issue {
     $null, $manifest_loaded = Get-Manifest $problematicName
     if ($manifest_loaded.version -ne $problematicVersion) {
         Add-Comment -ID $id -Message @(
+            # TODO: Try to find specific version of arhived manifest
             "You reported version ``$problematicVersion``, but the latest available version is ``$($manifest_loaded.version)``."
             ''
             "Run ``scoop update; scoop update $problematicName --force``"
