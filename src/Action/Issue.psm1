@@ -38,9 +38,10 @@ function Test-Hash {
         Write-Log 'Verified hash failed'
 
         $message = @('You are right. Thank you for reporting.')
+        # TODO: Post labels at the end of function
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
         $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
-        $titleToBePosted = "$Manifest@$($man.version): Hash fix"
+        $titleToBePosted = "$Manifest@$($man.version): Fix hash"
         $prs = $prs | Where-Object { $_.title -eq $titleToBePosted }
 
         # There is alreay PR for
@@ -58,6 +59,7 @@ function Test-Hash {
             Write-Log 'PR ID' $prID
             # Update PR description
             Invoke-GithubRequest "repos/$REPOSITORY/pulls/$prID" -Method Patch -Body @{ 'body' = (@("- Closes #$IssueID", $pr.body) -join "`r`n") }
+            Add-Label -ID $IssueID -Label 'duplicate'
         } else {
             Write-Log 'PR - Create new branch and post PR'
 

@@ -27,11 +27,12 @@ It could be one of these:
     1. Checkhashes binary is executed for manifest in title
     1. Result is parsed
         1. Hash mismatch
-            1. Pull requests with name `<manifest>@<version>: Hash fix` are listed
+            1. Pull requests with name `<manifest>@<version>: Fix hash` are listed
                 1. There is PR already
                     1. The newest one is selected
                     1. Description of this PR is updated with closing directive for created issue
                     1. Comment to issue is posted with reference to PR
+                    1. Label `duplicate` added
                 1. If none
                     1. New branch `<manifest>-hash-fix-<random>` is created
                     1. Changes are commited
