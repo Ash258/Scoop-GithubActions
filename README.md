@@ -2,6 +2,9 @@
 
 Set of automated actions, which will bucket maintainer ever need to save time managing issues / pull requets. Using `stable` tag instead of specific version is highly recommended.
 
+For better/native implementation using Windows image refer to [stable-win](https://github.com/Ash258/Scoop-GithubActions/tree/stable-win)/[main-win](https://github.com/Ash258/Scoop-GithubActions/tree/main-win) branches.
+Linux based actions are no longer supported and maintained.
+
 ## Available actions
 
 `GITH_EMAIL` environment is not required since [1.0.1](https://github.com/Ash258/Scoop-GithubActions/releases/tag/1.0.1), but it is recommended.
