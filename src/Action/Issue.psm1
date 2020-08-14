@@ -19,7 +19,7 @@ function Test-Hash {
             'Cannot reproduce'
             ''
             'Are you sure your scoop is up to date? Clean cache and reinstall'
-            "Please run ``scoop update; scoop cache rm $Manifest; scoop uninstall $Manifest; scoop install $Manifest``"
+            "Please run ``scoop update; scoop cache rm $Manifest;`` and update/reinstall application"
             ''
             'Hash mismatch could be caused by these factors:'
             ''
