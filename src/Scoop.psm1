@@ -15,6 +15,11 @@ function Install-Scoop {
         scoop config SCOOP_REPO 'https://github.com/Ash258/Scoop-Core.git'
         scoop update
     }
+
+    if ($env:SCOOP_BRANCH) {
+        scoop config SCOOP_BRANCH $env:SCOOP_BRANCH
+        scoop update
+    }
 }
 
 Export-ModuleMember -Function Install-Scoop
