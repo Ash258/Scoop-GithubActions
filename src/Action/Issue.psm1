@@ -136,7 +136,7 @@ function Test-Downloading {
         Write-Log 'Broken URLS' $broken_urls
 
         $string = ($broken_urls | Select-Object -Unique | ForEach-Object { "- $_" }) -join "`r`n"
-        Add-Label -ID $IssueID -Label 'manifest-fix-needed', 'verified', 'help-wanted'
+        Add-Label -ID $IssueID -Label 'manifest-fix-needed', 'verified', 'help wanted'
         Add-Comment -ID $IssueID -Comment 'Thank you for reporting. You are right.', '', 'Following URLs are not accessible:', '', $string
     }
 }
@@ -172,6 +172,7 @@ function Initialize-Issue {
         $null, $manifest_loaded = Get-Manifest $problematicName
     } catch {
         Add-Comment -ID $id -Message "Specified manifest ``$problematicName`` does not exist in this bucket. Make sure you opened issue in the correct bucket."
+        Add-Label -Id $id -Label 'invalid'
         Close-Issue -ID $id
         return
     }

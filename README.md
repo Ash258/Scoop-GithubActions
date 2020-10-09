@@ -50,7 +50,7 @@ It could be one of these:
     1. Comment to issue is posted
         1. If there is problematic URL
             1. List of these URLs is attached in comment
-            1. Labels `manifest-fix-needed`, `verified`, `help-wanted` is added
+            1. Labels `manifest-fix-needed`, `verified`, `help wanted` are added
         1. All URLs could be downloaded without problem
             1. Possible causes are attached in comment
 

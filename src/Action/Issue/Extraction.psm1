@@ -4,7 +4,7 @@ function Test-ExtractDir {
     param([String] $Manifest, [Int] $IssueID)
 
     # Load manifest
-    $manifest_path = Get-Childitem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
+    $manifest_path = Get-ChildItem $MANIFESTS_LOCATION "$Manifest.*" | Select-Object -First 1 -ExpandProperty Fullname
     $manifest_o = Get-Content $manifest_path -Raw | ConvertFrom-Json
 
     $message = @()
@@ -56,7 +56,7 @@ function Test-ExtractDir {
     if ($failed) {
         Write-Log 'Failed' $failed
         $message = 'You are right. Can reproduce', '', $message
-        Add-Label -ID $IssueID -Label 'verified', 'manifest-fix-needed', 'help-wanted'
+        Add-Label -ID $IssueID -Label 'verified', 'manifest-fix-needed', 'help wanted'
     } else {
         Write-Log 'Everything all right' $failed
         $message = @(
