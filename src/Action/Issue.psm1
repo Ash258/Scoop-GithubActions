@@ -168,7 +168,14 @@ function Initialize-Issue {
         return
     }
 
-    $null, $manifest_loaded = Get-Manifest $problematicName
+    try {
+        $null, $manifest_loaded = Get-Manifest $problematicName
+    } catch {
+        Add-Comment -ID $id -Message "Specified manifest ``$problematicName`` does not exist in this bucket. Make sure you opened issue in the correct bucket."
+        Close-Issue -ID $id
+        return
+    }
+
     if ($manifest_loaded.version -ne $problematicVersion) {
         Add-Comment -ID $id -Message @(
             # TODO: Try to find specific version of arhived manifest
