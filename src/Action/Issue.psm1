@@ -171,7 +171,7 @@ function Initialize-Issue {
     try {
         $null, $manifest_loaded = Get-Manifest $problematicName
     } catch {
-        Add-Comment -ID $id -Message "The pecified manifest ``$problematicName`` does not exist in this bucket. Make sure you opened the issue in the correct bucket."
+        Add-Comment -ID $id -Message "The specified manifest ``$problematicName`` does not exist in this bucket. Make sure you opened the issue in the correct bucket."
         Add-Label -Id $id -Label 'invalid'
         Remove-Label -Id $id -Label 'verify'
         Close-Issue -ID $id
