@@ -1,6 +1,6 @@
 # Github actions for scoop buckets
 
-Set of automated actions, which will bucket maintainer ever need to save time managing issues/pull requets. Using `stable` tag instead of specific version is highly recommended.
+Set of automated actions, which bucket maintainers can use to save time managing issues / pull requests. Using a `stable` tag instead of a specific version is highly recommended.
 
 ## Available actions
 
@@ -19,8 +19,8 @@ Use [`SHOVEL`](https://github.com/Ash258/Scoop-Core) environment variable for mo
 
 ### Issues
 
-As soon as new issue **is created** or **label `verify` is added** into issue, action is executed.
-Based on issue title, specific sub-action is executed.
+As soon as a new issue **is created** or the **label `verify` is added** to an issue, the action is executed.
+Based on the issue title, a specific sub-action is executed.
 It could be one of these:
 
 - **Hash check fails**
@@ -56,7 +56,7 @@ It could be one of these:
 
 ### Pull Requests
 
-As soon as PR **is created** or **comment `/verify` posted** to it, validation tests are executed (see [wiki](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks) for detailed desciption):
+As soon as a PR **is created** or the **comment `/verify` is posted** to it, validation tests are executed (see [wiki](https://github.com/Ash258/Scoop-GithubActions/wiki/Pull-Request-Checks) for detailed desciption):
 
 - ❗❗ [Pull request created from forked repository cannot be verified due to security concern from GitHub side](https://github.com/Ash258/Scoop-GithubActions/issues/42) ❗❗
     - Manual `/verify` comment is needed (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/176>)
