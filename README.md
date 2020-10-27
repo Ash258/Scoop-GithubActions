@@ -1,8 +1,8 @@
 # Github actions for scoop buckets
 
-Set of automated actions, which will bucket maintainer ever need to save time managing issues / pull requets. Using `stable` tag instead of specific version is highly recommended.
+Set of automated actions, which bucket maintainers can use to save time managing issues / pull requests. Using a `stable` tag instead of a specific version is highly recommended.
 
-For better/native implementation using Windows image refer to [stable-win](https://github.com/Ash258/Scoop-GithubActions/tree/stable-win)/[main-win](https://github.com/Ash258/Scoop-GithubActions/tree/main-win) branches.
+For a better/native implementation using a Windows image refer to [stable-win](https://github.com/Ash258/Scoop-GithubActions/tree/stable-win)/[main-win](https://github.com/Ash258/Scoop-GithubActions/tree/main-win) branches.
 Linux based actions are no longer supported and maintained.
 
 ## Available actions
@@ -20,15 +20,15 @@ If email is not specified commits will not be pushed using your account, which w
 
 ### Issues (`Issues`)
 
-As soon as new issue **is created** or **label `verify` is added** into issue, action is executed.
-Based on issue title, specific sub-action is executed. It could be one of these:
+As soon as a new issue **is created** or the **label `verify` is added** to an issue, the action is executed.
+Based on the issue title, a specific sub-action is executed. It could be one of these:
 
 - **Hash check fails**
     1. Checkhashes binary is executed
     1. Result is parsed
         1. Hash mismatch
             1. Pull requests with name `<manifest>@<version>: Hash fix` are listed
-                1. There is PR already
+                1. There is already a PR
                     1. The newest one is selected
                     1. Description of this PR is updated with closing directive for created issue
                     1. Comment to issue is posted with reference to PR
@@ -55,7 +55,7 @@ Based on issue title, specific sub-action is executed. It could be one of these:
 
 ### Pull requests (`Pull requests | PullRequestHandler`)
 
-As soon as **PR is created** or **someone post comment `/verify`** set of these tests are executed:
+As soon as a **PR is created** or **someone posts the comment `/verify`** the set of these tests are executed:
 
 - ❗❗ [Pull request created from forked repository cannot be finished due to different permission scope of token](https://github.com/Ash258/Scoop-GithubActions/issues/42) ❗❗
     - Manual `/verify` comment is needed
@@ -70,7 +70,7 @@ As soon as **PR is created** or **someone post comment `/verify`** set of these 
 1. Autoupdate
     - Autoupdate has to finish successfully
     - Hashes extraction has to finish successfully
-        - If there is `hash` property inside `autoupdate` output of checkver binary cannot contains `Could not find hash`
+        - If there is a `hash` property inside `autoupdate` the output of the checkver binary cannot contain `Could not find hash`
 
 - All checks could be executed with `/verify` comment. (<https://github.com/Ash258/GithubActionsBucketForTesting/pull/176>)
 
