@@ -9,6 +9,9 @@ Use [`SHOVEL`](https://github.com/Ash258/Scoop-Core) environment variable for mo
 1. `GITHUB_TOKEN`
     - **REQUIRED**
     - Use `${{ secrets.GITHUB_TOKEN }}`
+1. `GITH_EMAIL`**
+    - String
+    - If specified, [`SHOVEL`](https://github.com/Ash258/Scoop-Core) implementation will be used
 1. `SHOVEL`
     - Anything. Use `1`
     - If specified, [`SHOVEL`](https://github.com/Ash258/Scoop-Core) implementation will be used
@@ -19,9 +22,9 @@ Use [`SHOVEL`](https://github.com/Ash258/Scoop-Core) environment variable for mo
 1. `SKIP_UPDATED`
     - Anything. Use `1`
     - If specified, log of checkver utility will not print latest versions
-1. `GITH_EMAIL`**
+1. `SPECIAL_SNOWFLAKES`
     - String
-    - If specified, [`SHOVEL`](https://github.com/Ash258/Scoop-Core) implementation will be used
+    - List of manifest names joined with `,` used as parameter for auto-pr utility.
 
 **: `GITH_EMAIL` environment variable is not required since [1.0.1](https://github.com/Ash258/Scoop-GithubActions/releases/tag/1.0.1), but it is recommended.
 If email is not specified, commits will not be pushed using account bounded to the email. This will lead to not adding contributions. ([See as example commit from github action without user's email](https://github.com/phips28/gh-action-bump-version/commit/adda5b22b3c785eb69d328f91dadb49a4c34a82e))
