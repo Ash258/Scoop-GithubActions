@@ -38,10 +38,12 @@ function Test-Hash {
     } else {
         Write-Log 'Verified hash failed'
 
+        $masterBranch = (Invoke-GithubRequest "repos/$REPOSITORY").Content | ConvertFrom-Json
+        $masterBranch = $masterBranch.default_branch
         $message = @('You are right. Thank you for reporting.')
         # TODO: Post labels at the end of function
         Add-Label -ID $IssueID -Label 'verified', 'hash-fix-needed'
-        $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=master&sorting=updated").Content | ConvertFrom-Json
+        $prs = (Invoke-GithubRequest "repos/$REPOSITORY/pulls?state=open&base=$masterBranch&sorting=updated").Content | ConvertFrom-Json
         $titleToBePosted = "$manifestNameAsInBucket@$($man.version): Fix hash"
         $prs = $prs | Where-Object { $_.title -eq $titleToBePosted }
 
@@ -80,7 +82,7 @@ function Test-Hash {
             # Create new PR
             Invoke-GithubRequest -Query "repos/$REPOSITORY/pulls" -Method Post -Body @{
                 'title' = $titleToBePosted
-                'base'  = 'master'
+                'base'  = $masterBranch
                 'head'  = $branch
                 'body'  = "- Closes #$IssueID"
             }
