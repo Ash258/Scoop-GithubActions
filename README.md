@@ -1,3 +1,8 @@
+# Discontinued
+
+Scoop version is discontinued and this repository will not be updated anymore and archived in near future.
+Refer to [Shovel](https://github.com/Ash258/Scoop-Core) version of this repository: <https://github.com/shovel-org/GithubActions>
+
 # Github actions for scoop buckets
 
 Set of automated actions, which will bucket maintainer ever need to save time managing issues / pull requets. Using `stable` tag instead of specific version is highly recommended.
